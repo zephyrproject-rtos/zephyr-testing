@@ -1,0 +1,52 @@
+language: c
+
+compiler: gcc
+
+env:
+    global:
+        - SDK=0.9
+        - ZEPHYR_SDK_INSTALL_DIR=/opt/sdk/zephyr-sdk-0.9
+        - ZEPHYR_GCC_VARIANT=zephyr
+        - USE_CCACHE=1
+    matrix:
+        - ARCH="" RUN_COMPLIANCE="1"
+        #- ARCH="-a x86" RUN_COMPLIANCE="1"
+        #- ARCH="-a arm"
+        #- ARCH="-a arc -a riscv32 -a nios2"
+
+build:
+    cache: true
+    cache_dir_list:
+        - ${SHIPPABLE_BUILD_DIR}/ccache
+    pre_ci_boot:
+        image_name: nashif/zephyr
+        image_tag: master.25
+        pull: true
+        options: "-e HOME=/home/buildslave --privileged=true --tty --net=bridge --user buildslave"
+
+    ci:
+      - env
+      - export CCACHE_DIR=${SHIPPABLE_BUILD_DIR}/ccache/.ccache
+      - export COMMIT_RANGE=${SHIPPABLE_COMMIT_RANGE}
+      - source zephyr-env.sh
+      - >
+          if [ "$RUN_COMPLIANCE" = "1" ]; then
+            errors=$(./scripts/ci/compliance.py);
+            cat compliance.xml
+          fi;
+      - ccache -s --max-size=2000M
+      - make host-tools
+      - export PREBUILT_HOST_TOOLS=${ZEPHYR_BASE}/bin
+      - ./scripts/sanitycheck ${PLATFORMS} ${ARCH} ${COVERAGE} --inline-logs || ./scripts/sanitycheck ${PLATFORMS} ${ARCH} ${COVERAGE} --inline-logs --only-failed --outdir=out-2nd-pass
+      - ccache -s
+    post_ci:
+      - rm -rf sanity-out out-2nd-pass
+      - mkdir -p shippable/testresults
+      - >
+          if [ -e compliance.xml ]; then
+            cp compliance.xml shippable/testresults/;
+          fi;
+    on_failure:
+      - test -f ./scripts/sanity_chk/last_sanity.xml && cp ./scripts/sanity_chk/last_sanity.xml shippable/testresults/
+    on_success:
+      - cp ./scripts/sanity_chk/last_sanity.xml shippable/testresults/
