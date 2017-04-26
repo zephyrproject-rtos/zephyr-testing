@@ -50,3 +50,18 @@ build:
       - test -f ./scripts/sanity_chk/last_sanity.xml && cp ./scripts/sanity_chk/last_sanity.xml shippable/testresults/
     on_success:
       - cp ./scripts/sanity_chk/last_sanity.xml shippable/testresults/
+
+integrations:
+  notifications:
+    - integrationName: email
+      type: email
+      recipients:
+        - anas.nashif@inte.com
+      branches:
+        only:
+          - master
+          - net
+          - bluetooth
+          - arm
+      on_success: never
+      on_failure: never
