@@ -1,6 +1,6 @@
 VERSION_MAJOR 	   = 1
 VERSION_MINOR 	   = 7
-PATCHLEVEL 	   = 99
+PATCHLEVEL 	   = 990
 VERSION_RESERVED   = 0
 EXTRAVERSION       =
 NAME 		   = Zephyr Kernel
@@ -1195,10 +1195,10 @@ $(help-board-dirs): help-%:
 
 
 host-tools:
-	$(Q)$(MAKE) $(build)=scripts/kconfig standalone
 	$(Q)$(MAKE) $(build)=scripts/basic
 	$(Q)$(MAKE) $(build)=scripts/gen_idt
 	$(Q)$(MAKE) $(build)=scripts/gen_offset_header
+	$(Q)$(MAKE) $(build)=scripts/kconfig standalone
 	@mkdir -p ${ZEPHYR_BASE}/bin
 	@cp scripts/basic/fixdep scripts/gen_idt/gen_idt scripts/kconfig/conf \
 		scripts/gen_offset_header/gen_offset_header ${ZEPHYR_BASE}/bin
