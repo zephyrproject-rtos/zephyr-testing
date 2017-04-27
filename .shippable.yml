@@ -36,7 +36,7 @@ build:
       - make host-tools
       - export PREBUILT_HOST_TOOLS=${ZEPHYR_BASE}/bin
       - >
-          if [ "$RUN_COMPLIANCE" = "1" -a "$JOB_TRIGGERED_BY_NAME" == "undefined" ]; then
+          if [ "$RUN_COMPLIANCE" = "1" -a "$IS_PULL_REQUEST" = "true"]; then
             errors=$(./scripts/ci/compliance.py);
             cat compliance.xml
           fi;
