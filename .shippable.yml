@@ -21,7 +21,7 @@ build:
         - ${SHIPPABLE_BUILD_DIR}/ccache
     pre_ci_boot:
         image_name: nashif/zephyr
-        image_tag: master.27
+        image_tag: master.6
         pull: true
         options: "-e HOME=/home/buildslave --privileged=true --tty --net=bridge --user buildslave"
 
