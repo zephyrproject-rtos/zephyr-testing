@@ -34,7 +34,7 @@ build:
       - make host-tools
       - export PREBUILT_HOST_TOOLS=${ZEPHYR_BASE}/bin
       - >
-          if [ "$RUN_COMPLIANCE" = "1" ]; then
+          if [ "$RUN_COMPLIANCE" = "1" -a "$JOB_TRIGGERED_BY_NAME" == "undefined" ]; then
             errors=$(./scripts/ci/compliance.py);
             cat compliance.xml
           fi;
@@ -43,7 +43,7 @@ build:
             COVERAGE="--all";
           fi;
       - >
-          if [ "$JOB_TRIGGERED_BY_NAME" = "daily-scan" ]; then
+          if [ "$JOB_TRIGGERED_BY_NAME" = "code-scan" ]; then
             wget https://scan.coverity.com/download/linux64 --post-data "token=${COVERITY_TOKEN}&project=Zephyr" -O coverity_tool.tgz;
             tar xvf coverity_tool.tgz;
             rm -f coverity_tool.tgz;
@@ -51,7 +51,7 @@ build:
             ./scripts/ci/covall.sh
           fi;
       - >
-          if [ "$JOB_TRIGGERED_BY_NAME" != "daily-scan" ]; then
+          if [ "$JOB_TRIGGERED_BY_NAME" != "code-scan" ]; then
           ./scripts/sanitycheck ${PLATFORMS} ${ARCH} ${COVERAGE} --inline-logs || ./scripts/sanitycheck ${PLATFORMS} ${ARCH} ${COVERAGE} --inline-logs --only-failed --outdir=out-2nd-pass;
           fi
       - ccache -s
