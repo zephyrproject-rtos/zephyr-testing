@@ -34,6 +34,10 @@ build:
             errors=$(./scripts/ci/compliance.py);
             cat compliance.xml
           fi;
+      - >
+          if [ "$JOB_TRIGGERED_BY_NAME" = "daily-verify" ]; then
+            COVERAGE="--all";
+          fi;
       - ccache -s --max-size=2000M
       - make host-tools
       - export PREBUILT_HOST_TOOLS=${ZEPHYR_BASE}/bin
@@ -56,7 +60,7 @@ integrations:
     - integrationName: email
       type: email
       recipients:
-        - anas.nashif@inte.com
+        - builds@zephyrproject.org
       branches:
         only:
           - master
