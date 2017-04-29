@@ -11,7 +11,7 @@ env:
         - ZEPHYR_GCC_VARIANT=zephyr
         - USE_CCACHE=1
     matrix:
-        - ARCH="-a x86 -a riscv32 -a nios2" RUN_COMPLIANCE="1"
+        - ARCH="-a nios2" RUN_COMPLIANCE="1"
           #- ARCH="-a arm -a arc"
         #- ARCH="-a x86" RUN_COMPLIANCE="1"
         #- ARCH="-a arc -a riscv32 -a nios2"
@@ -27,9 +27,9 @@ build:
         options: "-e HOME=/home/buildslave --privileged=true --tty --net=bridge --user buildslave"
 
     ci:
-      - env
       - export CCACHE_DIR=${SHIPPABLE_BUILD_DIR}/ccache/.ccache
       - export COMMIT_RANGE=${SHIPPABLE_COMMIT_RANGE}
+      - aws s3 ls
       - source zephyr-env.sh
       - ccache -s --max-size=2000M
       - make host-tools
@@ -93,5 +93,3 @@ integrations:
           - arm
       on_success: never
       on_failure: never
-  generic:
-    - integrationName: "coverity"
