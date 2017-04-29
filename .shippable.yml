@@ -93,3 +93,5 @@ integrations:
           - arm
       on_success: never
       on_failure: never
+  generic:
+    - integrationName: "coverity-token"
