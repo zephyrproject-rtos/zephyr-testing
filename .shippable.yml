@@ -29,11 +29,22 @@ build:
     ci:
       - export CCACHE_DIR=${SHIPPABLE_BUILD_DIR}/ccache/.ccache
       - export COMMIT_RANGE=${SHIPPABLE_COMMIT_RANGE}
-      - aws s3 ls
       - source zephyr-env.sh
       - ccache -s --max-size=2000M
       - make host-tools
       - export PREBUILT_HOST_TOOLS=${ZEPHYR_BASE}/bin
+      - >
+          if [ "$IS_PULL_REQUEST" = "true" ]; then
+            S3_PATH="s3://zephyr-logs/pull-requests/${PULL_REQUEST}"
+          else
+            if [ "$JOB_TRIGGERED_BY_NAME" = "undefined" ]; then
+              LOG_TYPE="manual";
+            else
+              LOG_TYPE=${JOB_TRIGGERED_BY_NAME};
+            fi;
+
+            S3_PATH="s3://zephyr-logs/${LOG_TYPE}/${BUILD_NUMBER}";
+          fi;
       - >
           if [ "$RUN_COMPLIANCE" = "1" -a "$IS_PULL_REQUEST" = "true"]; then
             echo "Building a Pull Request";
@@ -70,14 +81,13 @@ build:
       - >
           if [ -e compliance.xml ]; then
             cp compliance.xml shippable/testresults/;
+            aws s3 cp compliance.xml ${S3_PATH}/;
           fi;
-    on_failure:
       - >
           if [ -e ./scripts/sanity_chk/last_sanity.xml ]; then
             cp ./scripts/sanity_chk/last_sanity.xml shippable/testresults/;
+            aws s3 cp ./scripts/sanity_chk/last_sanity.xml ${S3_PATH}/sanitycheck.xml;
           fi;
-    on_success:
-      - cp ./scripts/sanity_chk/last_sanity.xml shippable/testresults/
 
 integrations:
   notifications:
