@@ -10,7 +10,6 @@ env:
         - ZEPHYR_SDK_INSTALL_DIR=/opt/sdk/zephyr-sdk-0.9
         - ZEPHYR_GCC_VARIANT=zephyr
         - USE_CCACHE=1
-        - secure: CaE0YOxMfS71yTJsLOUMAXyvrOfgPbT6NLakwXShPHFF+aqqu9UyrmwFE1UfNxDrFOa3h0gxmbMRJAdGPLdKeLmGlLiL96XMhpaZIWYmAD2/Kfx9wb+1zfYISrh9k11QIifbB5JpeiFzNrrwYLOv5Gqn2fkAgvSe0BEKoh6weCvMXHgxwJR/I5gtQYwZXI6arvOTWlVgRpXeqURcJbthsmp7/Bc4MctgiRXmBxeyvi+OTVe1u/sNPVf51ZYcNdaqw+xRp9xFeg09EP87QPlDHV+g9dPWuGvGHAwQ86TD8hkpjurLO3O8GHCXena7Ft0/t9iL4RBecUIBplISNuaK6Q==
     matrix:
         - ARCH="-a x86 -a riscv32 -a nios2" RUN_COMPLIANCE="1"
         - ARCH="-a arm -a arc"
