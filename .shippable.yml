@@ -46,7 +46,7 @@ build:
             S3_PATH="s3://zephyr-logs/${LOG_TYPE}/${BUILD_NUMBER}";
           fi;
       - >
-          if [ "$RUN_COMPLIANCE" = "1" -a "$IS_PULL_REQUEST" = "true"]; then
+          if [ "$RUN_COMPLIANCE" = "1" -a "$IS_PULL_REQUEST" = "true" ]; then
             echo "Building a Pull Request";
             errors=$(./scripts/ci/check-compliance.py);
             echo "Building Documentation";
