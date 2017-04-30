@@ -54,7 +54,7 @@ build:
             if [ -s doc.warnings ]; then
               echo " => New documentation warnings/errors";
             fi;
-            errors=$(./scripts/ci/check-compliance.py);
+            ./scripts/ci/check-compliance.py || true;
           fi;
       - >
           if [ "$JOB_TRIGGERED_BY_NAME" = "daily-verify-asserts" ]; then
@@ -80,7 +80,20 @@ build:
             ./scripts/sanitycheck ${PLATFORMS} ${ARCH} ${COVERAGE} ${SANITYCHECK_OPTIONS} || ./scripts/sanitycheck ${PLATFORMS} ${ARCH} ${COVERAGE} ${SANITYCHECK_OPTIONS_RETRY};
           fi
       - ccache -s
-    post_ci:
+    on_success:
+      - rm -rf sanity-out out-2nd-pass
+      - mkdir -p shippable/testresults
+      - >
+          if [ -e compliance.xml ]; then
+            cp compliance.xml shippable/testresults/;
+            aws s3 cp compliance.xml ${S3_PATH}/;
+          fi;
+      - >
+          if [ -e ./scripts/sanity_chk/last_sanity.xml ]; then
+            cp ./scripts/sanity_chk/last_sanity.xml shippable/testresults/;
+            aws s3 cp ./scripts/sanity_chk/last_sanity.xml ${S3_PATH}/sanitycheck.xml;
+          fi;
+    on_failure:
       - rm -rf sanity-out out-2nd-pass
       - mkdir -p shippable/testresults
       - >
