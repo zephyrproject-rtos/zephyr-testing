@@ -7,6 +7,7 @@ sudo pip install breathe sphinx awscli sphinx_rtd_theme
 
 cd ${TESTING_REPO_STATE}
 echo ${TESTING_REPO_STATE}
+
 ls -la 
 source zephyr-env.sh
 
