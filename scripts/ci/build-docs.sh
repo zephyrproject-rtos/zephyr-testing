@@ -13,5 +13,7 @@ ls -la doc/themes
 
 echo "- Building docs..."
 make htmldocs > doc.log 2>&1
-echo "Uploading to AWS S3"
+echo "- Uploading to AWS S3..."
 aws s3 sync --quiet --delete doc/_build/html s3://zephyr-docs/online/dev
+
+echo "Done"
