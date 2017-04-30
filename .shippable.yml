@@ -53,7 +53,7 @@ build:
             make htmldocs > doc.log 2>&1;
             ./scripts/filter-known-issues.py --config-dir .known-issues/doc/ doc.log > doc.warnings;
             cat doc.warnings;
-            test -s doc.warnings && echo 1
+            test -s doc.warnings && exit 1
           fi;
       - >
           if [ "$JOB_TRIGGERED_BY_NAME" = "daily-verify-asserts" ]; then
