@@ -5,7 +5,7 @@ echo "- Install dependencies"
 sudo apt-get install doxygen make
 sudo pip install breathe sphinx awscli sphinx_rtd_theme
 
-cd ${ZEPHYR_TESTING_REPO_STATE}
+cd ${TESTING_REPO_STATE}
 source zephyr-env.sh
 
 cp -a /build/IN/docs-theme-repo/gitRepo doc/themes/zephyr-docs-theme
