@@ -9,6 +9,9 @@ sudo pip install awscli
 cd ${ZEPHYRREPO_STATE}
 source zephyr-env.sh
 
+cp -a /build/IN/docs-theme-repo/gitRepo doc/themes/zephyr-docs-theme
+ls -la doc/themes
+
 echo "- Building docs..."
 make htmldocs > doc.log 2>&1
 echo "Uploading to AWS S3"
