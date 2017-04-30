@@ -31,6 +31,7 @@ Sections
    introduction/introducing_zephyr.rst
    getting_started/getting_started.rst
    boards/boards.rst
+   boards/no_boards.rst
    kernel/kernel.rst
    application/application.rst
    porting/porting.rst
