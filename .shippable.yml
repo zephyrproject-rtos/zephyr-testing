@@ -52,8 +52,11 @@ build:
             echo "Building Documentation";
             make htmldocs > doc.log 2>&1;
             ./scripts/filter-known-issues.py --config-dir .known-issues/doc/ doc.log > doc.warnings;
-            cat doc.warnings;
-            test -s doc.warnings && exit 1
+            if [ -s doc.warnings ]; then
+              echo "New documentation warnings/errors";
+              ls -la doc.warnings;
+              exit 1;
+            fi;
           fi;
       - >
           if [ "$JOB_TRIGGERED_BY_NAME" = "daily-verify-asserts" ]; then
