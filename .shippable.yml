@@ -79,6 +79,11 @@ build:
             ./scripts/sanitycheck ${PLATFORMS} ${ARCH} ${COVERAGE} ${SANITYCHECK_OPTIONS} || ./scripts/sanitycheck ${PLATFORMS} ${ARCH} ${COVERAGE} ${SANITYCHECK_OPTIONS_RETRY};
           fi
       - ccache -s
+    post_ci:
+      - >
+          if [ -e ./doc/_build/html ]; then
+            aws s3 sync ./doc/_build/html ${S3_PATH}/docs;
+          fi;
     on_success:
       - rm -rf sanity-out out-2nd-pass
       - mkdir -p shippable/testresults
