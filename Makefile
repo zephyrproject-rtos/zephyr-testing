@@ -2,7 +2,7 @@ VERSION_MAJOR 	   = 1
 VERSION_MINOR 	   = 7
 PATCHLEVEL 	   = 99
 VERSION_RESERVED   = 0
-EXTRAVERSION       =
+EXTRAVERSION       = net
 NAME 		   = Zephyr Kernel
 
 export SOURCE_DIR PROJECT
