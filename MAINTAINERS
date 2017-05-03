@@ -506,3 +506,4 @@ T:	git https://github.com/zephyrproject-rtos/zephyr
 S:	Buried alive in reporters
 F:	*
 F:	*/
+FOO
