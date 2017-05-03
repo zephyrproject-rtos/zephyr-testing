@@ -1,4 +1,4 @@
-1-Zephyr™ Project
+Zephyr™ Project
 ###############
 
 The Zephyr™ Project is a scalable real-time operating system (RTOS) supporting
