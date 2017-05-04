@@ -27,8 +27,8 @@ build:
     ci:
       - env
       - export CCACHE_DIR=${SHIPPABLE_BUILD_DIR}/ccache/.ccache
-      - export COMMIT_RANGE=${SHIPPABLE_COMMIT_RANGE}
-      - echo ${SHIPPABLE_COMMIT_RANGE}
+      - export COMMIT_RANGE=origin/${BRANCH}..${COMMIT}
+      - echo ${COMMIT_RANGE}
       - source zephyr-env.sh
       - ccache -s --max-size=2000M
       - make host-tools
