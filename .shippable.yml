@@ -102,8 +102,13 @@ build:
            done;
           fi;
       - >
+        export COMMIT_RANGE=origin/${PULL_REQUEST_BASE_BRANCH}..${COMMIT};
+        git format-patch ${COMMIT_RANGE};
+        for file in `find -name *.patch`; do
+           aws s3 cp $file ${S3_PATH}/patches/
+        done;
         if [ "$RUN_COMPLIANCE" = "1" -a "$IS_PULL_REQUEST" = "true" ]; then
-          aws s3 sync doc/_build/html ${S3_PATH}/docs
+          aws s3 sync doc/_build/html ${S3_PATH}/docs;
         fi;
 
 integrations:
