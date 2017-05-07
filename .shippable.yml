@@ -81,32 +81,30 @@ build:
             ./scripts/sanitycheck ${PLATFORMS} ${ARCH} ${COVERAGE} ${SANITYCHECK_OPTIONS} || ./scripts/sanitycheck ${PLATFORMS} ${ARCH} ${COVERAGE} ${SANITYCHECK_OPTIONS_RETRY};
           fi
       - ccache -s
-    on_success:
+    post_ci:
       - rm -rf sanity-out out-2nd-pass
       - mkdir -p shippable/testresults
+      - sudo pip install junit2html
       - >
           if [ -e compliance.xml ]; then
             cp compliance.xml shippable/testresults/;
-            aws s3 cp compliance.xml ${S3_PATH}/;
           fi;
       - >
           if [ -e ./scripts/sanity_chk/last_sanity.xml ]; then
             cp ./scripts/sanity_chk/last_sanity.xml shippable/testresults/;
-            aws s3 cp ./scripts/sanity_chk/last_sanity.xml ${S3_PATH}/sanitycheck.xml;
-          fi;
-    on_failure:
-      - rm -rf sanity-out out-2nd-pass
-      - mkdir -p shippable/testresults
-      - >
-          if [ -e compliance.xml ]; then
-            cp compliance.xml shippable/testresults/;
-            aws s3 cp compliance.xml ${S3_PATH}/;
           fi;
       - >
-          if [ -e ./scripts/sanity_chk/last_sanity.xml ]; then
-            cp ./scripts/sanity_chk/last_sanity.xml shippable/testresults/;
-            aws s3 cp ./scripts/sanity_chk/last_sanity.xml ${S3_PATH}/sanitycheck.xml;
+        if [ -e ./scripts/sanity_chk/last_sanity.xml -a -e compliance.xml ]; then
+           ./scripts/ci/merge_junit.py compliance.xml scripts/sanity_chk/last_sanity.xml > test_report.xml
+           junit2html test_report.xml test_report.html;
+           for file in test_report.html test_report.xml; do
+              aws s3 cp $file ${S3_PATH}/;
+           done;
           fi;
+      - >
+        if [ "$RUN_COMPLIANCE" = "1" -a "$IS_PULL_REQUEST" = "true" ]; then
+          aws s3 sync doc/_build/html ${S3_PATH}/docs
+        fi;
 
 integrations:
   notifications:
