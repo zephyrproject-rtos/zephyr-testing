@@ -48,6 +48,7 @@ build:
             echo "Building a Pull Request";
             echo "- Building Documentation";
             echo "Commit range:" ${COMMIT_RANGE}
+            ./scripts/ci/add_reviewers.py
             make htmldocs > doc.log 2>&1;
             ./scripts/filter-known-issues.py --config-dir .known-issues/doc/ doc.log > doc.warnings;
             if [ -s doc.warnings ]; then
