@@ -92,29 +92,43 @@ build:
       - sudo pip install junit2html
       - >
           if [ -e compliance.xml ]; then
+            mkdir -p reports;
             cp compliance.xml shippable/testresults/;
+            cp compliance.xml reports/;
           fi;
       - >
           if [ -e ./scripts/sanity_chk/last_sanity.xml ]; then
+            mkdir -p reports;
             cp ./scripts/sanity_chk/last_sanity.xml shippable/testresults/;
+            cp ./scripts/sanity_chk/last_sanity.xml reports/;
           fi;
       - >
-        if [ -e ./scripts/sanity_chk/last_sanity.xml -a -e compliance.xml ]; then
-           ./scripts/ci/merge_junit.py compliance.xml scripts/sanity_chk/last_sanity.xml > test_report.xml
+        if [ -d "./reports" ]; then
+           aws s3 ls ${S3_PATH}/ | grep -q ${COMMIT};
+           if [ "$?" = "0" ]; then
+              aws s3 cp ${S3_PATH}/${COMMIT}/test_report.xml reports/test_report_done.xml;
+           fi;
+           ./scripts/ci/merge_junit.py  reports/*.xml > test_report.xml;
+
+           ls -la reports/;
            junit2html test_report.xml test_report.html;
+
            for file in test_report.html test_report.xml; do
-              aws s3 cp $file ${S3_PATH}/;
+              aws s3 cp $file ${S3_PATH}/${COMMIT}/;
            done;
-          fi;
-      - >
-        export COMMIT_RANGE=origin/${PULL_REQUEST_BASE_BRANCH}..${COMMIT};
-        git format-patch ${COMMIT_RANGE};
-        for file in `find -name *.patch`; do
-           aws s3 cp $file ${S3_PATH}/patches/
-        done;
-        if [ "$RUN_COMPLIANCE" = "1" -a "$IS_PULL_REQUEST" = "true" ]; then
-          aws s3 sync doc/_build/html ${S3_PATH}/docs;
         fi;
+      - >
+        if [ "$MATRIX_BUILD" = "1" ]; then
+          export COMMIT_RANGE=origin/${PULL_REQUEST_BASE_BRANCH}..${COMMIT};
+          git format-patch ${COMMIT_RANGE};
+          for file in `find . -name \*.patch`; do
+             aws s3 cp $file ${S3_PATH}/${COMMIT}/patches/
+          done;
+          if [ "$IS_PULL_REQUEST" = "true" ]; then
+            aws s3 sync doc/_build/html ${S3_PATH}/${COMMIT}/docs/;
+          fi;
+        fi;
+      - rm -rf reports
 
 integrations:
   notifications:
