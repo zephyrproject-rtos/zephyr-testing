@@ -173,6 +173,8 @@ import glob
 import concurrent
 import concurrent.futures
 import xml.etree.ElementTree as ET
+from collections import OrderedDict
+from itertools import islice
 
 if "ZEPHYR_BASE" not in os.environ:
     sys.stderr.write("$ZEPHYR_BASE environment variable undefined.\n")
@@ -1707,6 +1709,9 @@ def parse_arguments():
     parser.add_argument("--ccache", action="store_const", const=1, default=0,
             help="Enable the use of ccache when building")
 
+    parser.add_argument("-B", "--subset", action="store",
+            help="Only run a subset of the tests, 1/4 for running the first 25%,"
+                 "3/5 means run the 3rd fifth of the total.")
     parser.add_argument("-y", "--dry-run", action="store_true",
             help="Create the filtered list of test cases, but don't actually "
                  "run them. Useful if you're just interested in "
@@ -1917,6 +1922,22 @@ def main():
         for i, reason in discards.items():
             debug("{:<25} {:<50} {}SKIPPED{}: {}".format(i.platform.name,
                   i.test.name, COLOR_YELLOW, COLOR_NORMAL, reason))
+
+    ts.instancets = OrderedDict(sorted(ts.instances.items(), key=lambda t: t[0]))
+
+    if args.subset:
+        subset, sets = args.subset.split("/")
+        print("%s from %s" %(subset,sets))
+        total = len(ts.instancets)
+        per_set = round(total / int(sets))
+        start = (int(subset) - 1 ) * per_set
+        if subset == sets:
+            end = total
+        else:
+            end = start + per_set
+
+        sliced_instances = islice(ts.instancets.items(),start, end)
+        ts.instances = OrderedDict(sliced_instances)
 
     info("%d tests selected, %d tests discarded due to filters" %
          (len(ts.instances), len(discards)))
