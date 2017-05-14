@@ -10,9 +10,15 @@ env:
         - ZEPHYR_SDK_INSTALL_DIR=/opt/sdk/zephyr-sdk-0.9
         - ZEPHYR_GCC_VARIANT=zephyr
         - USE_CCACHE=1
+        - MATRIX="6"
+        - COVERAGE="--all --enable-slow"
     matrix:
-        - ARCH="-a x86 -a riscv32" RUN_COMPLIANCE="1"
-        - ARCH="-a arm -a arc -a nios2"
+        - MATRIX_BUILD="1"
+        - MATRIX_BUILD="2"
+        - MATRIX_BUILD="3"
+        - MATRIX_BUILD="4"
+        - MATRIX_BUILD="5"
+        - MATRIX_BUILD="6"
 
 build:
     cache: true
@@ -68,7 +74,6 @@ build:
           fi;
       - >
           if [ "$JOB_TRIGGERED_BY_NAME" = "code-scan" ]; then
-            echo "- Building basic sanitycheck";
             wget https://scan.coverity.com/download/linux64 --post-data "token=${COVERITY_TOKEN}&project=Zephyr" -O coverity_tool.tgz;
             tar xvf coverity_tool.tgz;
             rm -f coverity_tool.tgz;
@@ -77,7 +82,7 @@ build:
           fi;
       - >
           if [ "$JOB_TRIGGERED_BY_NAME" != "code-scan" ]; then
-            ./scripts/sanitycheck ${PLATFORMS} ${ARCH} ${COVERAGE} ${SANITYCHECK_OPTIONS} || ./scripts/sanitycheck ${PLATFORMS} ${ARCH} ${COVERAGE} ${SANITYCHECK_OPTIONS_RETRY};
+            ./scripts/sanitycheck ${PLATFORMS} --subset ${MATRIX_BUILD}/${MATRIX} ${COVERAGE} ${SANITYCHECK_OPTIONS} || ./scripts/sanitycheck ${PLATFORMS} ${COVERAGE} ${SANITYCHECK_OPTIONS_RETRY};
           fi
       - ccache -s
     on_success:
