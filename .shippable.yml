@@ -5,7 +5,7 @@ compiler: gcc
 env:
     global:
         - SDK=0.9
-        - SANITYCHECK_OPTIONS=" --inline-logs"
+        - SANITYCHECK_OPTIONS=" --inline-logs -R"
         - SANITYCHECK_OPTIONS_RETRY=" --inline-logs --only-failed --outdir=out-2nd-pass"
         - ZEPHYR_SDK_INSTALL_DIR=/opt/sdk/zephyr-sdk-0.9
         - ZEPHYR_GCC_VARIANT=zephyr
@@ -78,6 +78,7 @@ build:
       - >
           if [ "$JOB_TRIGGERED_BY_NAME" != "code-scan" ]; then
             ./scripts/sanitycheck ${PLATFORMS} ${ARCH} ${COVERAGE} ${SANITYCHECK_OPTIONS} || ./scripts/sanitycheck ${PLATFORMS} ${ARCH} ${COVERAGE} ${SANITYCHECK_OPTIONS_RETRY};
+            ./scripts/sanitycheck -l -b -s samples/hello_world/test || ./scripts/sanitycheck ${SANITYCHECK_OPTIONS_RETRY} -l -b -s samples/hello_world/test
           fi
       - ccache -s
     on_success:

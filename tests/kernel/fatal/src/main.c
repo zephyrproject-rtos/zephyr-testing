@@ -13,6 +13,7 @@
 #define PRIORITY 5
 
 static char __noinit __stack alt_stack[STACKSIZE];
+static struct k_thread alt_thread;
 volatile int rv;
 
 void alt_thread1(void)
@@ -21,8 +22,10 @@ void alt_thread1(void)
 	__asm__ volatile ("ud2");
 #elif defined(CONFIG_NIOS2)
 	__asm__ volatile ("trap");
+#elif defined(CONFIG_ARC)
+	__asm__ volatile ("swi");
 #else
-	/* Triggers usage fault on ARM, illegal instruction on RISCV32, ARC,
+	/* Triggers usage fault on ARM, illegal instruction on RISCV32
 	 * and xtensa
 	 */
 	{
@@ -48,9 +51,10 @@ void main(void)
 	TC_START("test_fatal");
 
 	printk("test alt thread 1: generic CPU exception\n");
-	k_thread_spawn(alt_stack, STACKSIZE, (k_thread_entry_t)alt_thread1,
-		       NULL, NULL, NULL, K_PRIO_PREEMPT(PRIORITY), 0,
-		       K_NO_WAIT);
+	k_thread_create(&alt_thread, alt_stack, STACKSIZE,
+			(k_thread_entry_t)alt_thread1,
+			NULL, NULL, NULL, K_PRIO_PREEMPT(PRIORITY), 0,
+			K_NO_WAIT);
 	if (rv == TC_FAIL) {
 		printk("thread was not aborted\n");
 		goto out;
@@ -59,9 +63,10 @@ void main(void)
 	}
 
 	printk("test alt thread 2: initiate kernel oops\n");
-	k_thread_spawn(alt_stack, STACKSIZE, (k_thread_entry_t)alt_thread2,
-		       NULL, NULL, NULL, K_PRIO_PREEMPT(PRIORITY), 0,
-		       K_NO_WAIT);
+	k_thread_create(&alt_thread, alt_stack, STACKSIZE,
+			(k_thread_entry_t)alt_thread2,
+			NULL, NULL, NULL, K_PRIO_PREEMPT(PRIORITY), 0,
+			K_NO_WAIT);
 	if (rv == TC_FAIL) {
 		printk("thread was not aborted\n");
 		goto out;
