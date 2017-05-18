@@ -48,6 +48,7 @@ build:
             export COMMIT_RANGE=origin/${PULL_REQUEST_BASE_BRANCH}..${COMMIT}
             sphinx-build --version
             pip show docutils sphinx breathe sphinx_rtd_theme junit2html
+            sudo pip install docutils==0.12
             echo "Building a Pull Request";
             echo "- Building Documentation";
             echo "Commit range:" ${COMMIT_RANGE}
