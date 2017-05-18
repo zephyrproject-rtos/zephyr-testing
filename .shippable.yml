@@ -46,6 +46,8 @@ build:
       - >
           if [ "$MATRIX_BUILD" = "1" -a "$IS_PULL_REQUEST" = "true" ]; then
             export COMMIT_RANGE=origin/${PULL_REQUEST_BASE_BRANCH}..${COMMIT}
+            sphinx-build --version
+            pip show docutils sphinx breathe sphinx_rtd_theme junit2html
             echo "Building a Pull Request";
             echo "- Building Documentation";
             echo "Commit range:" ${COMMIT_RANGE}
