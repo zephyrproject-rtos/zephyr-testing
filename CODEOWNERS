@@ -2,4 +2,4 @@
 
 # Get all docs reviewed by David
 doc/	david.b.kinder@intel.com
-*.rst/	@dbkinder
+*.rst	@dbkinder
