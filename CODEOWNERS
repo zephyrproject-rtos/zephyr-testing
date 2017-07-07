@@ -1,4 +1,5 @@
 # CODEOWNERS for autoreview assigning in github
 
 # Get all docs reviewed by David
-*.rst doc/	david.b.kinder@intel.com
+doc/	david.b.kinder@intel.com
+*.rst/	@dbkinder
