@@ -1,0 +1,38 @@
+# You *must* specify "version: 2"
+version: 2
+
+requirements:
+  signed_off_by:
+    required: true
+
+always_pending:
+  title_regex: '(WIP|wip)'
+  labels:
+    - wip
+  explanation: 'This PR is a work in progress...'
+
+# Group settings to apply to all groups by default, optionally being overridden later
+group_defaults:
+  approve_by_comment:
+    enabled: true
+    approve_regex: '^:\+1:'
+  reset_on_push:
+    enabled: true
+
+groups:
+  docs-team:
+    required: 1
+    users:
+      - nashif
+
+    conditions:
+      branches:
+        - master
+    files:
+      include:
+        - "*.md"
+        - "*.rst"
+        - "docs/*"
+      exclude:
+        - 'README.rst'
+
