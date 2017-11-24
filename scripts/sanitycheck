@@ -309,6 +309,55 @@ class Handler:
         self.lock.release()
         return ret
 
+class NativeHandler(Handler):
+    def __init__(self, name, sourcedir, outdir, run_log, valgrind_log, timeout):
+        """Constructor
+
+        @param name Arbitrary name of the created thread
+        @param outdir Working directory containing the test binary
+        @param run_log Absolute path to runtime logs
+        @param valgrind Absolute path to valgrind's log
+        @param timeout Kill the QEMU process if it doesn't finish up within
+            the given number of seconds
+        """
+        super().__init__(name, outdir, run_log, timeout, True)
+
+        self.timeout = timeout
+        self.sourcedir = sourcedir
+        self.outdir = outdir
+        self.run_log = run_log
+        self.valgrind = False
+        self.valgrind_log = valgrind_log
+        self.returncode = 0
+        self.set_state("running", {})
+
+    def handle(self):
+        out_state = "failed"
+
+        with open(self.run_log, "wt") as rl, open(self.valgrind_log, "wt") as vl:
+            try:
+                binary = os.path.join(self.outdir, "zephyr", "zephyr.exe")
+                command = [binary]
+                if shutil.which("valgrind") and self.valgrind:
+                    command = ["valgrind", "--error-exitcode=2",
+                               "--leak-check=full"] + command
+                returncode = subprocess.call(command, timeout=self.timeout,
+                                             stdout=rl, stderr=vl)
+                self.returncode = returncode
+                if returncode != 0:
+                    if self.returncode == 1:
+                        out_state = "failed"
+                    else:
+                        out_state = "failed valgrind"
+                else:
+                    out_state = "passed"
+            except subprocess.TimeoutExpired:
+                out_state = "timeout"
+                self.returncode = 1
+
+        returncode = subprocess.call(["GCOV_PREFIX=" + self.outdir, "gcov", self.sourcedir, "-s", self.outdir], shell=True)
+
+        self.set_state(out_state, {})
 
 class UnitHandler(Handler):
     def __init__(self, name, sourcedir, outdir,
@@ -857,6 +906,20 @@ class MakeGenerator:
         self.goals[name] = MakeGoal(name, text, unit_handler, self.logfile, build_logfile,
                                     run_logfile, valgrind_logfile)
 
+    def add_native_goal(self, name, directory, outdir, args, timeout=30, coverage=False):
+        self._add_goal(outdir)
+        build_logfile = os.path.join(outdir, "build.log")
+        run_logfile = os.path.join(outdir, "run.log")
+        valgrind_logfile = os.path.join(outdir, "valgrind.log")
+
+        # we handle running in the NativeHandler class
+        text = (self._get_rule_header(name) +
+                self._get_sub_make(name, "building", directory,
+                                   outdir, build_logfile, args) +
+                self._get_rule_footer(name))
+        q = NativeHandler(name, directory, outdir, run_logfile, valgrind_logfile, timeout)
+        self.goals[name] = MakeGoal(name, text, q, self.logfile, build_logfile,
+                                    run_logfile, valgrind_logfile)
 
     def add_test_instance(self, ti, build_only=False, enable_slow=False, coverage=False,
                           extra_args=[]):
@@ -878,6 +941,9 @@ class MakeGenerator:
                                args, ti.test.timeout)
         elif ti.test.type == "unit":
             self.add_unit_goal(ti.name, ti.test.code_location, ti.outdir,
+                               args, ti.test.timeout, coverage)
+        elif ti.platform.type == "native":
+            self.add_native_goal(ti.name, ti.test.code_location, ti.outdir,
                                args, ti.test.timeout, coverage)
         else:
             self.add_build_goal(ti.name, ti.test.code_location, ti.outdir,
@@ -972,33 +1038,29 @@ class MakeGenerator:
 
 # XXX Be sure to update __doc__ if you change any of this!!
 
-arch_valid_keys = {"name": {"type": "str", "required": True},
-                   "platforms": {"type": "list", "required": True},
-                   "supported_toolchains": {"type": "list", "required": True}}
+platform_valid_keys = {"qemu_support" : {"type" : "bool", "default" : False},
+                       "supported_toolchains" : {"type" : "list", "default" : []}}
 
-platform_valid_keys = {"qemu_support": {"type": "bool", "default": False},
-                       "supported_toolchains": {"type": "list", "default": []}}
-
-testcase_valid_keys = {"tags": {"type": "set", "required": False},
-                       "type": {"type": "str", "default": "integration"},
-                       "extra_args": {"type": "list"},
-                       "extra_configs": {"type": "list"},
-                       "build_only": {"type": "bool", "default": False},
-                       "build_on_all": {"type": "bool", "default": False},
-                       "skip": {"type": "bool", "default": False},
-                       "slow": {"type": "bool", "default": False},
-                       "timeout": {"type": "int", "default": 60},
-                       "min_ram": {"type": "int", "default": 8},
-                       "depends_on": {"type": "set"},
-                       "min_flash": {"type": "int", "default": 32},
-                       "arch_whitelist": {"type": "set"},
-                       "arch_exclude": {"type": "set"},
-                       "extra_sections": {"type": "list", "default": []},
-                       "platform_exclude": {"type": "set"},
-                       "platform_whitelist": {"type": "set"},
-                       "toolchain_exclude": {"type": "set"},
-                       "toolchain_whitelist": {"type": "set"},
-                       "filter": {"type": "str"}}
+testcase_valid_keys = {"tags" : {"type" : "set", "required" : False},
+                       "type" : {"type" : "str", "default": "integration"},
+                       "extra_args" : {"type" : "list"},
+                       "extra_configs" : {"type" : "list"},
+                       "build_only" : {"type" : "bool", "default" : False},
+                       "build_on_all" : {"type" : "bool", "default" : False},
+                       "skip" : {"type" : "bool", "default" : False},
+                       "slow" : {"type" : "bool", "default" : False},
+                       "timeout" : {"type" : "int", "default" : 60},
+                       "min_ram" : {"type" : "int", "default" : 8},
+                       "depends_on": {"type" : "set"},
+                       "min_flash" : {"type" : "int", "default" : 32},
+                       "arch_whitelist" : {"type" : "set"},
+                       "arch_exclude" : {"type" : "set"},
+                       "extra_sections" : {"type" : "list", "default" : []},
+                       "platform_exclude" : {"type" : "set"},
+                       "platform_whitelist" : {"type" : "set"},
+                       "toolchain_exclude" : {"type" : "set"},
+                       "toolchain_whitelist" : {"type" : "set"},
+                       "filter" : {"type" : "str"}}
 
 
 class SanityConfigParser:
@@ -1159,6 +1221,7 @@ class Platform:
 
         self.qemu_support = True if data.get('type', "na") == 'qemu' else False
         self.arch = data['arch']
+        self.type = data.get('type', "na")
         self.supported_toolchains = data.get("toolchain", [])
         self.defconfig = None
         pass
