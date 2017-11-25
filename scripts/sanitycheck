@@ -917,8 +917,8 @@ class MakeGenerator:
                 self._get_sub_make(name, "building", directory,
                                    outdir, build_logfile, args) +
                 self._get_rule_footer(name))
-        q = NativeHandler(name, directory, outdir, run_logfile, valgrind_logfile, timeout)
-        self.goals[name] = MakeGoal(name, text, q, self.logfile, build_logfile,
+        native_handler = NativeHandler(name, directory, outdir, run_logfile, valgrind_logfile, timeout)
+        self.goals[name] = MakeGoal(name, text, native_handler, self.logfile, build_logfile,
                                     run_logfile, valgrind_logfile)
 
     def add_test_instance(self, ti, build_only=False, enable_slow=False, coverage=False,
