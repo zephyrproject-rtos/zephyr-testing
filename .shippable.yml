@@ -70,6 +70,7 @@ build:
     on_failure:
       - mkdir -p shippable/testresults
       - mkdir -p shippable/codecoverage
+      - source zephyr-env.sh
       - gcovr -r ${ZEPHYR_BASE} -x > shippable/codecoverage/coverage.xml
       - rm -rf sanity-out out-2nd-pass
       - >
@@ -83,6 +84,7 @@ build:
     on_success:
       - mkdir -p shippable/testresults
       - mkdir -p shippable/codecoverage
+      - source zephyr-env.sh
       - gcovr -r ${ZEPHYR_BASE} -x > shippable/codecoverage/coverage.xml
       - rm -rf sanity-out out-2nd-pass
       - >
