@@ -52,6 +52,13 @@
 #define ERPREFIX   PREFIX"error on "
 #define NO_MEM_ERR PREFIX"Can't allocate memory\n"
 
+#if POSIX_ARCH_DEBUG_PRINTS
+#define PC_DEBUG(fmt, ...) ps_print_trace(PREFIX fmt, __VA_ARGS__)
+#else
+#define PC_DEBUG(...)
+#endif
+
+
 #define PC_ALLOC_CHUNK_SIZE 64
 #define PC_REUSE_ABORTED_ENTRIES 0
 /* tests/kernel/threads/scheduling/schedule_api fails when setting
@@ -59,14 +66,14 @@
  */
 
 static int pc_threads_table_size;
-typedef struct {
-	enum {NotUsed = 0, Used, Aborting, Aborted, Failed} state;
+struct pc_threads_table_el {
+	enum {NOTUSED = 0, USED, ABORTING, ABORTED, FAILED} state;
 	bool running;     /*is this the currently running thread*/
 	pthread_t thread; /*actual pthread_t as returned by native kernel*/
 	int thead_cnt; /*for debugging. Unique, consecutive, thread number*/
-} pc_threads_table_t;
+};
 
-static pc_threads_table_t *pc_threads_table;
+static struct pc_threads_table_el *pc_threads_table;
 
 static int thread_create_count; /*For debugging. Thread creation counter*/
 
@@ -91,16 +98,13 @@ static void pc_preexit_cleanup(void);
  */
 static void pc_abort_tail(int this_th_nbr)
 {
-	if (POSIX_ARCH_DEBUG_PRINTS) {
-		ps_print_trace(
-			PREFIX
-			"Thread [%i] %i: %s: Aborting (exiting) (rel mut)\n",
-			pc_threads_table[this_th_nbr].thead_cnt,
-			this_th_nbr,
-			__func__);
-	}
+	PC_DEBUG("Thread [%i] %i: %s: Aborting (exiting) (rel mut)\n",
+		pc_threads_table[this_th_nbr].thead_cnt,
+		this_th_nbr,
+		__func__);
+
 	pc_threads_table[this_th_nbr].running = false;
-	pc_threads_table[this_th_nbr].state = Aborted;
+	pc_threads_table[this_th_nbr].state = ABORTED;
 	pc_preexit_cleanup();
 	pthread_exit(NULL);
 }
@@ -118,32 +122,26 @@ static void pc_wait_until_allowed(int this_th_nbr)
 {
 	pc_threads_table[this_th_nbr].running = false;
 
-	if (POSIX_ARCH_DEBUG_PRINTS) {
-		ps_print_trace(PREFIX"Thread [%i] %i: %s: Waiting to be allowed"
-				" to run (rel mut)\n",
-				pc_threads_table[this_th_nbr].thead_cnt,
-				this_th_nbr,
-				__func__);
-	}
+	PC_DEBUG("Thread [%i] %i: %s: Waiting to be allowed to run (rel mut)\n",
+		pc_threads_table[this_th_nbr].thead_cnt,
+		this_th_nbr,
+		__func__);
 
 	while (this_th_nbr != pc_currently_allowed_thread) {
 		pthread_cond_wait(&pc_cond_threads, &pc_mtx_threads);
 
 		if (pc_threads_table &&
-		    (pc_threads_table[this_th_nbr].state == Aborting)) {
+		    (pc_threads_table[this_th_nbr].state == ABORTING)) {
 			pc_abort_tail(this_th_nbr);
 		}
 	}
 
 	pc_threads_table[this_th_nbr].running = true;
 
-	if (POSIX_ARCH_DEBUG_PRINTS) {
-		ps_print_trace(PREFIX"Thread [%i] %i: %s(): I'm allowed to run!"
-				" (hav mut)\n",
-				pc_threads_table[this_th_nbr].thead_cnt,
-				this_th_nbr,
-				__func__);
-	}
+	PC_DEBUG("Thread [%i] %i: %s(): I'm allowed to run! (hav mut)\n",
+		pc_threads_table[this_th_nbr].thead_cnt,
+		this_th_nbr,
+		__func__);
 }
 
 
@@ -153,12 +151,11 @@ static void pc_wait_until_allowed(int this_th_nbr)
  */
 static void pc_let_run(int next_allowed_th)
 {
-	if (POSIX_ARCH_DEBUG_PRINTS) {
-		ps_print_trace(PREFIX"%s: We let thread [%i] %i run\n",
-				__func__,
-				pc_threads_table[next_allowed_th].thead_cnt,
-				next_allowed_th);
-	}
+	PC_DEBUG("%s: We let thread [%i] %i run\n",
+		__func__,
+		pc_threads_table[next_allowed_th].thead_cnt,
+		next_allowed_th);
+
 
 	pc_currently_allowed_thread = next_allowed_th;
 
@@ -197,14 +194,11 @@ void pc_swap(int next_allowed_thread_nbr, int this_th_nbr)
 {
 	pc_let_run(next_allowed_thread_nbr);
 
-	if (pc_threads_table[this_th_nbr].state == Aborting) {
-		if (POSIX_ARCH_DEBUG_PRINTS) {
-			ps_print_trace(PREFIX
-					"Thread [%i] %i: %s: Aborting curr.\n",
-					pc_threads_table[this_th_nbr].thead_cnt,
-					this_th_nbr,
-					__func__);
-		}
+	if (pc_threads_table[this_th_nbr].state == ABORTING) {
+		PC_DEBUG("Thread [%i] %i: %s: Aborting curr.\n",
+			pc_threads_table[this_th_nbr].thead_cnt,
+			this_th_nbr,
+			__func__);
 		pc_abort_tail(this_th_nbr);
 	} else {
 		pc_wait_until_allowed(this_th_nbr);
@@ -224,10 +218,8 @@ void pc_swap(int next_allowed_thread_nbr, int this_th_nbr)
 void pc_main_thread_start(int next_allowed_thread_nbr)
 {
 	pc_let_run(next_allowed_thread_nbr);
-	if (POSIX_ARCH_DEBUG_PRINTS) {
-		ps_print_trace(PREFIX"%s: Init thread dying now (rel mut)\n",
-				__func__);
-	}
+	PC_DEBUG("%s: Init thread dying now (rel mut)\n",
+		__func__);
 	pc_preexit_cleanup();
 	pthread_exit(NULL);
 }
@@ -235,7 +227,7 @@ void pc_main_thread_start(int next_allowed_thread_nbr)
 /**
  * Handler called when any thread is cancelled or exits
  */
-static void pc_cleanupHandler(void *arg)
+static void pc_cleanup_handler(void *arg)
 {
 	/*
 	 * If we are not terminating, this is just an aborted thread,
@@ -248,14 +240,14 @@ static void pc_cleanupHandler(void *arg)
 		return;
 	}
 
+#if POSIX_ARCH_DEBUG_PRINTS
 	posix_thread_status_t *ptr = (posix_thread_status_t *) arg;
 
-	if (POSIX_ARCH_DEBUG_PRINTS) {
-		ps_print_trace(PREFIX
-			"Thread %i: %s: Canceling (rel mut)\n",
-			ptr->thread_idx,
-			__func__);
-	}
+	PC_DEBUG("Thread %i: %s: Canceling (rel mut)\n",
+		ptr->thread_idx,
+		__func__);
+#endif
+
 
 	if (pthread_mutex_unlock(&pc_mtx_threads)) {
 		ps_print_error_and_exit(ERPREFIX"pthread_mutex_unlock()\n");
@@ -275,12 +267,11 @@ static void *pc_thread_starter(void *arg)
 {
 	posix_thread_status_t *ptr = (posix_thread_status_t *) arg;
 
-	if (POSIX_ARCH_DEBUG_PRINTS) {
-		ps_print_trace(PREFIX"Thread [%i] %i: %s: Starting\n",
-				pc_threads_table[ptr->thread_idx].thead_cnt,
-				ptr->thread_idx,
-				__func__);
-	}
+	PC_DEBUG("Thread [%i] %i: %s: Starting\n",
+		pc_threads_table[ptr->thread_idx].thead_cnt,
+		ptr->thread_idx,
+		__func__);
+
 	/*
 	 * We block until all other running threads reach the while loop
 	 * in pc_wait_until_allowed() and they release the mutex
@@ -288,16 +279,13 @@ static void *pc_thread_starter(void *arg)
 	if (pthread_mutex_lock(&pc_mtx_threads)) {
 		ps_print_error_and_exit(ERPREFIX"pthread_mutex_lock()\n");
 	}
-	if (POSIX_ARCH_DEBUG_PRINTS) {
-		ps_print_trace(PREFIX
-				"Thread [%i] %i: %s: After start mutex "
-				"(hav mut)\n",
-				pc_threads_table[ptr->thread_idx].thead_cnt,
-				ptr->thread_idx,
-				__func__);
-	}
+	PC_DEBUG("Thread [%i] %i: %s: After start mutex (hav mut)\n",
+		pc_threads_table[ptr->thread_idx].thead_cnt,
+		ptr->thread_idx,
+		__func__);
 
-	pthread_cleanup_push(pc_cleanupHandler, arg);
+
+	pthread_cleanup_push(pc_cleanup_handler, arg);
 
 	/*
 	 * The thread would try to execute immediately, so we block it
@@ -320,7 +308,7 @@ static void *pc_thread_starter(void *arg)
 
 
 	pc_threads_table[ptr->thread_idx].running = false;
-	pc_threads_table[ptr->thread_idx].state = Failed;
+	pc_threads_table[ptr->thread_idx].state = FAILED;
 
 	pthread_cleanup_pop(1);
 
@@ -334,9 +322,9 @@ static int pc_ttable_get_empty_slot(void)
 {
 
 	for (int i = 0; i < pc_threads_table_size; i++) {
-		if ((pc_threads_table[i].state == NotUsed)
+		if ((pc_threads_table[i].state == NOTUSED)
 			|| (PC_REUSE_ABORTED_ENTRIES
-			&& (pc_threads_table[i].state == Aborted))) {
+			&& (pc_threads_table[i].state == ABORTED))) {
 			return i;
 		}
 	}
@@ -348,7 +336,7 @@ static int pc_ttable_get_empty_slot(void)
 
 	pc_threads_table = realloc(pc_threads_table,
 				(pc_threads_table_size + PC_ALLOC_CHUNK_SIZE)
-				* sizeof(pc_threads_table_t));
+				* sizeof(struct pc_threads_table_el));
 	if (pc_threads_table == NULL) {
 		ps_print_error_and_exit(NO_MEM_ERR);
 	}
@@ -356,7 +344,7 @@ static int pc_ttable_get_empty_slot(void)
 	/*Clear new piece of table*/
 	memset(&pc_threads_table[pc_threads_table_size],
 		0,
-		PC_ALLOC_CHUNK_SIZE * sizeof(pc_threads_table_t));
+		PC_ALLOC_CHUNK_SIZE * sizeof(struct pc_threads_table_el));
 
 	pc_threads_table_size += PC_ALLOC_CHUNK_SIZE;
 
@@ -375,7 +363,7 @@ void pc_new_thread(posix_thread_status_t *ptr)
 	int t_slot;
 
 	t_slot = pc_ttable_get_empty_slot();
-	pc_threads_table[t_slot].state = Used;
+	pc_threads_table[t_slot].state = USED;
 	pc_threads_table[t_slot].running = false;
 	pc_threads_table[t_slot].thead_cnt = thread_create_count++;
 	ptr->thread_idx = t_slot;
@@ -388,12 +376,10 @@ void pc_new_thread(posix_thread_status_t *ptr)
 		ps_print_error_and_exit(ERPREFIX"pthread_create()\n");
 	}
 
-	if (POSIX_ARCH_DEBUG_PRINTS) {
-		ps_print_trace(PREFIX"created thread [%i] %i [%lu]\n",
-				pc_threads_table[t_slot].thead_cnt,
-				ptr->thread_idx,
-				pc_threads_table[t_slot].thread);
-	}
+	PC_DEBUG("created thread [%i] %i [%lu]\n",
+		pc_threads_table[t_slot].thead_cnt,
+		ptr->thread_idx,
+		pc_threads_table[t_slot].thread);
 
 }
 
@@ -408,7 +394,7 @@ void pc_init_multithreading(void)
 	pc_currently_allowed_thread = -1;
 
 	pc_threads_table = calloc(PC_ALLOC_CHUNK_SIZE,
-				sizeof(pc_threads_table_t));
+				sizeof(struct pc_threads_table_el));
 	if (pc_threads_table == NULL) {
 		ps_print_error_and_exit(NO_MEM_ERR);
 	}
@@ -445,7 +431,7 @@ void pc_clean_up(void)
 	pc_terminate = true;
 
 	for (int i = 0; i < pc_threads_table_size; i++) {
-		if (pc_threads_table[i].state != Used) {
+		if (pc_threads_table[i].state != USED) {
 			continue;
 		}
 
@@ -463,18 +449,16 @@ void pc_clean_up(void)
 
 void pc_abort_thread(int thread_idx)
 {
-	if (pc_threads_table[thread_idx].state != Used) {
+	if (pc_threads_table[thread_idx].state != USED) {
 		/*The thread may have been already aborted before*/
 		return;
 	}
 
-	if (POSIX_ARCH_DEBUG_PRINTS) {
-		ps_print_trace(PREFIX"Aborting not scheduled thread [%i] %i\n",
-				pc_threads_table[thread_idx].thead_cnt,
-				thread_idx);
-	}
+	PC_DEBUG("Aborting not scheduled thread [%i] %i\n",
+		pc_threads_table[thread_idx].thead_cnt,
+		thread_idx);
 
-	pc_threads_table[thread_idx].state = Aborting;
+	pc_threads_table[thread_idx].state = ABORTING;
 	/*
 	 * Note: the native thread will linger in RAM until it catches the
 	 * mutex or awakes on the condition.
@@ -518,35 +502,31 @@ void _impl_k_thread_abort(k_tid_t thread)
 				"should NOT have happened\n",
 				thread_idx);
 		}
-		pc_threads_table[thread_idx].state = Aborting;
-		if (POSIX_ARCH_DEBUG_PRINTS) {
-			ps_print_trace(PREFIX"Thread [%i] %i: %s Marked myself "
-					"as aborting\n",
-					pc_threads_table[thread_idx].thead_cnt,
-					thread_idx,
-					__func__);
-		}
+		pc_threads_table[thread_idx].state = ABORTING;
+		PC_DEBUG("Thread [%i] %i: %s Marked myself "
+			"as aborting\n",
+			pc_threads_table[thread_idx].thead_cnt,
+			thread_idx,
+			__func__);
+
 		_Swap(key);
 		CODE_UNREACHABLE;
 	}
 
 	if (pc_tstatus->aborted == 0) {
-		if (POSIX_ARCH_DEBUG_PRINTS) {
-			ps_print_trace(PREFIX"%s aborting now [%i] %i\n",
-					__func__,
-					pc_threads_table[thread_idx].thead_cnt,
-					thread_idx);
-		}
+		PC_DEBUG("%s aborting now [%i] %i\n",
+			__func__,
+			pc_threads_table[thread_idx].thead_cnt,
+			thread_idx);
+
 		pc_tstatus->aborted = 1;
 		pc_abort_thread(thread_idx);
 	} else {
-		if (POSIX_ARCH_DEBUG_PRINTS) {
-			ps_print_trace(PREFIX"%s ignoring re_abort of [%i] "
-					"%i\n",
-					__func__,
-					pc_threads_table[thread_idx].thead_cnt,
-					thread_idx);
-		}
+		PC_DEBUG("%s ignoring re_abort of [%i] "
+			"%i\n",
+			__func__,
+			pc_threads_table[thread_idx].thead_cnt,
+			thread_idx);
 	}
 
 	/* The abort handler might have altered the ready queue. */

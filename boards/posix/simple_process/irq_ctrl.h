@@ -36,7 +36,7 @@ void hw_irq_ctrl_raise_im(unsigned int irq);
 void hw_irq_ctrl_raise_im_from_sw(unsigned int irq);
 
 
-#define N_IRQs 32
+#define N_IRQS 32
 
 #ifdef __cplusplus
 }

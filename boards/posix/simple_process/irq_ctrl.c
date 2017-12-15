@@ -38,7 +38,7 @@ static uint64_t irq_mask;
 static bool irqs_locked;
 static bool lock_ignore; /*For the hard fake IRQ, temporarily ignore lock*/
 
-static uint8_t irq_prio[N_IRQs]; /*Priority of each interrupt*/
+static u8_t irq_prio[N_IRQS]; /*Priority of each interrupt*/
 /*note that prio = 0 == highest, prio=255 == lowest*/
 
 static int currently_running_prio = 256; /*255 is the lowest prio interrupt*/
@@ -50,7 +50,7 @@ void hw_irq_ctrl_init(void)
 	irqs_locked = false;
 	lock_ignore = false;
 
-	for (int i = 0 ; i < N_IRQs; i++) {
+	for (int i = 0 ; i < N_IRQS; i++) {
 		irq_prio[i] = 255;
 	}
 }
@@ -187,7 +187,7 @@ void hw_irq_ctrl_enable_irq(unsigned int irq)
 
 static inline void hw_irq_ctrl_irq_raise_prefix(unsigned int irq)
 {
-	if (irq < N_IRQs) {
+	if (irq < N_IRQS) {
 		irq_premask |= ((uint64_t)1<<irq);
 
 		if (irq_mask & (1 << irq)) {

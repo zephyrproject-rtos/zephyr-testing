@@ -20,15 +20,17 @@ static hwtime_t device_time; /*The actual time as known by the device*/
 static hwtime_t end_of_time = NEVER; /*When will this device stop*/
 
 /* List of HW model timers: */
-extern hwtime_t HWTimer_timer; /*When does the timer_model want to be called*/
+extern hwtime_t hw_timer_timer; /*When does the timer_model want to be called*/
 extern hwtime_t irq_ctrl_timer;
 
-typedef enum { HWTimer = 0, IRQCnt, Number_of_timers, None } timer_types_t;
-static hwtime_t *Timer_list[Number_of_timers] = {
-	&HWTimer_timer,
+static enum { HWTIMER = 0, IRQCNT, NUMBER_OF_TIMERS, NONE }
+	next_timer_index = NONE;
+
+static hwtime_t *Timer_list[NUMBER_OF_TIMERS] = {
+	&hw_timer_timer,
 	&irq_ctrl_timer
 };
-static timer_types_t next_timer_index = None;
+
 static hwtime_t next_timer_time;
 
 
@@ -37,8 +39,8 @@ static void hwm_sleep_until_next_timer(void)
 	if (next_timer_time >= device_time) {
 		device_time = next_timer_time;
 	} else {
-		ps_print_warning("next_timer_time corrupted (%"PRItime"<= %"
-				PRItime", Timertype=%i)\n",
+		ps_print_warning("next_timer_time corrupted (%"PRITIME"<= %"
+				PRITIME", timer idx=%i)\n",
 				next_timer_time,
 				device_time,
 				next_timer_index);
@@ -62,7 +64,7 @@ void hwm_find_next_timer(void)
 	next_timer_index = 0;
 	next_timer_time  = *Timer_list[0];
 
-	for (unsigned int i = 1; i < Number_of_timers ; i++) {
+	for (unsigned int i = 1; i < NUMBER_OF_TIMERS ; i++) {
 		if (next_timer_time > *Timer_list[i]) {
 			next_timer_index = i;
 			next_timer_time = *Timer_list[i];
@@ -80,10 +82,10 @@ void hwm_main_loop(void)
 		hwm_sleep_until_next_timer();
 
 		switch (next_timer_index) {
-		case HWTimer:
+		case HWTIMER:
 			hwtimer_timer_reached();
 			break;
-		case IRQCnt:
+		case IRQCNT:
 			hw_irq_ctrl_timer_triggered();
 			break;
 		default:

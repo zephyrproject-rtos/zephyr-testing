@@ -39,6 +39,12 @@
 #define PREFIX "POSIX SOC: "
 #define ERPREFIX PREFIX"error on "
 
+#if POSIX_ARCH_SOC_DEBUG_PRINTS
+#define PS_DEBUG(fmt, ...) ps_print_trace(PREFIX fmt, __VA_ARGS__)
+#else
+#define PS_DEBUG(...)
+#endif
+
 /*conditional variable to know if the CPU is running or halted/idling*/
 static pthread_cond_t  ps_cond_cpu  = PTHREAD_COND_INITIALIZER;
 /*mutex for the conditional variable posix_soc_cond_cpu*/
@@ -72,9 +78,8 @@ static void ps_change_cpu_state_and_wait(bool halted)
 		ps_print_error_and_exit(ERPREFIX"pthread_mutex_lock()\n");
 	}
 
-	if (POSIX_ARCH_SOC_DEBUG_PRINTS) {
-		ps_print_trace(PREFIX"Going to halted = %d\n", halted);
-	}
+	PS_DEBUG("Going to halted = %d\n", halted);
+
 	ps_cpu_halted = halted;
 
 	/* We let the other side know the CPU has changed state */
@@ -95,9 +100,7 @@ static void ps_change_cpu_state_and_wait(bool halted)
 		pthread_cond_wait(&ps_cond_cpu, &ps_mtx_cpu);
 	}
 
-	if (POSIX_ARCH_SOC_DEBUG_PRINTS) {
-		ps_print_trace(PREFIX"Awaken after halted = %d\n", halted);
-	}
+	PS_DEBUG("Awaken after halted = %d\n", halted);
 
 	if (pthread_mutex_unlock(&ps_mtx_cpu)) {
 		ps_print_error_and_exit(ERPREFIX"pthread_mutex_unlock()\n");
@@ -177,12 +180,12 @@ static void *zephyr_wrapper(void *a)
 		ps_print_error_and_exit(ERPREFIX"pthread_mutex_unlock()\n");
 	}
 
-	if (POSIX_ARCH_SOC_DEBUG_PRINTS) {
+#if (POSIX_ARCH_SOC_DEBUG_PRINTS)
 		pthread_t zephyr_thread = pthread_self();
 
-		ps_print_trace(PREFIX"Zephyr init started (%lu)\n",
+		PS_DEBUG("Zephyr init started (%lu)\n",
 			zephyr_thread);
-	}
+#endif
 
 	/*Start Zephyr:*/
 	_Cstart();

@@ -47,7 +47,7 @@ unsigned int __swap(unsigned int key)
  */
 	_kernel.current->callee_saved.key = key;
 	_kernel.current->callee_saved.retval = -EAGAIN;
-	/*retval may be modified with a call to _set_thread_return_value()*/
+	/* retval may be modified with a call to _set_thread_return_value() */
 
 #if CONFIG_KERNEL_EVENT_LOGGER_CONTEXT_SWITCH
 	_sys_k_event_logger_context_switch();
@@ -69,11 +69,10 @@ unsigned int __swap(unsigned int key)
 	 * to run. In this arch case, we just block this thread until allowed to
 	 * run later, and signal to whomever is allowed to run to continue.
 	 */
-	{
-		pc_swap(ready_thread_ptr->thread_idx,
-			this_thread_ptr->thread_idx);
-	}
-	/*when we continue, _kernel->current points back to this thread*/
+	pc_swap(ready_thread_ptr->thread_idx,
+		this_thread_ptr->thread_idx);
+
+	/* When we continue, _kernel->current points back to this thread */
 
 	irq_unlock(_kernel.current->callee_saved.key);
 

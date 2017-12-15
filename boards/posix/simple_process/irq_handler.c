@@ -22,7 +22,7 @@ typedef void (*normal_irq_f_ptr)(void *);
 typedef int (*direct_irq_f_ptr)(void);
 
 typedef struct _isr_list isr_table_entry_t;
-static isr_table_entry_t irq_vector_table[N_IRQs] = { { 0 } };
+static isr_table_entry_t irq_vector_table[N_IRQS] = { { 0 } };
 
 static int currently_running_irq = -1;
 

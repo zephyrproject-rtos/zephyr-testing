@@ -20,10 +20,10 @@
 #include "misc/util.h"
 
 
-hwtime_t HWTimer_timer;
+hwtime_t hw_timer_timer;
 
-hwtime_t HWTimer_tick_timer;
-hwtime_t HWTimer_awake_timer;
+hwtime_t hw_timer_tick_timer;
+hwtime_t hw_timer_awake_timer;
 
 static hwtime_t tick_p = 10000; /*period of the ticker*/
 static unsigned int silent_ticks;
@@ -37,15 +37,15 @@ static struct timespec tv;
 
 static void hwtimer_update_timer(void)
 {
-	HWTimer_timer = min(HWTimer_tick_timer, HWTimer_awake_timer);
+	hw_timer_timer = min(hw_timer_tick_timer, hw_timer_awake_timer);
 }
 
 
 void hwtimer_init(void)
 {
 	silent_ticks = 0;
-	HWTimer_tick_timer = tick_p;
-	HWTimer_awake_timer = NEVER;
+	hw_timer_tick_timer = tick_p;
+	hw_timer_awake_timer = NEVER;
 	hwtimer_update_timer();
 #if (CONFIG_SIMPLE_PROCESS_SLOWDOWN_TO_REAL_TIME)
 	clock_gettime(CLOCK_MONOTONIC, &tv);
@@ -62,7 +62,7 @@ void hwtimer_cleanup(void)
 static void hwtimer_tick_timer_reached(void)
 {
 #if (CONFIG_SIMPLE_PROCESS_SLOWDOWN_TO_REAL_TIME)
-	hwtime_t expected_realtime = Boot_time + HWTimer_tick_timer;
+	hwtime_t expected_realtime = Boot_time + hw_timer_tick_timer;
 
 	clock_gettime(CLOCK_MONOTONIC, &tv);
 	hwtime_t actual_real_time = tv.tv_sec*1e6 + tv.tv_nsec/1000;
@@ -84,7 +84,7 @@ static void hwtimer_tick_timer_reached(void)
 	}
 #endif
 
-	HWTimer_tick_timer += tick_p;
+	hw_timer_tick_timer += tick_p;
 	hwtimer_update_timer();
 
 	if (silent_ticks > 0) {
@@ -97,20 +97,20 @@ static void hwtimer_tick_timer_reached(void)
 
 static void hwtimer_awake_timer_reached(void)
 {
-	HWTimer_awake_timer = NEVER;
+	hw_timer_awake_timer = NEVER;
 	hwtimer_update_timer();
 	hw_irq_ctrl_set_irq(PHONY_HARD_IRQ);
 }
 
 void hwtimer_timer_reached(void)
 {
-	hwtime_t Now = HWTimer_timer;
+	hwtime_t Now = hw_timer_timer;
 
-	if (HWTimer_awake_timer == Now) {
+	if (hw_timer_awake_timer == Now) {
 		hwtimer_awake_timer_reached();
 	}
 
-	if (HWTimer_tick_timer == Now) {
+	if (hw_timer_tick_timer == Now) {
 		hwtimer_tick_timer_reached();
 	}
 }
@@ -126,8 +126,8 @@ void hwtimer_timer_reached(void)
  */
 void hwtimer_wake_in_time(hwtime_t time)
 {
-	if (HWTimer_awake_timer > time) {
-		HWTimer_awake_timer = time;
+	if (hw_timer_awake_timer > time) {
+		hw_timer_awake_timer = time;
 		hwtimer_update_timer();
 	}
 }

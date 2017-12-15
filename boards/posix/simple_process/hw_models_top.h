@@ -16,7 +16,7 @@ extern "C" {
 
 typedef uint64_t hwtime_t;
 #define NEVER UINT64_MAX
-#define PRItime PRIu64
+#define PRITIME PRIu64
 
 void hwm_main_loop(void);
 void hwm_init(void);
