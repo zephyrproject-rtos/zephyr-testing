@@ -5,17 +5,12 @@ compiler: gcc
 env:
     global:
         - SDK=0.9.2
-        - SANITYCHECK_OPTIONS="--inline-logs -R"
+        - SANITYCHECK_OPTIONS="-p simple_process --inline-logs -R"
         - SANITYCHECK_OPTIONS_RETRY="${SANITYCHECK_OPTIONS} --only-failed --outdir=out-2nd-pass"
         - ZEPHYR_SDK_INSTALL_DIR=/opt/sdk/zephyr-sdk-0.9.2
         - ZEPHYR_GCC_VARIANT=zephyr
         - MATRIX_BUILDS="4"
         - MATRIX_BUILDS_EXTRA="4"
-    matrix:
-        - MATRIX_BUILD="1"
-        - MATRIX_BUILD="2"
-        - MATRIX_BUILD="3"
-        - MATRIX_BUILD="4"
 
 build:
     cache: true
@@ -63,15 +58,15 @@ build:
             fi;
             rm -f modified_tests.args modified_boards.args;
           fi;
-      - ./scripts/sanitycheck ${SANITYCHECK_OPTIONS} --save-tests test_file.txt
-      - ./scripts/sanitycheck  --load-tests test_file.txt --subset ${MATRIX_BUILD}/${MATRIX_BUILDS} || ./scripts/sanitycheck ${SANITYCHECK_OPTIONS_RETRY} || ./scripts/sanitycheck ${SANITYCHECK_OPTIONS_RETRY}
-      - rm test_file.txt
+      - ./scripts/sanitycheck  ${SANITYCHECK_OPTIONS} || ./scripts/sanitycheck ${SANITYCHECK_OPTIONS_RETRY} || ./scripts/sanitycheck ${SANITYCHECK_OPTIONS_RETRY}
+      - rm -f test_file.txt
       - ccache -s
     on_failure:
       - mkdir -p shippable/testresults
       - mkdir -p shippable/codecoverage
       - source zephyr-env.sh
       - gcovr -r ${ZEPHYR_BASE} -x > shippable/codecoverage/coverage.xml
+      - bash <(curl -s https://codecov.io/bash)
       - rm -rf sanity-out out-2nd-pass
       - >
           if [ -e compliance.xml ]; then
@@ -86,6 +81,7 @@ build:
       - mkdir -p shippable/codecoverage
       - source zephyr-env.sh
       - gcovr -r ${ZEPHYR_BASE} -x > shippable/codecoverage/coverage.xml
+      - bash <(curl -s https://codecov.io/bash)
       - rm -rf sanity-out out-2nd-pass
       - >
           if [ -e compliance.xml ]; then
