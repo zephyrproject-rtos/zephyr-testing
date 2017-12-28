@@ -2,4 +2,3 @@ tests:
   test:
     tags: buf
     timeout: 5
-    type: unit
