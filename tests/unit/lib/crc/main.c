@@ -3,10 +3,8 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-
+#include <crc16.h>
 #include <ztest.h>
-
-#include <lib/crc/crc16_sw.c>
 
 void test_crc16(void)
 {
