@@ -23,9 +23,14 @@
 #include "hw_models_top.h"
 #include <stdlib.h>
 #include "misc/util.h"
+#include <signal.h>
+#include <unistd.h>
+#include <misc/printk.h>
+#include <logging/sys_log.h>
 
 #define STOP_AFTER_5_SECONDS 0
 
+void signal_handler(int signum);
 
 void main_clean_up(int exit_code)
 {
@@ -42,6 +47,7 @@ void main_clean_up(int exit_code)
 	exit(exit_code);
 }
 
+
 /**
  * This is the actual main for the Linux process,
  * the Zephyr application main is renamed something else thru a define.
@@ -55,7 +61,8 @@ void main_clean_up(int exit_code)
  */
 int main(void)
 {
-
+	signal(SIGINT, signal_handler);
+	signal(SIGTERM, signal_handler);
 	hwm_init();
 
 #if (STOP_AFTER_5_SECONDS)
@@ -67,5 +74,19 @@ int main(void)
 	hwm_main_loop();
 
 	return 0;
-
 }
+
+
+void signal_handler(int signum)
+{
+	switch (signum) {
+	case SIGINT:
+	case SIGTERM:
+		exit(EXIT_SUCCESS);
+		break;
+	default:
+		SYS_LOG_WRN("Unhandled signal %s", strsignal(signum));
+		break;
+	}
+}
+
