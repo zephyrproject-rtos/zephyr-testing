@@ -5,17 +5,15 @@ compiler: gcc
 env:
     global:
         - SDK=0.9.2
-        - SANITYCHECK_OPTIONS=" --inline-logs -R --coverage"
+        - SANITYCHECK_OPTIONS=" -p native_posix --inline-logs -R --coverage"
         - SANITYCHECK_OPTIONS_RETRY="${SANITYCHECK_OPTIONS} --only-failed --outdir=out-2nd-pass"
         - ZEPHYR_SDK_INSTALL_DIR=/opt/sdk/zephyr-sdk-0.9.2
         - ZEPHYR_GCC_VARIANT=zephyr
-        - MATRIX_BUILDS="4"
-        - MATRIX_BUILDS_EXTRA="4"
+        - MATRIX_BUILDS="2"
+        - MATRIX_BUILDS_EXTRA="2"
     matrix:
         - MATRIX_BUILD="1"
         - MATRIX_BUILD="2"
-        - MATRIX_BUILD="3"
-        - MATRIX_BUILD="4"
 
 build:
     cache: true
@@ -67,14 +65,15 @@ build:
       - ./scripts/sanitycheck ${SANITYCHECK_OPTIONS} --load-tests test_file.txt --subset ${MATRIX_BUILD}/${MATRIX_BUILDS} || ./scripts/sanitycheck ${SANITYCHECK_OPTIONS_RETRY} || ./scripts/sanitycheck ${SANITYCHECK_OPTIONS_RETRY}
       - rm test_file.txt
       - ccache -s
+    post_ci:
+      - rm -rf ccache
+      - source zephyr-env.sh
+      - gcovr -r ${ZEPHYR_BASE} -x > shippable/codecoverage/coverage.xml
+      - export S3_PATH="s3://incoming.zephyrproject.org/coverage/${ZEPHYRTESTING_CIREPO_VERSIONNUMBER}";
+      - aws s3 cp sanity-out/coverage.info ${S3_PATH}/coverage-${MATRIX_BUILD}.info
     on_failure:
       - mkdir -p shippable/testresults
       - mkdir -p shippable/codecoverage
-      - source zephyr-env.sh
-      - gcovr -r ${ZEPHYR_BASE} -x > shippable/codecoverage/coverage.xml
-      - rm -rf ccache
-      - bash <(curl -s https://codecov.io/bash)
-      - aws s3 sync --quiet sanity-out/coverage/ s3://docs.zephyrproject.org/coverage/
       - rm -rf sanity-out out-2nd-pass
       - >
           if [ -e compliance.xml ]; then
@@ -87,11 +86,6 @@ build:
     on_success:
       - mkdir -p shippable/testresults
       - mkdir -p shippable/codecoverage
-      - source zephyr-env.sh
-      - gcovr -r ${ZEPHYR_BASE} -x > shippable/codecoverage/coverage.xml
-      - rm -rf ccache
-      - bash <(curl -s https://codecov.io/bash)
-      - aws s3 sync --quiet sanity-out/coverage/ s3://docs.zephyrproject.org/coverage/
       - rm -rf sanity-out out-2nd-pass
       - >
           if [ -e compliance.xml ]; then
