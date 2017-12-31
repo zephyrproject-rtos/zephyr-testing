@@ -71,6 +71,7 @@ build:
       - gcovr -r ${ZEPHYR_BASE} -x > shippable/codecoverage/coverage.xml
       - export S3_PATH="s3://incoming.zephyrproject.org/coverage/${ZEPHYRTESTING_CIREPO_VERSIONNUMBER}";
       - aws s3 cp sanity-out/coverage.info ${S3_PATH}/coverage-${MATRIX_BUILD}.info
+      - aws s3 cp shippable/codecoverage/coverage.xml ${S3_PATH}/coverage-${MATRIX_BUILD}.xml
     on_failure:
       - mkdir -p shippable/testresults
       - mkdir -p shippable/codecoverage
