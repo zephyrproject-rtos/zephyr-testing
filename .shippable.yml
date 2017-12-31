@@ -64,7 +64,7 @@ build:
             rm -f modified_tests.args modified_boards.args;
           fi;
       - ./scripts/sanitycheck ${SANITYCHECK_OPTIONS} --save-tests test_file.txt
-      - ./scripts/sanitycheck  --load-tests test_file.txt --subset ${MATRIX_BUILD}/${MATRIX_BUILDS} || ./scripts/sanitycheck ${SANITYCHECK_OPTIONS_RETRY} || ./scripts/sanitycheck ${SANITYCHECK_OPTIONS_RETRY}
+      - ./scripts/sanitycheck ${SANITYCHECK_OPTIONS} --load-tests test_file.txt --subset ${MATRIX_BUILD}/${MATRIX_BUILDS} || ./scripts/sanitycheck ${SANITYCHECK_OPTIONS_RETRY} || ./scripts/sanitycheck ${SANITYCHECK_OPTIONS_RETRY}
       - rm test_file.txt
       - ccache -s
     on_failure:
