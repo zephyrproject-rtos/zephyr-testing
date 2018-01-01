@@ -13,8 +13,8 @@ coverage:
     changes: no
 
 ignore:
-  - "tests/*"
-  - "samples/*"
+  - "tests/**/*"
+  - "samples/**/*"
 
 parsers:
   gcov:
