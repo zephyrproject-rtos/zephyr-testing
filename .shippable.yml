@@ -68,6 +68,7 @@ build:
     post_ci:
       - rm -rf ccache
       - source zephyr-env.sh
+      - bash <(curl -s https://codecov.io/bash)
       - gcovr -r ${ZEPHYR_BASE} -x > shippable/codecoverage/coverage.xml
       - export S3_PATH="s3://incoming.zephyrproject.org/coverage/${ZEPHYRTESTING_CIREPO_VERSIONNUMBER}";
       - aws s3 cp sanity-out/coverage.info ${S3_PATH}/coverage-${MATRIX_BUILD}.info
