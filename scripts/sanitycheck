@@ -365,7 +365,8 @@ class NativeHandler(Handler):
                     out_state = "failed"
                     break
 
-        returncode = subprocess.call(["GCOV_PREFIX=" + self.outdir, "gcov", self.sourcedir, "-s", self.outdir], shell=True)
+        returncode = subprocess.call(["GCOV_PREFIX=" + self.outdir, "gcov", self.sourcedir, "-r",
+                                     "-s", self.outdir], shell=True)
 
         self.set_state(out_state, {})
 
