@@ -361,7 +361,8 @@ class NativeHandler(Handler):
 
         binary = os.path.join(self.outdir, "zephyr", "zephyr.exe")
         command = [binary]
-        if shutil.which("valgrind"):
+        # FIXME
+        if shutil.which("valgrind") and self.valgrind:
             command = ["valgrind", "--error-exitcode=2",
                        "--leak-check=full"] + command
 
