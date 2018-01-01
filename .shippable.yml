@@ -66,9 +66,7 @@ build:
       - rm test_file.txt
       - ccache -s
     post_ci:
-      - rm -rf ccache
       - source zephyr-env.sh
-      - bash <(curl -s https://codecov.io/bash)
       - gcovr -r ${ZEPHYR_BASE} -x > shippable/codecoverage/coverage.xml
       - export S3_PATH="s3://incoming.zephyrproject.org/coverage/${ZEPHYRTESTING_CIREPO_VERSIONNUMBER}";
       - aws s3 cp sanity-out/coverage.info ${S3_PATH}/coverage-${MATRIX_BUILD}.info
@@ -86,6 +84,8 @@ build:
             cp ./scripts/sanity_chk/last_sanity.xml shippable/testresults/;
           fi;
     on_success:
+      - rm -rf ccache
+      - bash <(curl -s https://codecov.io/bash)
       - mkdir -p shippable/testresults
       - mkdir -p shippable/codecoverage
       - rm -rf sanity-out out-2nd-pass
