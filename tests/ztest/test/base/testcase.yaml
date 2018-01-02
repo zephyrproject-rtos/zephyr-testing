@@ -1,7 +1,4 @@
 tests:
-  test:
-    tags: test_framework
-    type: unit
   test_verbose_0:
     extra_args: CONF_FILE=prj_verbose_0.conf
     tags: test_framework

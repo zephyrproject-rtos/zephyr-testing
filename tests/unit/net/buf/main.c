@@ -9,38 +9,6 @@
 
 struct net_buf_pool _net_buf_pool_list[1];
 
-unsigned int irq_lock(void)
-{
-	return 0;
-}
-
-void irq_unlock(unsigned int key)
-{
-}
-
-#include <net/buf.c>
-
-void k_queue_init(struct k_queue *queue) {}
-void k_queue_append_list(struct k_queue *queue, void *head, void *tail) {}
-
-int k_is_in_isr(void)
-{
-	return 0;
-}
-
-void *k_queue_get(struct k_queue *queue, s32_t timeout)
-{
-	return NULL;
-}
-
-void k_queue_append(struct k_queue *queue, void *data)
-{
-}
-
-void k_queue_prepend(struct k_queue *fifo, void *data)
-{
-}
-
 #define TEST_BUF_COUNT 1
 #define TEST_BUF_SIZE 74
 
