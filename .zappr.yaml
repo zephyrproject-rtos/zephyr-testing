@@ -1,7 +1,3 @@
-commit:
-  message:
-    patterns:
-      - '#[0-9]+'
 approvals:
   minimum: 1
   ignore: none
