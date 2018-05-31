@@ -4,6 +4,10 @@ approvals:
   pattern: "^(:\\+1:|👍)$"
   veto:
     pattern: "^(:\\-1:|👎)$"
+commit:
+  message:
+    patterns:
+      - ".*"
 specification:
   title:
     minimum-length:
