@@ -52,6 +52,7 @@ choice
 
 config LINKER_ORPHAN_SECTION_PLACE
 	bool "Place"
+	depends on FOO_BAR
 	help
 	  Linker puts orphan sections in place without warnings
 	  or errors.
