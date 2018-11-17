@@ -1,11 +1,11 @@
 .. _kernel:
 
 Zephyr Kernel Primer
-####################
+##############
 
 This document provides a general introduction of the Zephyr kernel's
 key capabilities and services. Additional details can be found by consulting
-the :ref:`api` and :ref:`application` documentation, and by examining
+the :ref:`apicc` and :ref:`application` documentation, and by examining
 the code in the Zephyr source tree.
 
 .. toctree::
