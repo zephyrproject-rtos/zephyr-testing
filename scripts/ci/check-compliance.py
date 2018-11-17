@@ -8,7 +8,7 @@ from email.utils import parseaddr
 import sh
 import logging
 import argparse
-#from check_identity import verify_signed_off
+from github import Github
 
 if "ZEPHYR_BASE" not in os.environ:
     logging.error("$ZEPHYR_BASE environment variable undefined.\n")
@@ -18,6 +18,15 @@ logger = None
 DOCS_WARNING_FILE = "doc.warnings"
 
 repository_path = os.environ['ZEPHYR_BASE']
+
+gh = None
+pr = None
+if 'GH_TOKEN' in os.environ:
+    github_token = os.environ['GH_TOKEN']
+    gh = Github(github_token)
+    repo = gh.get_repo(os.environ['TESTING_REPO_REPO_FULL_NAME'])
+    pr = repo.get_pull(int(os.environ['TESTING_REPO_PULL_REQUEST']))
+
 sh_special_args = {
     '_tty_out': False,
     '_cwd': repository_path
@@ -75,6 +84,8 @@ def run_gitlint(tc, commit_range):
     if msg != "":
         failure = ET.SubElement(tc, 'failure', type="failure", message="commit message error on range: %s" %commit_range)
         failure.text = (msg.decode('utf8'))
+        if pr:
+            pr.create_issue_comment("Issues found by gitlint:\n\n" + failure.text + "\nPlease fix them and resubmit.")
         return 1
 
     return 0
@@ -92,6 +103,8 @@ def run_checkpatch(tc, commit_range):
 
     except subprocess.CalledProcessError as ex:
         m = re.search("([1-9][0-9]*) errors,", ex.output.decode('utf8'))
+        if pr:
+            pr.create_issue_comment("Issues found by checkpatch:\n```" + ex.output.decode('utf8') + "```\nPlease fix them and resubmit." )
         if m:
             failure = ET.SubElement(tc, 'failure', type="failure", message="checkpatch issues")
             failure.text = (ex.output.decode('utf8'))
@@ -125,6 +138,8 @@ def run_kconfig_undef_ref_check(tc, commit_range):
         failure = ET.SubElement(tc, "failure", type="failure",
                                 message="undefined Kconfig symbols")
         failure.text = "\n\n\n".join(undef_ref_warnings)
+        if pr:
+            pr.create_issue_comment(failure.text)
         return 1
 
     return 0
@@ -163,6 +178,8 @@ def verify_signed_off(tc, commit):
         else:
             failure.text = failure.text + "\n" + error2
         error = 1
+    if failure and pr:
+        pr.create_issue_comment(failure.text)
 
     return error
 
@@ -183,6 +200,8 @@ def check_doc(tc, range):
             failure = ET.SubElement(tc, 'failure', type="failure",
                         message="documentation issues")
             failure.text = (log.decode('utf8'))
+            if pr:
+                pr.create_issue_comment("Issues found in documentation:\n\n" + failure.text + "\nPlease fix them and resubmit.")
         return 1
 
     return 0
