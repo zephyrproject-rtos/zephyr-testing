@@ -1,0 +1,29 @@
+autobranch:
+  pattern: '{number}-{title}'
+  length: 60
+commit:
+  message:
+    patterns:
+      - '#[0-9]+'
+approvals:
+  minimum: 2
+  ignore: none
+  pattern: "^(:\\+1:|👍)$"
+  veto:
+    pattern: "^(:\\-1:|👎)$"
+specification:
+  title:
+    minimum-length:
+      enabled: true
+      length: 8
+  body:
+    minimum-length:
+      enabled: true
+      length: 8
+    contains-url: true
+    contains-issue-number: true
+  template:
+    differs-from-body: true
+pull-request:
+  labels:
+    additional: true
