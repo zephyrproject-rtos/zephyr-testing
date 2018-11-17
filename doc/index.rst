@@ -2,7 +2,7 @@
     Zephyr Project documentation master file
 
 Zephyr Project Documentation
-############################
+###################
 
 .. only:: release
 
