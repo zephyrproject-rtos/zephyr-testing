@@ -128,9 +128,9 @@ K_THREAD_STACK_DEFINE(_interrupt_stack3, CONFIG_ISR_STACK_SIZE);
 	#define initialize_timeouts() do { } while ((0))
 #endif
 
-extern void idle(void *unused1, void *unused2, void *unused3);
+extern void idle(void *unused1, void *unused2, void * unused3 );
 
-
+      
 /**
  *
  * @brief Clear BSS
@@ -139,8 +139,7 @@ extern void idle(void *unused1, void *unused2, void *unused3);
  *
  * @return N/A
  */
-void _bss_zero(void)
-{
+void _bss_zero(void) {
 	(void)memset(&__bss_start, 0,
 		     ((u32_t) &__bss_end - (u32_t) &__bss_start));
 #ifdef CONFIG_CCM_BASE_ADDRESS
