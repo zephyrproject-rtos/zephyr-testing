@@ -139,10 +139,10 @@ else
 fi
 
 # Build Docs on matrix 5 in a pull request
-if [ "${MATRIX}" = "${DOC_MATRIX}" -a -n "${PULL_REQUEST}" ]; then
-	build_docs
-	./scripts/ci/check-compliance.py --commits ${COMMIT_RANGE} || true;
-fi
+#if [ "${MATRIX}" = "${DOC_MATRIX}" -a -n "${PULL_REQUEST}" ]; then
+#	build_docs
+#	./scripts/ci/check-compliance.py --commits ${COMMIT_RANGE} || true;
+#fi
 
 # In a pull-request see if we have changed any tests or board definitions
 if [ -n "${PULL_REQUEST}" ]; then
