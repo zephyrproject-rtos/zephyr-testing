@@ -7,8 +7,10 @@ from email.utils import parseaddr
 import sh
 import logging
 import argparse
-from junitparser import TestCase, TestSuite, JUnitXml, Skipped, Error, Failure
+from junitparser import TestCase, TestSuite, JUnitXml, Skipped, Error, Failure, Attr
 from github import Github
+from shutil import copyfile, copytree
+import json
 
 
 if "ZEPHYR_BASE" not in os.environ:
@@ -41,6 +43,8 @@ def get_shas(refspec):
     return sha_list
 
 
+class MyCase(TestCase):
+    classname = Attr()
 
 
 class ComplianceTest:
@@ -55,7 +59,8 @@ class ComplianceTest:
         self.commit_range = range
 
     def prepare(self):
-        self.case = TestCase(self._name)
+        self.case = MyCase(self._name)
+        self.case.classname = "Guidelines"
         print("Running {} tests...".format(self._name))
 
     def run(self):
@@ -145,6 +150,65 @@ class GitLint(ComplianceTest):
             text = (msg.decode('utf8'))
             self.case.result = Failure("commit message syntax issues", "failure")
             self.case.result._elem.text = text
+
+
+
+class License(ComplianceTest):
+    _name = "License"
+    _doc  = "https://docs.zephyrproject.org/"
+
+    def run(self):
+        self.prepare()
+
+        os.makedirs("scancode-files", exist_ok=True)
+        new_files = sh.git("diff", "--name-only", "--diff-filter=A", self.commit_range, **sh_special_args)
+        for newf in new_files:
+            f = str(newf).rstrip()
+            os.makedirs(os.path.join('scancode-files', os.path.dirname(f)), exist_ok=True)
+            copy = os.path.join("scancode-files", f)
+            copyfile(f, copy)
+
+        scancode = subprocess.check_output(('/opt/scancode-toolkit/scancode',
+                                            '--copyright',
+                                            '--license',
+                                            '--license-diag',
+                                            '--info',
+                                            '--classify',
+                                            '--summary',
+                                            'scancode-files',
+                                            '--json',
+                                            'scancode.json',
+                                            '--html',
+                                            'scancode.html'
+                                           ))
+
+        report = ""
+        with open ('scancode.json', 'r') as json_fp:
+            scancode_results = json.load(json_fp)
+            for file in scancode_results['files']:
+                if file['type'] == 'directory':
+                    continue
+
+                original_fp = str(file['path']).replace('scancode-files/', '')
+                licenses = file['licenses']
+                if (file['is_script'] or file['is_source']) and (file['programming_language'] not in ['CMake']) and (file['extension'] not in ['.yaml']):
+                    if len(file['licenses']) == 0:
+                        report += ("* {} missing license.\n".format(original_fp))
+                    else:
+                        for l in licenses:
+                            if l['key'] != "apache-2.0":
+                                report += ("*{} has not apache-2.0 license: {}\n".format(original_fp, l['key']))
+                            if l['category'] != 'Permissive':
+                                report += ("* {} has non-permissive license: {}\n".format(original_fp, l['key']))
+
+                    if len(file['copyrights'])  == 0:
+                        report += ("* {} missing license.\n".format(original_fp))
+
+        if report != "":
+            self.case.result = Failure("License/Copyright issues", "failure")
+            self.case.result._elem.text = report
+
+
 
 
 class Identity(ComplianceTest):
@@ -276,8 +340,10 @@ def main():
         commit = repo.get_commit(args.sha)
 
         comment = "Found the following issues, please fix and resubmit:\n\n"
+        comment_count = 0
         for case in suite:
             if case.result:
+                comment_count += 1
                 comment += ("## {}\n".format(case.result.message))
                 comment += "\n"
                 if case.name not in ['Gitlint', 'Identity/Emails']:
@@ -296,7 +362,7 @@ def main():
                                      'checks passed',
                                      '{}'.format(case.name))
 
-        if args.repo and args.pull_request:
+        if args.repo and args.pull_request and comment_count > 0:
             pr.create_issue_comment(comment)
 
 
