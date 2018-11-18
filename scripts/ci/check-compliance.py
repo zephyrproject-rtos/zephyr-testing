@@ -197,7 +197,7 @@ class License(ComplianceTest):
                     else:
                         for l in licenses:
                             if l['key'] != "apache-2.0":
-                                report += ("*{} has not apache-2.0 license: {}\n".format(original_fp, l['key']))
+                                report += ("* {} is not apache-2.0 licensed: {}\n".format(original_fp, l['key']))
                             if l['category'] != 'Permissive':
                                 report += ("* {} has non-permissive license: {}\n".format(original_fp, l['key']))
 
@@ -346,10 +346,10 @@ def main():
                 comment_count += 1
                 comment += ("## {}\n".format(case.result.message))
                 comment += "\n"
-                if case.name not in ['Gitlint', 'Identity/Emails']:
+                if case.name not in ['Gitlint', 'Identity/Emails', 'License']:
                     comment += "```\n"
                 comment += ("{}\n".format(case.result._elem.text))
-                if case.name not in ['Gitlint', 'Identity/Emails']:
+                if case.name not in ['Gitlint', 'Identity/Emails', 'License']:
                     comment += "```\n"
 
                 commit.create_status('failure',
