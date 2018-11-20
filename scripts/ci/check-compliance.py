@@ -156,36 +156,41 @@ class GitLint(ComplianceTest):
 
 class License(ComplianceTest):
     _name = "License"
-    _doc  = "https://docs.zephyrproject.org/"
+    _doc  = "https://docs.zephyrproject.org/latest/contribute/contribute_guidelines.html#licensing"
 
     def run(self):
         self.prepare()
 
-        if not os.path.exists('/opt/scancode-toolkit/scancode'):
+        scancode = "/opt/scancode-toolkit/scancode"
+        if not os.path.exists(scancode):
             self.case.result = Skipped()
             return
 
         os.makedirs("scancode-files", exist_ok=True)
         new_files = sh.git("diff", "--name-only", "--diff-filter=A", self.commit_range, **sh_special_args)
+
+        if len(new_files) == 0:
+            self.case.result = Skipped()
+            return
+
         for newf in new_files:
             f = str(newf).rstrip()
             os.makedirs(os.path.join('scancode-files', os.path.dirname(f)), exist_ok=True)
             copy = os.path.join("scancode-files", f)
             copyfile(f, copy)
 
-        scancode = subprocess.check_output(('/opt/scancode-toolkit/scancode',
-                                            '--copyright',
-                                            '--license',
-                                            '--license-diag',
-                                            '--info',
-                                            '--classify',
-                                            '--summary',
-                                            'scancode-files',
-                                            '--json',
-                                            'scancode.json',
-                                            '--html',
-                                            'scancode.html'
-                                           ))
+        try:
+            cmd = [scancode, '--copyright', '--license', '--license-diag', '--info',
+                    '--classify', '--summary', '--json', 'scancode.json', 'scancode-files']
+
+            cmd_str = " ".join(cmd)
+            print(cmd_str)
+            out = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
+
+        except subprocess.CalledProcessError as e:
+            print(e.output)
+            self.case.result = Skipped()
+            return
 
         report = ""
         with open ('scancode.json', 'r') as json_fp:
