@@ -258,7 +258,7 @@ static inline void k_object_access_all_grant(void *object)
  * @param object Address of kernel object
  * @param thread Thread to grant access to the object
  */
-__syscall void k_object_access_grant(void *object, struct k_thread *thread);
+__syscall void k_object_access_grant(void * object, struct k_thread *thread);
 
 /**
  * grant a thread access to a kernel object
