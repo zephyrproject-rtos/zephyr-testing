@@ -9,8 +9,8 @@ env:
         - SANITYCHECK_OPTIONS_RETRY="${SANITYCHECK_OPTIONS} --only-failed --outdir=out-2nd-pass"
         - ZEPHYR_SDK_INSTALL_DIR=/opt/sdk/zephyr-sdk-0.9.5
         - ZEPHYR_TOOLCHAIN_VARIANT=zephyr
-        - MATRIX_BUILDS="5"
-        - MATRIX_BUILDS_EXTRA="5"
+        - MATRIX_BUILDS="4"
+        - MATRIX_BUILDS_EXTRA="4"
         - BSIM_OUT_PATH=/opt/bsim/
         - BSIM_COMPONENTS_PATH=${BSIM_OUT_PATH}/components/
         - BSIM_BT_TEST_RESULTS_FILE="./bsim_bt_out/bsim_results.xml"
@@ -19,7 +19,6 @@ env:
         - MATRIX_BUILD="2"
         - MATRIX_BUILD="3"
         - MATRIX_BUILD="4"
-        - MATRIX_BUILD="5"
 
 build:
     cache: false
@@ -27,7 +26,7 @@ build:
         - ${SHIPPABLE_BUILD_DIR}/ccache
     pre_ci_boot:
         image_name: zephyrprojectrtos/ci
-        image_tag: v0.5-rc2
+        image_tag: v0.5-rc3
         pull: true
         options: "-e HOME=/home/buildslave --privileged=true --tty --net=bridge --user buildslave"
 
