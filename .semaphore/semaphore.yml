@@ -24,4 +24,4 @@ blocks:
       - name: docker image
         commands:
           - source zephyr-env.sh
-          - ./scripts/sanitycheck
+          - ./scripts/sanitycheck --inline-logs
