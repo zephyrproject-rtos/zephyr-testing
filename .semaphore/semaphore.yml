@@ -20,10 +20,13 @@ blocks:
       jobs:
       - name: sanitycheck
         commands:
-          - echo '$my_pub_key' >> .ssh/authorized_keys
+          - export USE_CCACHE=1
+          - export CCACHE_DIR=ccache
+          - cache restore $CCACHE_DIR
           - sem-version c 7
           - checkout
           - sudo ./install.sh
+          - ccache -s
           - sudo pip3 install -r scripts/requirements.txt
           - sudo pip3 install wheel west sh pyelftools==0.24
           - /usr/bin/env python3 -c "import elftools"
@@ -31,3 +34,5 @@ blocks:
           - sudo cp /opt/toolchains/zephyr-sdk-0.9.5/sysroots/x86_64-pokysdk-linux/usr/bin/dtc /usr/local/bin
           - source zephyr-env.sh
           - ./scripts/sanitycheck --inline-logs -N --subset 1/5
+          - ccache -s
+          - cache store $CCACHE_DIR
