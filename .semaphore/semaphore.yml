@@ -12,26 +12,23 @@ blocks:
         - name: ssh_pub_key
       env_vars:
         - name: ZEPHYR_SDK_INSTALL_DIR
-          value: "/opt/toolchains/zephyr-sdk-0.9.5"
+          value: "/home/semaphore/zephyr-sdk-0.9.5"
         - name: ZEPHYR_TOOLCHAIN_VARIANT
           value: "zephyr"
-        - name: DTC
-          value: "/opt/toolchains/zephyr-sdk-0.9.5/sysroots/x86_64-pokysdk-linux/usr/bin/dtc"
       jobs:
       - name: sanitycheck
         commands:
           - export USE_CCACHE=1
           - export CCACHE_DIR=ccache
           - cache restore $CCACHE_DIR
+          - cache restore $ZEPHYR_SDK_INSTALL_DIR
           - sem-version c 7
           - checkout
           - sudo ./install.sh
+          - cache store $ZEPHYR_SDK_INSTALL_DIR
           - ccache -s
-          - sudo pip3 install -r scripts/requirements.txt
-          - sudo pip3 install wheel west sh pyelftools==0.24
-          - /usr/bin/env python3 -c "import elftools"
           - sudo mkdir -p /usr/local/bin
-          - sudo cp /opt/toolchains/zephyr-sdk-0.9.5/sysroots/x86_64-pokysdk-linux/usr/bin/dtc /usr/local/bin
+          - sudo cp $HOME/zephyr-sdk-0.9.5/sysroots/x86_64-pokysdk-linux/usr/bin/dtc /usr/local/bin
           - source zephyr-env.sh
           - ./scripts/sanitycheck --inline-logs -N --subset 1/5
           - ccache -s
