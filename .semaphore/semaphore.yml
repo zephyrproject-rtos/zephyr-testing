@@ -6,7 +6,7 @@ agent:
     os_image: ubuntu1804
 
 blocks:
-  - name: Change GCC version
+  - name: Zephyr Tests
     task:
       env_vars:
         - name: ZEPHYR_SDK_INSTALL_DIR
@@ -15,16 +15,15 @@ blocks:
           value: "zephyr"
         - name: DTC
           value: "/opt/toolchains/zephyr-sdk-0.9.5/sysroots/x86_64-pokysdk-linux/usr/bin/dtc"
-      prologue:
+      jobs:
+      - name: sanitycheck
         commands:
           - checkout
           - sudo ./install.sh
           - sudo pip3 install -r scripts/requirements.txt
-          - sudo pip3 install wheel west sh
+          - sudo pip3 install wheel west sh pyelftools==0.24
+          - /usr/bin/env python3 -c "import elftools"
           - sudo mkdir -p /usr/local/bin
           - sudo cp /opt/toolchains/zephyr-sdk-0.9.5/sysroots/x86_64-pokysdk-linux/usr/bin/dtc /usr/local/bin
-      jobs:
-      - name: docker image
-        commands:
           - source zephyr-env.sh
-          - ./scripts/sanitycheck --inline-logs
+          - ./scripts/sanitycheck --inline-logs --subset 1/5
