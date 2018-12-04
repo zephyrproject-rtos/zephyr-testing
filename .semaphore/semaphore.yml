@@ -9,6 +9,8 @@ blocks:
   - name: Change GCC version
     task:
       env_vars:
+        - name: ZEPHYR_SDK_INSTALL_DIR
+          value: "/opt/toolchains/zephyr-sdk-0.9.5"
         - name: ZEPHYR_TOOLCHAIN_VARIANT
           value: "zephyr"
         - name: DTC
