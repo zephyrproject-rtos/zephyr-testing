@@ -13,6 +13,6 @@ blocks:
         commands:
           - checkout
           - ls -1
-          - ./install.sh
+          - sudo ./install.sh
           - source zephyr-env.sh
           - ./scripts/sanitycheck
