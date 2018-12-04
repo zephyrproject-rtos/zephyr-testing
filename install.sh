@@ -29,6 +29,8 @@ apt-get install --no-install-recommends -y \
 	python3-ply \
 	python3-setuptools
 
+sudo apt-get --no-install-recommends -y remove python3.4
+sudo apt-get --no-install-recommends -y autoremove
 
 wget -q "https://github.com/zephyrproject-rtos/meta-zephyr-sdk/releases/download/${ZSDK_VERSION}/zephyr-sdk-${ZSDK_VERSION}-setup.run" && \
   sh "zephyr-sdk-${ZSDK_VERSION}-setup.run" --quiet -- -d /opt/toolchains/zephyr-sdk-${ZSDK_VERSION} && \
