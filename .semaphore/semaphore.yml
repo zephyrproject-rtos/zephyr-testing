@@ -8,6 +8,8 @@ agent:
 blocks:
   - name: Zephyr Tests
     task:
+      secrets:
+        - name: ssh_pub_key
       env_vars:
         - name: ZEPHYR_SDK_INSTALL_DIR
           value: "/opt/toolchains/zephyr-sdk-0.9.5"
@@ -18,6 +20,7 @@ blocks:
       jobs:
       - name: sanitycheck
         commands:
+          - echo '$my_pub_key' >> .ssh/authorized_keys
           - checkout
           - sudo ./install.sh
           - sudo pip3 install -r scripts/requirements.txt
