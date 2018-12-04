@@ -32,7 +32,7 @@ export GCC_ARM_NAME=gcc-arm-none-eabi-7-2018-q2-update
 	xz-utils
 
 pip3 install wheel west sh
-pip3 install -r requirements.txt
+pip3 install -r scripts/requirements.txt
 
 wget -q "https://github.com/zephyrproject-rtos/meta-zephyr-sdk/releases/download/${ZSDK_VERSION}/zephyr-sdk-${ZSDK_VERSION}-setup.run" && \
   sh "zephyr-sdk-${ZSDK_VERSION}-setup.run" --quiet -- -d /opt/toolchains/zephyr-sdk-${ZSDK_VERSION} && \
