@@ -18,10 +18,7 @@ blocks:
       prologue:
         commands:
           - sem-version python 3.7
-          - python --version
           - checkout
-          - pip3 install -r scripts/requirements.txt
-          - pip3 install wheel west sh
           - ls -1
           - sudo ./install.sh
           - sudo mkdir -p /usr/local/bin
@@ -30,5 +27,7 @@ blocks:
       - name: docker image
         commands:
           - sem-version python 3.7
+          - pip3 install -r scripts/requirements.txt
+          - pip3 install wheel west sh
           - source zephyr-env.sh
           - ./scripts/sanitycheck --inline-logs
