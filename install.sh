@@ -35,9 +35,3 @@ apt-get install --no-install-recommends -y \
 wget -q "https://github.com/zephyrproject-rtos/meta-zephyr-sdk/releases/download/${ZSDK_VERSION}/zephyr-sdk-${ZSDK_VERSION}-setup.run" && \
   sh "zephyr-sdk-${ZSDK_VERSION}-setup.run" --quiet -- -d /opt/toolchains/zephyr-sdk-${ZSDK_VERSION} && \
   rm "zephyr-sdk-${ZSDK_VERSION}-setup.run"
-
-wget -q https://developer.arm.com/-/media/Files/downloads/gnu-rm/7-2018q2/${GCC_ARM_NAME}-linux.tar.bz2  && \
-    tar xf ${GCC_ARM_NAME}-linux.tar.bz2 && \
-    rm -f ${GCC_ARM_NAME}-linux.tar.bz2 && \
-    mv ${GCC_ARM_NAME} /opt/toolchains/${GCC_ARM_NAME}
-
