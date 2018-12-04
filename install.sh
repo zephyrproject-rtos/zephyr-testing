@@ -1,8 +1,6 @@
 export ZSDK_VERSION=0.9.5
 export GCC_ARM_NAME=gcc-arm-none-eabi-7-2018-q2-update
 
-apt-get -y update && \
-	apt-get -y upgrade && \
 	apt-get install --no-install-recommends -y \
 	autoconf \
 	automake \
@@ -10,7 +8,6 @@ apt-get -y update && \
 	ccache \
 	cmake \
 	device-tree-compiler \
-	dfu-util \
 	doxygen \
 	file \
 	g++ \
@@ -20,23 +17,15 @@ apt-get -y update && \
 	git \
 	git-core \
 	gperf \
-	iproute2 \
 	lcov \
-	libglib2.0-dev \
-	libpcap-dev \
 	libtool \
 	locales \
 	make \
-	net-tools \
-	ninja-build \
 	ninja-build \
 	pkg-config \
 	python3-pip \
 	python3-ply \
 	python3-setuptools \
-	qemu \
-	socat \
-	sudo \
 	texinfo \
 	valgrind \
 	wget \
