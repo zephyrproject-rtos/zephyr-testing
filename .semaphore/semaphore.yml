@@ -11,6 +11,8 @@ blocks:
       env_vars:
         - name: ZEPHYR_TOOLCHAIN_VARIANT
           value: "zephyr"
+        - name: DTC
+          value: "/opt/toolchains/zephyr-sdk-0.9.5/sysroots/x86_64-pokysdk-linux/usr/bin/dtc"
       prologue:
         commands:
           - sem-version python 3.7
