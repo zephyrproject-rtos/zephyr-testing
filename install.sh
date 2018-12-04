@@ -26,7 +26,10 @@ export GCC_ARM_NAME=gcc-arm-none-eabi-7-2018-q2-update
 	texinfo \
 	valgrind \
 	wget \
-	xz-utils
+	xz-utils \
+	python3-pip \
+	python3-ply \
+	python3-setuptools
 
 
 wget -q "https://github.com/zephyrproject-rtos/meta-zephyr-sdk/releases/download/${ZSDK_VERSION}/zephyr-sdk-${ZSDK_VERSION}-setup.run" && \
