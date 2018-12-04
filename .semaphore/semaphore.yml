@@ -30,4 +30,4 @@ blocks:
           - sudo mkdir -p /usr/local/bin
           - sudo cp /opt/toolchains/zephyr-sdk-0.9.5/sysroots/x86_64-pokysdk-linux/usr/bin/dtc /usr/local/bin
           - source zephyr-env.sh
-          - ./scripts/sanitycheck --inline-logs -T samples/synchronization/
+          - ./scripts/sanitycheck --inline-logs --subset 1/5
