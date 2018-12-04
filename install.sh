@@ -1,7 +1,7 @@
 export ZSDK_VERSION=0.9.5
 export GCC_ARM_NAME=gcc-arm-none-eabi-7-2018-q2-update
 
-	apt-get install --no-install-recommends -y \
+apt-get install --no-install-recommends -y \
 	autoconf \
 	automake \
 	build-essential \
