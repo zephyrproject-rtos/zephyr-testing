@@ -1,0 +1,43 @@
+version: v1.0
+name: Zephyr Project CI
+agent:
+  machine:
+    type: e1-standard-8
+    os_image: ubuntu1804
+
+blocks:
+  - name: Zephyr Tests
+    task:
+      secrets:
+        - name: ssh_pub_key
+      env_vars:
+        - name: ZEPHYR_SDK_INSTALL_DIR
+          value: "/home/semaphore/zephyr-sdk-0.9.5"
+        - name: ZEPHYR_TOOLCHAIN_VARIANT
+          value: "zephyr"
+        - name: USE_CCACHE
+          value: "1"
+        - name: MATRIX_TOTAL
+          value: "5"
+      jobs:
+      - name: sanitycheck
+        matrix:
+          - env_var: MATRIX_BUILD
+            values: ["1", "2", "3", "4", "5"]
+        commands:
+          - env
+          - sem-version python 3.7
+          - cache restore zephyr_sdk_1
+          - cache restore ccache_dir_${MATRIX_BUILD}
+          - sem-version c 7
+          - checkout
+          - pip3 install -r scripts/requirements.txt
+          - pip3 install wheel west sh
+          - ./install.sh
+          - ccache -s
+          - source zephyr-env.sh
+          - ./scripts/sanitycheck --inline-logs -N --subset ${MATRIX_BUILD}/${MATRIX_TOTAL} || ./scripts/sanitycheck --inline-logs -N --only-failed
+          - ccache -s
+          - cd $HOME
+          - cache store ccache_dir_${MATRIX_BUILD} .ccache
+          - cache has_key zephyr_sdk_1 || cache store zephyr_sdk_1 zephyr-sdk-0.9.5
