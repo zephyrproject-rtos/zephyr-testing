@@ -13,5 +13,4 @@ blocks:
         commands:
           - checkout
           - ls -1
-          - docker run -ti -v $PWD:/workdir docker.io/zephyrprojectrtos/zephyr-build:latest /bin/bash
-          - scripts/sanitycheck
+          - docker run -ti -v $PWD:/workdir docker.io/zephyrprojectrtos/zephyr-build:latest /bin/bash -c "scripts/sanitycheck"
