@@ -9,14 +9,9 @@ blocks:
   - name: Change GCC version
     task:
       jobs:
-      - name: Select gcc version 6
+      - name: docker image
         commands:
-          - gcc --version
-          - sem-version c 6
-          - gcc --version
-
-      - name: Select gcc version 8
-        commands:
-          - gcc --version
-          - sem-version c 8
-          - gcc --version
+          - checkout
+          - ls -1
+          - docker run -ti -v $PWD:/workdir docker.io/zephyrprojectrtos/zephyr-build:latest /bin/bash
+          - scripts/sanitycheck
