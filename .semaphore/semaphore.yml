@@ -24,8 +24,6 @@ blocks:
           - sem-version c 7
           - checkout
           - sudo ./install.sh
-          - sudo apt-get remove python3.4
-          - sudo apt-get autoremove
           - sudo pip3 install -r scripts/requirements.txt
           - sudo pip3 install wheel west sh pyelftools==0.24
           - /usr/bin/env python3 -c "import elftools"
