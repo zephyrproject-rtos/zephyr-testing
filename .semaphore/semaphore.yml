@@ -16,8 +16,8 @@ blocks:
           - sem-version python 3.7
           - python --version
           - checkout
-          - sudo pip3 install -r scripts/requirements.txt
-          - sudo pip3 install wheel west sh
+          - sudo pip install -r scripts/requirements.txt
+          - sudo pip install wheel west sh
           - ls -1
           - sudo ./install.sh
       jobs:
