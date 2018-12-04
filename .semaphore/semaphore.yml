@@ -8,12 +8,20 @@ agent:
 blocks:
   - name: Change GCC version
     task:
+      env_vars:
+        - name: ZEPHYR_TOOLCHAIN_VARIANT
+          value: "zephyr"
+      prologue:
+        commands:
+          - checkout
+          - mkdir .pip_cache
+          - cache restore pip-$SEMAPHORE_GIT_BRANCH-$(checksum requirements.txt),pip-$SEMAPHORE_GIT_BRANCH,pip-master
+          - pip3 install --user --cache-dir .pip_cache -r scripts/requirements.txt
+          - pip3 install --user --cache-dir .pip_cache wheel west sh
+          - ls -1
+          - sudo ./install.sh
       jobs:
       - name: docker image
         commands:
-          - checkout
-          - ls -1
-          - sudo ./install.sh
           - source zephyr-env.sh
-          - export ZEPHYR_TOOLCHAIN_VARIANT=zephyr
           - ./scripts/sanitycheck
