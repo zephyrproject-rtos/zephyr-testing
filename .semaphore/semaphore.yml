@@ -13,4 +13,6 @@ blocks:
         commands:
           - checkout
           - ls -1
-          - docker run -ti -v $PWD:/workdir docker.io/zephyrprojectrtos/zephyr-build:latest /bin/bash -c "scripts/sanitycheck"
+          - ./install.sh
+          - source zephyr-env.sh
+          - ./scripts/sanitycheck
