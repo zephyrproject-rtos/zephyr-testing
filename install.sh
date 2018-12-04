@@ -22,8 +22,6 @@ apt-get install --no-install-recommends -y \
 	locales \
 	make \
 	ninja-build \
-	pkg-config \
-	texinfo \
 	valgrind \
 	wget \
 	xz-utils \
