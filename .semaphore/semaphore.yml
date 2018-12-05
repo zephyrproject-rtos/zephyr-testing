@@ -17,13 +17,18 @@ blocks:
           value: "zephyr"
         - name: USE_CCACHE
           value: "1"
+        - name: MATRIX_TOTAL
+          value: "5"
       jobs:
       - name: sanitycheck
+        matrix:
+          - env_var: MATRIX_BUILD
+            values: ["1", "2", "3", "4", "5"]
         commands:
           - env
           - sem-version python 3.7
           - cache restore zephyr_sdk_1
-          - cache restore ccache_dir_1
+          - cache restore ccache_dir_${MATRIX_BUILD}
           - sem-version c 7
           - checkout
           - pip3 install -r scripts/requirements.txt
@@ -31,8 +36,8 @@ blocks:
           - ./install.sh
           - ccache -s
           - source zephyr-env.sh
-          - ./scripts/sanitycheck --inline-logs -N --subset 1/5 -T tests/kernel
+          - ./scripts/sanitycheck --inline-logs -N --subset ${MATRIX_BUILD}/${MATRIX_TOTAL}
           - ccache -s
           - cd $HOME
-          - cache store ccache_dir_1 .ccache
+          - cache store ccache_dir_${MATRIX_BUILD} .ccache
           - cache store zephyr_sdk_1 zephyr-sdk-0.9.5
