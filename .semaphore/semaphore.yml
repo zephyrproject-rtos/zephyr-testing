@@ -40,4 +40,4 @@ blocks:
           - ccache -s
           - cd $HOME
           - cache store ccache_dir_${MATRIX_BUILD} .ccache
-          - cache store zephyr_sdk_1 zephyr-sdk-0.9.5
+          - cache has_key zephyr_sdk_1 || cache store zephyr_sdk_1 zephyr-sdk-0.9.5
