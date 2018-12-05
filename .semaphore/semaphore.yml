@@ -20,6 +20,7 @@ blocks:
       jobs:
       - name: sanitycheck
         commands:
+          - env
           - sem-version python 3.7
           - cache restore zephyr_sdk_1
           - cache restore ccache_dir_1
