@@ -20,8 +20,8 @@ blocks:
       jobs:
       - name: sanitycheck
         commands:
-          - cache restore zephyr_sdk
-          - cache restore ccache_dir
+          - cache restore zephyr_sdk_1
+          - cache restore ccache_dir_1
           - sem-version c 7
           - checkout
           - ./install.sh
@@ -30,5 +30,5 @@ blocks:
           - ./scripts/sanitycheck --inline-logs -N --subset 1/5 -T tests/kernel
           - ccache -s
           - cd $HOME
-          - cache store ccache_dir .ccache
-          - cache store zephyr_sdk zephyr-sdk-0.9.5
+          - cache store ccache_dir_1 .ccache
+          - cache store zephyr_sdk_1 zephyr-sdk-0.9.5
