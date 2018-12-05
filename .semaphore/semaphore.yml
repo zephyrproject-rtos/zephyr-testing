@@ -20,17 +20,15 @@ blocks:
       jobs:
       - name: sanitycheck
         commands:
-          - export CCACHE_DIR=$HOME/.ccache
           - cache restore zephyr_sdk
           - cache restore ccache_dir
           - sem-version c 7
           - checkout
-          - sudo ./install.sh
-          - cache store zephyr_sdk $ZEPHYR_SDK_INSTALL_DIR
+          - ./install.sh
           - ccache -s
-          - sudo mkdir -p /usr/local/bin
-          - sudo cp $HOME/zephyr-sdk-0.9.5/sysroots/x86_64-pokysdk-linux/usr/bin/dtc /usr/local/bin
           - source zephyr-env.sh
           - ./scripts/sanitycheck --inline-logs -N --subset 1/5 -T tests/kernel
           - ccache -s
-          - cache store ccache_dir $CCACHE_DIR
+          - cd $HOME
+          - cache store ccache_dir .ccache
+          - cache store zephyr_sdk zephyr-sdk-0.9.5
