@@ -9,25 +9,11 @@ sudo apt-get install --no-install-recommends -y \
 	cmake \
 	device-tree-compiler \
 	doxygen \
-	file \
-	g++ \
-	gcc \
 	gcc-multilib \
-	gcovr \
-	git \
-	git-core \
 	gperf \
-	lcov \
-	libtool \
-	locales \
 	make \
 	ninja-build \
-	valgrind \
-	wget \
-	xz-utils \
-	python3-pip \
-	python3-ply \
-	python3-setuptools
+	wget
 
 sudo pip3 install -r scripts/requirements.txt
 sudo pip3 install wheel west sh
