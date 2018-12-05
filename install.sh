@@ -14,8 +14,6 @@ sudo apt-get install --no-install-recommends -y \
 	ninja-build \
 	wget
 
-sudo pip3 install -r scripts/requirements.txt
-sudo pip3 install wheel west sh
 
 if [ ! -d "/home/semaphore/zephyr-sdk-0.9.5" ]; then
 wget -q "https://github.com/zephyrproject-rtos/meta-zephyr-sdk/releases/download/${ZSDK_VERSION}/zephyr-sdk-${ZSDK_VERSION}-setup.run" && \
