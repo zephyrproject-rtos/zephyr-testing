@@ -36,7 +36,7 @@ blocks:
           - ./install.sh
           - ccache -s
           - source zephyr-env.sh
-          - ./scripts/sanitycheck --inline-logs -N --subset ${MATRIX_BUILD}/${MATRIX_TOTAL}
+          - ./scripts/sanitycheck --inline-logs -N --subset ${MATRIX_BUILD}/${MATRIX_TOTAL} || ./scripts/sanitycheck --inline-logs -N --only-failed
           - ccache -s
           - cd $HOME
           - cache store ccache_dir_${MATRIX_BUILD} .ccache
