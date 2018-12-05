@@ -31,6 +31,6 @@ blocks:
           - sudo mkdir -p /usr/local/bin
           - sudo cp $HOME/zephyr-sdk-0.9.5/sysroots/x86_64-pokysdk-linux/usr/bin/dtc /usr/local/bin
           - source zephyr-env.sh
-          - ./scripts/sanitycheck --inline-logs -N --subset 1/5
+          - ./scripts/sanitycheck --inline-logs -N --subset 1/5 -T tests/kernel
           - ccache -s
           - cache store ccache_dir $CCACHE_DIR
