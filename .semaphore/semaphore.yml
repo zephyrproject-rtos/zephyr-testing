@@ -1,5 +1,5 @@
 version: v1.0
-name: Using C in Semaphore 2.0
+name: Zephyr Project CI
 agent:
   machine:
     type: e1-standard-8
