@@ -25,6 +25,8 @@ blocks:
           - cache restore ccache_dir_1
           - sem-version c 7
           - checkout
+          - pip3 install -r scripts/requirements.txt
+          - pip3 install wheel west sh
           - ./install.sh
           - ccache -s
           - source zephyr-env.sh
