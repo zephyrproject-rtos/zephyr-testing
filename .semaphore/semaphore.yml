@@ -15,11 +15,12 @@ blocks:
           value: "/home/semaphore/zephyr-sdk-0.9.5"
         - name: ZEPHYR_TOOLCHAIN_VARIANT
           value: "zephyr"
+        - name: USE_CCACHE
+          value: "1"
       jobs:
       - name: sanitycheck
         commands:
-          - export USE_CCACHE=1
-          - export CCACHE_DIR=ccache
+          - export CCACHE_DIR=$HOME/.ccache
           - cache restore $CCACHE_DIR
           - cache restore $ZEPHYR_SDK_INSTALL_DIR
           - sem-version c 7
