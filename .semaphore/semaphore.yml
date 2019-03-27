@@ -12,7 +12,7 @@ blocks:
         - name: ssh_pub_key
       env_vars:
         - name: ZEPHYR_SDK_INSTALL_DIR
-          value: "/home/semaphore/zephyr-sdk-0.9.5"
+          value: "/home/semaphore/zephyr-sdk-0.10.0"
         - name: ZEPHYR_TOOLCHAIN_VARIANT
           value: "zephyr"
         - name: USE_CCACHE
@@ -27,17 +27,8 @@ blocks:
         commands:
           - env
           - sem-version python 3.7
-          - cache restore zephyr_sdk_1
-          - cache restore ccache_dir_${MATRIX_BUILD}
           - sem-version c 7
           - checkout
-          - pip3 install -r scripts/requirements.txt
-          - pip3 install wheel west sh
-          - ./install.sh
-          - ccache -s
-          - source zephyr-env.sh
-          - ./scripts/sanitycheck --inline-logs -N --subset ${MATRIX_BUILD}/${MATRIX_TOTAL} || ./scripts/sanitycheck --inline-logs -N --only-failed
-          - ccache -s
-          - cd $HOME
-          - cache store ccache_dir_${MATRIX_BUILD} .ccache
-          - cache has_key zephyr_sdk_1 || cache store zephyr_sdk_1 zephyr-sdk-0.9.5
+          - ls -la
+          - pwd
+          - docker run -ti -u `id -u $USER` -e CCACHE_DIR=$PWD/ccache -v $PWD:/workdir docker.io/zephyrprojectrtos/zephyr-build:v0.10 ./scripts/sanitycheck --inline-logs -N --subset ${MATRIX_BUILD}/${MATRIX_TOTAL}
