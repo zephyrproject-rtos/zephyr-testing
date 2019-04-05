@@ -26,9 +26,10 @@ blocks:
             values: ["1", "2", "3", "4", "5"]
         commands:
           - env
+          - cat /etc/os-release
           - sem-version python 3.7
           - sem-version c 7
           - checkout
           - ls -la
           - pwd
-          - docker run -ti -u `id -u $USER` -e CCACHE_DIR=$PWD/ccache -v $PWD:/workdir docker.io/zephyrprojectrtos/zephyr-build:v0.10 ./scripts/sanitycheck --inline-logs -N --subset ${MATRIX_BUILD}/${MATRIX_TOTAL}
+          - docker run -ti -u `id -u $USER` -e CCACHE_DIR=$PWD/ccache -v $PWD:/workdir:z docker.io/zephyrprojectrtos/zephyr-build:v0.10 ./scripts/sanitycheck --inline-logs -N -T tests/kernel --subset ${MATRIX_BUILD}/${MATRIX_TOTAL}
