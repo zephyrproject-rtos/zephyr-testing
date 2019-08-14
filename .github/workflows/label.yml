@@ -1,5 +1,6 @@
 name: Labeler
-on: [pull-request]
+
+on: [push, pull-request]
 
 jobs:
   label:
