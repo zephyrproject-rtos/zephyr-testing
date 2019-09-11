@@ -21,7 +21,7 @@ blocks:
             - west update
             - >-
               scripts/sanitycheck -p frdm_k64f --subset
-              $SEMAPHORE_JOB_INDEX/$SEMAPHORE_JOB_COUNT
+              $SEMAPHORE_JOB_INDEX/$SEMAPHORE_JOB_COUNT --inline-logs
       env_vars:
         - name: ZEPHYR_SDK_INSTALL_DIR
           value: /opt/sdk/zephyr-sdk-0.10.3
