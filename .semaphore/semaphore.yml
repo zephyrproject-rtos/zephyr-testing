@@ -13,6 +13,8 @@ blocks:
       jobs:
         - name: Hello
           commands:
+            - export
+            - echo KUMAR
             - >-
               printf "#include <stdio.h>\n int main() { printf(\"Hello world\");
               return 0; }" > hello.c
