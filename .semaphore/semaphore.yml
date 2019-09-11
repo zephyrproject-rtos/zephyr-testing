@@ -6,7 +6,7 @@ agent:
     os_image: ubuntu1804
   containers:
     - name: zephyr
-      image: 'zephyrprojectrtos/ci:v0.9'
+      image: semaphoreci/ubuntu
 blocks:
   - name: Docker-based example
     task:
