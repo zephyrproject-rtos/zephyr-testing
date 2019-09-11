@@ -19,6 +19,8 @@ blocks:
             - echo $ZEPHYR_SDK_INSTALL_DIR
             - export
             - su - buildslave
+            - export
+            - exit
       env_vars:
         - name: ZEPHYR_SDK_INSTALL_DIR
           value: /opt/sdk/zephyr-sdk-0.10.3
