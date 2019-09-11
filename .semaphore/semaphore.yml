@@ -15,3 +15,10 @@ blocks:
           commands:
             - ls
             - pwd
+            - id
+            - echo $ZEPHYR_SDK_INSTALL_DIR
+      env_vars:
+        - name: ZEPHYR_SDK_INSTALL_DIR
+          value: /opt/sdk/zephyr-sdk-0.10.3
+        - name: ZEPHYR_TOOLCHAIN_VARIANT
+          value: zephyr
