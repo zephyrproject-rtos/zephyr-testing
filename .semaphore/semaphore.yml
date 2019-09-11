@@ -1,12 +1,12 @@
 version: v1.0
-name: Hello Docker
+name: Zephyr
 agent:
   machine:
-    type: e1-standard-2
+    type: e1-standard-4
     os_image: ubuntu1804
   containers:
     - name: main
-      image: 'semaphoreci/ubuntu:18.04'
+      image: 'zephyrprojectrtos/ci:v0.9'
 blocks:
   - name: Hello
     task:
