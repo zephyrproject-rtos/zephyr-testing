@@ -1,0 +1,22 @@
+# Run CI/CD jobs in Docker images:
+# https://docs.semaphoreci.com/article/127-custom-ci-cd-environment-with-docker
+version: v1.0
+name: Hello Semaphore
+agent:
+  machine:
+    type: e1-standard-2
+  containers:
+    - name: zephyr
+      image: zephyrprojectrtos/ci:v0.9
+blocks:
+  - name: Docker-based example
+    task:
+      jobs:
+      - name: Hello
+        commands:
+          - node -p '"evol".split("").reverse().join("")'
+          - apt-get -y update && apt-get install redis-tools
+          - redis-cli -h cache "KEYS *"
+          # Uncomment the following line to pull your code,
+          # then proceed by adding your custom commands:
+          #- checkout
