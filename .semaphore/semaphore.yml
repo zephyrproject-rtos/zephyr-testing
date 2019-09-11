@@ -1,14 +1,17 @@
 version: v1.0
-name: Test
+name: Hello Docker
 agent:
   machine:
     type: e1-standard-2
     os_image: ubuntu1804
+  containers:
+    - name: main
+      image: 'semaphoreci/ruby:2.6.1'
 blocks:
   - name: Hello
     task:
       jobs:
         - name: Hello
           commands:
-            - ls
-            - pwd
+            - checkout
+            - ruby --version
