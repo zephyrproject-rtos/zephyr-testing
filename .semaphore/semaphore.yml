@@ -13,12 +13,12 @@ blocks:
       jobs:
         - name: Hello
           commands:
+            - checkout
             - ls
             - pwd
             - id
             - echo $ZEPHYR_SDK_INSTALL_DIR
             - export
-            - checkout
       env_vars:
         - name: ZEPHYR_SDK_INSTALL_DIR
           value: /opt/sdk/zephyr-sdk-0.10.3
@@ -29,5 +29,5 @@ blocks:
       jobs:
         - name: 'Job #1'
           commands:
-            - id
+            - ls
             - export
