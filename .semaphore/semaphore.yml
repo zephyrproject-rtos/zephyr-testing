@@ -31,4 +31,5 @@ blocks:
         - name: 'Job #1'
           commands:
             - ls
+            - ls /
             - export
