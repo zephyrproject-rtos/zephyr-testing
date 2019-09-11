@@ -12,13 +12,16 @@ blocks:
     task:
       jobs:
         - name: Hello
+          parallelism: 4
           commands:
             - apt-get install lftp
             - checkout --use-cache
             - source zephyr-env.sh
             - west init
             - west update
-            - scripts/sanitycheck -T samples/hello_world/ -p frdm_k64f
+            - >-
+              scripts/sanitycheck -p frdm_k64f --subset
+              $SEMAPHORE_JOB_INDEX/$SEMAPHORE_JOB_COUNT
       env_vars:
         - name: ZEPHYR_SDK_INSTALL_DIR
           value: /opt/sdk/zephyr-sdk-0.10.3
