@@ -1,0 +1,33 @@
+version: v1.0
+name: Zephyr
+agent:
+  machine:
+    type: e1-standard-4
+    os_image: ubuntu1804
+  containers:
+    - name: main
+      image: 'zephyrprojectrtos/ci:v0.9'
+blocks:
+  - name: Hello
+    task:
+      jobs:
+        - name: Hello
+          commands:
+            - ls
+            - pwd
+            - id
+            - echo $ZEPHYR_SDK_INSTALL_DIR
+            - export
+            - su - buildslave
+      env_vars:
+        - name: ZEPHYR_SDK_INSTALL_DIR
+          value: /opt/sdk/zephyr-sdk-0.10.3
+        - name: ZEPHYR_TOOLCHAIN_VARIANT
+          value: zephyr
+  - name: 'Block #2'
+    task:
+      jobs:
+        - name: 'Job #1'
+          commands:
+            - id
+            - export
