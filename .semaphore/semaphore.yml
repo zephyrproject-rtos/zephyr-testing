@@ -13,5 +13,5 @@ blocks:
       jobs:
         - name: Hello
           commands:
-            - checkout
-            - ruby --version
+            - ls
+            - pwd
