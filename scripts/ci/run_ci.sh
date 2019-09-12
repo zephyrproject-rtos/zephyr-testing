@@ -290,6 +290,8 @@ if [ -n "$MAIN_CI" ]; then
 
 	# Save list of tests to be run
 	${SANITYCHECK} ${SANITYCHECK_OPTIONS} --save-tests test_file.txt || exit 1
+	shasum test_file.txt
+
 
 	# Run a subset of tests based on matrix size
 	${SANITYCHECK} ${SANITYCHECK_OPTIONS} --load-tests test_file.txt \
