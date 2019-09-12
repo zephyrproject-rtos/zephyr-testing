@@ -88,7 +88,7 @@ if [ -n "$MAIN_CI" ]; then
 	# West handling
         pushd ..
 	if [ ! -d .west ]; then
-		west init -l zephyr
+		west init -l zephyr-testing
 		west update
 	fi
         popd
