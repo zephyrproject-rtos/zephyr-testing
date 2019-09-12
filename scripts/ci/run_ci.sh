@@ -287,6 +287,8 @@ if [ -n "$MAIN_CI" ]; then
 		get_tests_to_run
 	fi
 
+	shasum test_file.txt
+
 	# Save list of tests to be run
 	${SANITYCHECK} ${SANITYCHECK_OPTIONS} --save-tests test_file.txt || exit 1
 
