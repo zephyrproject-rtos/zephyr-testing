@@ -83,14 +83,12 @@ while getopts ":p:m:b:r:M:cfslR:" opt; do
 	esac
 done
 
-DOC_MATRIX=${MATRIX_BUILDS}
-
 if [ -n "$MAIN_CI" ]; then
 
 	# West handling
         pushd ..
 	if [ ! -d .west ]; then
-		west init -l zephyr
+		west init -l zephyr-testing
 		west update
 	fi
         popd
