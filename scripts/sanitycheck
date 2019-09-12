@@ -2438,8 +2438,8 @@ class TestSuite:
                 else:
                     self.add_instances(instance_list)
 
-                for name, case in self.instances.items():
-                    case.create_overlay(case.platform.name)
+        for name, case in self.instances.items():
+            case.create_overlay(case.platform.name)
 
         self.discards = discards
 
