@@ -12,7 +12,7 @@ blocks:
     task:
       jobs:
         - name: Hello
-          parallelism: 4
+          parallelism: 20
           commands:
             - apt-get install lftp
             - checkout --use-cache
