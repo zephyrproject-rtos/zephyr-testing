@@ -166,6 +166,17 @@ function get_tests_to_run() {
 }
 
 
+function west_setup() {
+	# West handling
+	pushd ..
+	if [ ! -d .west ]; then
+		west init -l zephyr
+		west update
+	fi
+	popd
+}
+
+
 while getopts ":p:m:b:r:M:cfslR:" opt; do
 	case $opt in
 		c)
@@ -217,13 +228,7 @@ done
 
 if [ -n "$MAIN_CI" ]; then
 
-	# West handling
-        pushd ..
-	if [ ! -d .west ]; then
-		west init -l zephyr
-		west update
-	fi
-        popd
+	west_setup
 
 	if [ -z "$BRANCH" ]; then
 		echo "No base branch given"
