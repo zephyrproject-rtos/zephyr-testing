@@ -86,9 +86,11 @@ done
 if [ -n "$MAIN_CI" ]; then
 
 	# West handling
+	FOO=$(basename $PWD)
+	echo $FOO
         pushd ..
 	if [ ! -d .west ]; then
-		west init -l zephyr
+		west init -l ${FOO}
 		west update
 	fi
         popd
