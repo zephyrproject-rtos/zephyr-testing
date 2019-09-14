@@ -53,23 +53,6 @@ branches:
     - v*-branch
     - topic-*
 integrations:
-  notifications:
-    - integrationName: slack_integration
-      type: slack
-      recipients:
-        - "#ci"
-      branches:
-        only:
-          - master
-      on_success: never
-      on_failure: never
-    - integrationName: email
-      type: email
-      recipients:
-        - builds@zephyrproject.org
-      branches:
-        only:
-          - master
-      on_success: never
-      on_failure: always
-      on_pull_request: never
+  generic:
+    - integrationName: aws_s3
+
