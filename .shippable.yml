@@ -7,6 +7,7 @@ env:
         - ZEPHYR_SDK_INSTALL_DIR=/opt/sdk/zephyr-sdk-0.10.3
         - ZEPHYR_TOOLCHAIN_VARIANT=zephyr
         - MATRIX_BUILDS="5"
+        - SCCACHE_BUCKET="builds.zephyrproject.org"
     matrix:
         - MATRIX_BUILD="1"
         - MATRIX_BUILD="2"
@@ -26,13 +27,14 @@ build:
 
     ci:
       - export CCACHE_DIR=${SHIPPABLE_BUILD_DIR}/ccache/.ccache
+      - sccache -s
       - >
         if [ "$IS_PULL_REQUEST" = "true" ]; then
           ./scripts/ci/run_ci.sh -c -b ${PULL_REQUEST_BASE_BRANCH} -r origin -m ${MATRIX_BUILD} -M ${MATRIX_BUILDS} -p ${PULL_REQUEST};
         else
           ./scripts/ci/run_ci.sh -c -b ${BRANCH} -r origin -m ${MATRIX_BUILD} -M ${MATRIX_BUILDS};
         fi;
-      - ccache -s
+      - sccache -s
     on_failure:
       - >
         if [ "$IS_PULL_REQUEST" = "true" ]; then
