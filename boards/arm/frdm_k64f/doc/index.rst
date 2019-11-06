@@ -1,4 +1,4 @@
-.. _frdm_k64f:
+ .. _frdm_k64f:
 
 NXP FRDM-K64F
 ##############
