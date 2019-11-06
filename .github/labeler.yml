@@ -1,0 +1,3 @@
+"area: DTS":
+        - *.dts
+        - dts/**
