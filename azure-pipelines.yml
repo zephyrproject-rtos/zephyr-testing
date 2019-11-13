@@ -14,10 +14,12 @@ jobs:
   steps:
   - checkout: self
     fetchDepth: 1
+    path: zephyr
   - bash: |
       which bash
       ls
       ls /
+      pwd
       uname -a
       id
       cat /etc/issue
