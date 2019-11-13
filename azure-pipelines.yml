@@ -29,7 +29,8 @@ jobs:
       export PATH=$HOME/.local/bin:$PATH
       echo $PATH
       source zephyr-env.sh
-      west -v
+      west --version
+      
 
     displayName: Multiline Bash script
     env:
