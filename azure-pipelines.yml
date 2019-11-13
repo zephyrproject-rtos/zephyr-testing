@@ -25,6 +25,8 @@ jobs:
       python3 --version
       pip3 install setuptools wheel
       pip3 install west
+      echo PATH
+      export PATH=$HOME/.local/bin:$PATH
       west -v
     displayName: Multiline Bash script
     env:
