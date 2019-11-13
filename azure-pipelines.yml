@@ -16,10 +16,10 @@ jobs:
     fetchDepth: 1
   - bash: |
       which bash
-      echo Hello $name
       ls
       ls /
       uname -a
+      id
       cat /etc/issue
       cat /etc/issue.net
       python3 --version
