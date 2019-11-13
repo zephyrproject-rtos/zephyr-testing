@@ -9,7 +9,7 @@ trigger:
 resources:
   containers:
   - container: zephyr # reusable alias
-    image: zephyrprojectrtos/ci:v0.9.3
+    image: zephyrprojectrtos/ci:v0.9.5
 
 pool:
   vmImage: 'ubuntu-latest'
