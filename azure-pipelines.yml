@@ -30,7 +30,14 @@ jobs:
       echo $PATH
       source zephyr-env.sh
       west --version
-      
+      cd ..
+      west init -l zephyr || true
+      cd zephyr
+      west update
+      export CITOOLS=$(west list ci-tools -f"{abspath:18}")
+      echo $CITOOLS
+      sudo pip3 install -r ${CITOOLS}/requirements.txt
+
 
     displayName: Multiline Bash script
     env:
