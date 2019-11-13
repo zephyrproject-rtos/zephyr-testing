@@ -20,7 +20,5 @@ jobs:
   - bash: |
     which bash
     echo Hello $name
-  displayName: Multiline Bash script
   env:
-    name: Microsoft
-
+   name: Microsoft
