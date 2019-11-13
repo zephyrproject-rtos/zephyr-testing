@@ -20,6 +20,7 @@ jobs:
       uname -a
       cat /etc/issue
       cat /etc/issue.net
+      python3 --version
       pip3 install west
     displayName: Multiline Bash script
     env:
