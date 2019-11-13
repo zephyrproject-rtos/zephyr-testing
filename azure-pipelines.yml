@@ -19,6 +19,7 @@ jobs:
       which bash
       ls
       ls /
+      echo "--- PWD ---"
       pwd
       uname -a
       id
