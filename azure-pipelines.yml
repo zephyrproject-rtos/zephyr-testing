@@ -17,8 +17,10 @@ pool:
 jobs:
 - job: a
   container: zephyr # reference
+  steps:
   - bash: |
     which bash
     echo Hello $name
-  env:
-   name: Microsoft
+    displayName: Multiline Bash script
+    env:
+      name: Microsoft
