@@ -19,8 +19,8 @@ jobs:
   container: zephyr # reference
   steps:
   - bash: |
-    which bash
-    echo Hello $name
+      which bash
+      echo Hello $name
     displayName: Multiline Bash script
     env:
       name: Microsoft
