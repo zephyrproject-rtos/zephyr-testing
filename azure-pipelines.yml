@@ -9,13 +9,11 @@ trigger:
 pool:
   vmImage: 'ubuntu-latest'
 
-steps:
-- checkout: self
-  fetchDepth: 1
-
 jobs:
 - job: a
   steps:
+  - checkout: self
+    fetchDepth: 1
   - bash: |
       which bash
       echo Hello $name
