@@ -6,14 +6,21 @@
 trigger:
 - master
 
+resources:
+  containers:
+  - container: zephyr # reusable alias
+    image: zephyrprojectrtos/ci:v0.9.3
+
 pool:
   vmImage: 'ubuntu-latest'
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+jobs:
+- job: a
+  container: zephyr # reference
+  - bash: |
+    which bash
+    echo Hello $name
+  displayName: Multiline Bash script
+  env:
+    name: Microsoft
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
