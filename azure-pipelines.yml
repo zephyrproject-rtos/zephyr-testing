@@ -16,6 +16,7 @@ jobs:
     fetchDepth: 1
     path: zephyr
   - bash: |
+      echo $(Build.Repository.Name)
       which bash
       ls
       ls /
@@ -40,6 +41,7 @@ jobs:
       export CITOOLS=$(west list ci-tools -f"{abspath:18}")
       echo $CITOOLS
       sudo pip3 install -r ${CITOOLS}/requirements.txt
+      ${CITOOLS}/scripts/what_changed.py -r ${MAIN_REPO_REPO_FULL_NAME} -p ${MAIN_REPO_PULL_REQUEST} --commits ${COMMIT_RANGE}
 
 
     displayName: Multiline Bash script
