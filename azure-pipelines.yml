@@ -23,8 +23,9 @@ jobs:
       cat /etc/issue
       cat /etc/issue.net
       python3 --version
-      pip3 install setuptools
+      pip3 install setuptools wheel
       pip3 install west
+      west -v
     displayName: Multiline Bash script
     env:
       name: Microsoft
