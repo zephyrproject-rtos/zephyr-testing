@@ -12,7 +12,7 @@ pool:
 jobs:
 - job: a
   steps:
-  - checkout: self
+  - checkout: none
     fetchDepth: 1
   - bash: |
       which bash
@@ -23,6 +23,7 @@ jobs:
       cat /etc/issue
       cat /etc/issue.net
       python3 --version
+      pip3 install setuptools
       pip3 install west
     displayName: Multiline Bash script
     env:
