@@ -23,6 +23,7 @@ jobs:
       echo "-- export --"
       export
       echo "--- PWD ---"
+      lscpu
       pwd
       uname -a
       id
