@@ -33,6 +33,8 @@ build:
           ./scripts/ci/run_ci.sh -c -b ${BRANCH} -r origin -m ${MATRIX_BUILD} -M ${MATRIX_BUILDS};
         fi;
       - ccache -s
+    post-ci:
+      - curl -s https://report.ci/upload.py | python - -l sanity-out/sanitycheck.xml
     on_failure:
       - >
         if [ "$IS_PULL_REQUEST" = "true" ]; then
