@@ -1,0 +1,63 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- master
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  CCACHE_DIR: $(Pipeline.Workspace)/ccache
+  LOCAL_DIR: ${HOME}/.local
+
+jobs:
+- job: a
+  steps:
+  - checkout: self
+    fetchDepth: 1
+    path: zephyr
+  - task: CacheBeta@0
+    inputs:
+      key: localdir | $(Agent.OS)
+      path: $(LOCAL_DIR)
+    displayName: local-cache
+  - bash: |
+      sudo apt-get install -y ninja-build doxygen
+      pip3 install setuptools wheel
+      pip3 install west
+      pip3 install cmake
+      pip3 install -r https://raw.githubusercontent.com/zephyrproject-rtos/zephyr/master/scripts/requirements.txt
+      pip3 install -r https://raw.githubusercontent.com/zephyrproject-rtos/ci-tools/master/requirements.txt
+    displayName: install
+  - bash: |
+      echo SYSTEM_PULLREQUEST_PULLREQUESTNUMBER=${SYSTEM_PULLREQUEST_PULLREQUESTNUMBER}
+      git fetch origin pull/${SYSTEM_PULLREQUEST_PULLREQUESTNUMBER}/head
+      git checkout -f FETCH_HEAD
+      export SHA=$(git rev-parse HEAD)
+      echo SHA=${SHA}
+      echo SYSTEM_PULLREQUEST_TARGETBRANCH=${SYSTEM_PULLREQUEST_TARGETBRANCH}
+      git merge -q origin/${SYSTEM_PULLREQUEST_TARGETBRANCH}
+      git rebase origin/${SYSTEM_PULLREQUEST_TARGETBRANCH}
+      echo $(Build.Repository.Name)
+      git log -5
+      which bash
+      echo "-- export --"
+      export
+      echo "--- PWD ---"
+      pwd
+      echo "--- ls ---"
+      ls $(Pipeline.Workspace)/
+      echo "-----------"
+      export PATH=$HOME/.local/bin:$PATH
+      source zephyr-env.sh
+      export COMMIT_RANGE=origin/${SYSTEM_PULLREQUEST_TARGETBRANCH}..HEAD
+      west init -l . || true
+      west update
+      export CITOOLS=$(west list ci-tools -f"{abspath:18}")
+      echo $CITOOLS
+      make htmldocs
+      #${CITOOLS}/scripts/what_changed.py -r ${BUILD_REPOSITORY_NAME} -p ${SYSTEM_PULLREQUEST_PULLREQUESTNUMBER} --commits ${COMMIT_RANGE}
+    displayName: build-docs
