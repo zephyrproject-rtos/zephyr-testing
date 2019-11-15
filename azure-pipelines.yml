@@ -19,6 +19,11 @@ jobs:
   - checkout: self
     fetchDepth: 1
     path: zephyr
+  - task: CacheBeta@0
+    inputs:
+      key: localdir | $(Agent.OS)
+      path: $(LOCAL_DIR)
+    displayName: local-cache
   - bash: |
       sudo apt-get install -y ninja-build doxygen
       pip3 install setuptools wheel
@@ -27,11 +32,6 @@ jobs:
       pip3 install -r https://raw.githubusercontent.com/zephyrproject-rtos/zephyr/master/scripts/requirements.txt
       pip3 install -r https://raw.githubusercontent.com/zephyrproject-rtos/ci-tools/master/requirements.txt
     displayName: install
-  - task: CacheBeta@0
-    inputs:
-      key: localdir | $(Agent.OS)
-      path: $(LOCAL_DIR)
-    displayName: local-cache
   - bash: |
       echo SYSTEM_PULLREQUEST_PULLREQUESTNUMBER=${SYSTEM_PULLREQUEST_PULLREQUESTNUMBER}
       git fetch origin pull/${SYSTEM_PULLREQUEST_PULLREQUESTNUMBER}/head
