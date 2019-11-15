@@ -10,7 +10,7 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  - group: GitHub
+- group: GitHub
 
 jobs:
 - job: a
