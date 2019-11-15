@@ -6,8 +6,7 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-    
-    steps:
+steps:
     - uses: actions/checkout@v1
     - name: install-pkg
       run: |
@@ -18,6 +17,12 @@ jobs:
         pip3 install west
         pip3 install cmake
         pip3 install -r https://raw.githubusercontent.com/zephyrproject-rtos/zephyr/master/scripts/requirements.txt
+    - uses: actions/cache@v1
+      with:
+        path: ../modules
+        key: ${{ runner.os }}-zephyr-${{ hashFiles('west.yml') }}
+        restore-keys: |
+          ${{ runner.os }}-zerphyr-modules        
     - name: git
       run: |
         export
