@@ -29,13 +29,14 @@ jobs:
       pip3 install west
       export PATH=$HOME/.local/bin:$PATH
       source zephyr-env.sh
+      export COMMIT_RANGE=origin/${SYSTEM_PULLREQUEST_TARGETBRANCH}..HEAD
       west init -l . || true
       west update
       export CITOOLS=$(west list ci-tools -f"{abspath:18}")
       echo $CITOOLS
       sudo pip3 install -r ${CITOOLS}/requirements.txt
 
-      ${CITOOLS}/scripts/what_changed.py -r ${MAIN_REPO_REPO_FULL_NAME} -p ${MAIN_REPO_PULL_REQUEST} --commits ${COMMIT_RANGE}
+      ${CITOOLS}/scripts/what_changed.py -r ${BUILD_REPOSITORY_NAME} -p ${SYSTEM_PULLREQUEST_PULLREQUESTNUMBER} --commits ${COMMIT_RANGE}
 
 
     displayName: Multiline Bash script
