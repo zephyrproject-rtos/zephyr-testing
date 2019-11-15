@@ -58,8 +58,6 @@ jobs:
       west update
       export CITOOLS=$(west list ci-tools -f"{abspath:18}")
       echo $CITOOLS
-    displayName: prep-git
-  - bash: |
       make htmldocs
       #${CITOOLS}/scripts/what_changed.py -r ${BUILD_REPOSITORY_NAME} -p ${SYSTEM_PULLREQUEST_PULLREQUESTNUMBER} --commits ${COMMIT_RANGE}
     displayName: build-docs
