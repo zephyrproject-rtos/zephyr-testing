@@ -13,10 +13,10 @@ jobs:
         sudo apt-get install -y ninja-build doxygen
     - name: install-pip
       run: |
-        #pip3 install setuptools wheel
+        pip3 install setuptools wheel
         pip3 install west
         pip3 install cmake
-        pip3 install -r https://raw.githubusercontent.com/zephyrproject-rtos/zephyr/master/scripts/requirements.txt
+        pip3 install -r scripts/requirements.txt
     - uses: actions/cache@v1
       with:
         path: ../modules
