@@ -16,9 +16,14 @@ jobs:
     fetchDepth: 1
     path: zephyr
   - bash: |
+      echo ${SYSTEM_PULLREQUEST_PULLREQUESTNUMBER}
       git fetch origin pull/${SYSTEM_PULLREQUEST_PULLREQUESTNUMBER}/head
       git checkout -f FETCH_HEAD
       export SHA=$(git rev-parse HEAD)
+      echo ${SHA}
+      echo ${SYSTEM_PULLREQUEST_TARGETBRANCH}
+      git merge -q origin/${SYSTEM_PULLREQUEST_TARGETBRANCH}
+      git rebase origin/${SYSTEM_PULLREQUEST_TARGETBRANCH}
       echo $(Build.Repository.Name)
       git log -5
       which bash
