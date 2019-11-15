@@ -11,7 +11,7 @@ pool:
 
 variables:
   CCACHE_DIR: $(Pipeline.Workspace)/ccache
-  LOCAL_DIR: $(Pipeline.Workspace)/.local
+  LOCAL_DIR: ${HOME}/.local
 
 jobs:
 - job: a
