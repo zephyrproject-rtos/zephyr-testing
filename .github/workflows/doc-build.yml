@@ -9,20 +9,15 @@ jobs:
     
     steps:
     - uses: actions/checkout@v1
-    - uses: actions/cache@v1
-      with:
-        path: ~/.local
-        key: ${{ runner.os }}-local-1.1.1.1
-        restore-keys: |
-          ${{ runner.os }}-local-      
-    - name: install
+    - name: install-pkg
       run: |
         sudo apt-get install -y ninja-build doxygen
+    - name: install-pip
+      run: |
         pip3 install setuptools wheel
         pip3 install west
         pip3 install cmake
         pip3 install -r https://raw.githubusercontent.com/zephyrproject-rtos/zephyr/master/scripts/requirements.txt
-        pip3 install -r https://raw.githubusercontent.com/zephyrproject-rtos/ci-tools/master/requirements.txt
     - name: git
       run: |
         export
