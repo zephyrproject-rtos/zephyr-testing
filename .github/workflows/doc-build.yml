@@ -1,0 +1,26 @@
+name: doc-build
+
+on: [pull_request]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v1
+    - name: install
+      run: |
+        sudo apt-get install -y ninja-build doxygen
+        pip3 install setuptools wheel
+        pip3 install west
+        pip3 install cmake
+        pip3 install -r https://raw.githubusercontent.com/zephyrproject-rtos/zephyr/master/scripts/requirements.txt
+        pip3 install -r https://raw.githubusercontent.com/zephyrproject-rtos/ci-tools/master/requirements.txt
+    - name: git
+      run: |
+        export
+        #git fetch origin pull/${SYSTEM_PULLREQUEST_PULLREQUESTNUMBER}/head
+        #git checkout -f FETCH_HEAD
+        #git merge -q origin/${SYSTEM_PULLREQUEST_TARGETBRANCH}
+        #git rebase origin/${SYSTEM_PULLREQUEST_TARGETBRANCH}
