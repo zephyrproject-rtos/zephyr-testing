@@ -9,6 +9,12 @@ jobs:
     
     steps:
     - uses: actions/checkout@v1
+    - uses: actions/cache@v1
+      with:
+        path: ~/.local
+        key: ${{ runner.os }}-local-${{ hashFiles('**/*.local') }}
+        restore-keys: |
+          ${{ runner.os }}-local-      
     - name: install
       run: |
         sudo apt-get install -y ninja-build doxygen
@@ -24,3 +30,5 @@ jobs:
         #git checkout -f FETCH_HEAD
         #git merge -q origin/${SYSTEM_PULLREQUEST_TARGETBRANCH}
         #git rebase origin/${SYSTEM_PULLREQUEST_TARGETBRANCH}
+        export PATH=$HOME/.local/bin:$PATH
+
