@@ -16,6 +16,7 @@ jobs:
     fetchDepth: 1
     path: zephyr
   - bash: |
+      sudo apt-get install -y ninja-build
       echo SYSTEM_PULLREQUEST_PULLREQUESTNUMBER=${SYSTEM_PULLREQUEST_PULLREQUESTNUMBER}
       git fetch origin pull/${SYSTEM_PULLREQUEST_PULLREQUESTNUMBER}/head
       git checkout -f FETCH_HEAD
