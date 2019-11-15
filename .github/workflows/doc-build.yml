@@ -11,7 +11,8 @@ jobs:
     - name: export
       run: |
         export      
-    - uses: unacast/actions-github-deployment-status@master
+    - name: 'deployment pending'
+      uses: 'deliverybot/deployment-status@v1'
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        status: FOO
+        state: 'pending'
+        token: '${{ github.token }}'
