@@ -8,15 +8,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
-    - uses: geekodour/gh-actions-custom-status@v0.0.4
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        LAST_COMMIT_SHA: ${{ github.event.client_payload.LAST_COMMIT_SHA }}
-      with:
-       args: >-
-         --state=pending
-         --context=foo-status-update
-         --target_url=https://github.com/${{ github.repository }}/actions
     - name: export
       run: |
-        export 
+        export      
+    - uses: unacast/actions-github-deployment-status@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        status: FOO
