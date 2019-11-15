@@ -37,5 +37,6 @@ jobs:
         ls -lsa ~/
         ls -lsa ~/.local
         ls -lsa ..
+        make htmldocs
         
 
