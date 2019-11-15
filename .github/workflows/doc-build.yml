@@ -12,7 +12,7 @@ jobs:
     - uses: actions/cache@v1
       with:
         path: ~/.local
-        key: ${{ runner.os }}-local-${{ hashFiles('**/*.local') }}
+        key: ${{ runner.os }}-local-${{ hashFiles('~/.local/**/*') }}
         restore-keys: |
           ${{ runner.os }}-local-      
     - name: install
@@ -31,4 +31,11 @@ jobs:
         #git merge -q origin/${SYSTEM_PULLREQUEST_TARGETBRANCH}
         #git rebase origin/${SYSTEM_PULLREQUEST_TARGETBRANCH}
         export PATH=$HOME/.local/bin:$PATH
+        source zephyr-env.sh
+        west init -l . || true
+        west update
+        ls -lsa ~/
+        ls -lsa ~/.local
+        ls -lsa ..
+        
 
