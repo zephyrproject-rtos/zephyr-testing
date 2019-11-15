@@ -6,42 +6,18 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    uses: geekodour/gh-actions-custom-status@v0.0.4
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      LAST_COMMIT_SHA: ${{ github.event.client_payload.LAST_COMMIT_SHA }}
+    with:
+      args: >-
+        --state=pending
+        --context=foo-status-update
+        --target_url=https://github.com/${{ github.repository }}/actions
     steps:
     - uses: actions/checkout@v1
     - name: install-pkg
-      run: |
-        sudo apt-get install -y ninja-build doxygen
-    - uses: actions/cache@v1
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('scripts/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-          
-    - name: install-pip
-      run: |
-        pip3 install setuptools wheel
-        pip3 install west
-        pip3 install cmake
-        pip3 install -r scripts/requirements.txt
-    - uses: actions/cache@v1
-      with:
-        path: ../modules
-        key: ${{ runner.os }}-zephyr-modules-${{ hashFiles('west.yml') }}
-        restore-keys: |
-          ${{ runner.os }}-zerphyr-modules
-    - uses: actions/cache@v1
-      with:
-        path: ../tools
-        key: ${{ runner.os }}-zephyr-tools-${{ hashFiles('west.yml') }}
-        restore-keys: |
-          ${{ runner.os }}-zerphyr-tools          
-    - name: build-docs
-      run: |
-        export PATH=$HOME/.local/bin:$PATH
-        source zephyr-env.sh
-        west init -l . || true
-        west update
-        make htmldocs
     - name: export
       run: |
         export 
