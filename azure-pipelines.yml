@@ -48,6 +48,9 @@ jobs:
       export
       echo "--- PWD ---"
       pwd
+      echo "--- ls ---"
+      ls $(Pipeline.Workspace)/
+      echo "-----------"
       export PATH=$HOME/.local/bin:$PATH
       source zephyr-env.sh
       export COMMIT_RANGE=origin/${SYSTEM_PULLREQUEST_TARGETBRANCH}..HEAD
