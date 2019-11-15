@@ -9,6 +9,10 @@ trigger:
 pool:
   vmImage: 'ubuntu-latest'
 
+variables:
+  CCACHE_DIR: $(Pipeline.Workspace)/ccache
+  LOCAL_DIR: $(Pipeline.Workspace)/.local
+
 jobs:
 - job: a
   steps:
@@ -17,6 +21,13 @@ jobs:
     path: zephyr
   - bash: |
       sudo apt-get install -y ninja-build doxygen
+      pip3 install setuptools wheel
+      pip3 install west
+      pip3 install cmake
+      pip3 install -r https://raw.githubusercontent.com/zephyrproject-rtos/zephyr/master/scripts/requirements.txt
+      pip3 install -r https://raw.githubusercontent.com/zephyrproject-rtos/ci-tools/master/requirements.txt
+
+  - bash: |
       echo SYSTEM_PULLREQUEST_PULLREQUESTNUMBER=${SYSTEM_PULLREQUEST_PULLREQUESTNUMBER}
       git fetch origin pull/${SYSTEM_PULLREQUEST_PULLREQUESTNUMBER}/head
       git checkout -f FETCH_HEAD
@@ -32,10 +43,6 @@ jobs:
       export
       echo "--- PWD ---"
       pwd
-      pip3 install setuptools wheel
-      pip3 install west
-      pip3 install cmake
-      pip3 install -r https://raw.githubusercontent.com/zephyrproject-rtos/zephyr/master/scripts/requirements.txt
       export PATH=$HOME/.local/bin:$PATH
       source zephyr-env.sh
       export COMMIT_RANGE=origin/${SYSTEM_PULLREQUEST_TARGETBRANCH}..HEAD
@@ -43,7 +50,6 @@ jobs:
       west update
       export CITOOLS=$(west list ci-tools -f"{abspath:18}")
       echo $CITOOLS
-      sudo pip3 install -r ${CITOOLS}/requirements.txt
       make htmldocs
       #${CITOOLS}/scripts/what_changed.py -r ${BUILD_REPOSITORY_NAME} -p ${SYSTEM_PULLREQUEST_PULLREQUESTNUMBER} --commits ${COMMIT_RANGE}
 
