@@ -43,7 +43,7 @@ jobs:
         source zephyr-env.sh
         west init -l . || true
         west update
-        make htmldocs
+        #make htmldocs
     - name: export
       run: |
         export 
