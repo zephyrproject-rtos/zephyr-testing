@@ -20,9 +20,15 @@ jobs:
     - uses: actions/cache@v1
       with:
         path: ../modules
-        key: ${{ runner.os }}-zephyr-${{ hashFiles('west.yml') }}
+        key: ${{ runner.os }}-zephyr-modules-${{ hashFiles('west.yml') }}
         restore-keys: |
           ${{ runner.os }}-zerphyr-modules
+    - uses: actions/cache@v1
+      with:
+        path: ../tools
+        key: ${{ runner.os }}-zephyr-tools-${{ hashFiles('west.yml') }}
+        restore-keys: |
+          ${{ runner.os }}-zerphyr-tools          
     - name: git
       run: |
         export
