@@ -17,7 +17,6 @@ jobs:
          --state=pending
          --context=foo-status-update
          --target_url=https://github.com/${{ github.repository }}/actions
-    - name: install-pkg
     - name: export
       run: |
         export 
