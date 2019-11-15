@@ -26,7 +26,7 @@ jobs:
       pip3 install cmake
       pip3 install -r https://raw.githubusercontent.com/zephyrproject-rtos/zephyr/master/scripts/requirements.txt
       pip3 install -r https://raw.githubusercontent.com/zephyrproject-rtos/ci-tools/master/requirements.txt
-
+    displayName: gala
   - bash: |
       echo SYSTEM_PULLREQUEST_PULLREQUESTNUMBER=${SYSTEM_PULLREQUEST_PULLREQUESTNUMBER}
       git fetch origin pull/${SYSTEM_PULLREQUEST_PULLREQUESTNUMBER}/head
@@ -50,10 +50,10 @@ jobs:
       west update
       export CITOOLS=$(west list ci-tools -f"{abspath:18}")
       echo $CITOOLS
+    displayName: kumar
+  - bash: |
       make htmldocs
       #${CITOOLS}/scripts/what_changed.py -r ${BUILD_REPOSITORY_NAME} -p ${SYSTEM_PULLREQUEST_PULLREQUESTNUMBER} --commits ${COMMIT_RANGE}
-
-
     displayName: Multiline Bash script
     env:
       name: Microsoft
