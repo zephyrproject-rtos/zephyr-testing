@@ -35,6 +35,7 @@ jobs:
       pip3 install setuptools wheel
       pip3 install west
       pip3 install cmake
+      pip3 install -r https://raw.githubusercontent.com/zephyrproject-rtos/zephyr/master/scripts/requirements.txt
       export PATH=$HOME/.local/bin:$PATH
       source zephyr-env.sh
       export COMMIT_RANGE=origin/${SYSTEM_PULLREQUEST_TARGETBRANCH}..HEAD
