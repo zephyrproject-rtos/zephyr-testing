@@ -16,6 +16,9 @@ jobs:
     fetchDepth: 1
     path: zephyr
   - bash: |
+      git fetch origin pull/${TESTING_REPO_PULL_REQUEST}/head
+      git checkout -f FETCH_HEAD
+      export SHA=$(git rev-parse HEAD)
       echo $(Build.Repository.Name)
       git log -5
       which bash
