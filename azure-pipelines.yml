@@ -17,7 +17,7 @@ jobs:
     path: zephyr
   - bash: |
       echo $(Build.Repository.Name)
-      git log
+      git log -5
       which bash
       ls
       ls /
@@ -25,20 +25,11 @@ jobs:
       export
       echo "--- PWD ---"
       pwd
-      uname -a
-      id
-      cat /etc/issue
-      cat /etc/issue.net
-      python3 --version
       pip3 install setuptools wheel
       pip3 install west
-      echo $PATH
       export PATH=$HOME/.local/bin:$PATH
-      echo $PATH
       source zephyr-env.sh
-      cd ..
-      west init -l zephyr || true
-      cd zephyr
+      west init -l . || true
       west update
       export CITOOLS=$(west list ci-tools -f"{abspath:18}")
       echo $CITOOLS
