@@ -29,20 +29,13 @@ jobs:
         key: ${{ runner.os }}-zephyr-tools-${{ hashFiles('west.yml') }}
         restore-keys: |
           ${{ runner.os }}-zerphyr-tools          
-    - name: git
+    - name: build-docs
       run: |
-        export
-        #git fetch origin pull/${SYSTEM_PULLREQUEST_PULLREQUESTNUMBER}/head
-        #git checkout -f FETCH_HEAD
-        #git merge -q origin/${SYSTEM_PULLREQUEST_TARGETBRANCH}
-        #git rebase origin/${SYSTEM_PULLREQUEST_TARGETBRANCH}
         export PATH=$HOME/.local/bin:$PATH
         source zephyr-env.sh
         west init -l . || true
         west update
-        ls -lsa ~/
-        ls -lsa ~/.local
-        ls -lsa ..
-        make htmldocs
-        
-
+        #make htmldocs
+    - name: export
+      run: |
+        export 
