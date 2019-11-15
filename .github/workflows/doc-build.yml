@@ -6,7 +6,7 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-steps:
+  steps:
     - uses: actions/checkout@v1
     - name: install-pkg
       run: |
@@ -22,7 +22,7 @@ steps:
         path: ../modules
         key: ${{ runner.os }}-zephyr-${{ hashFiles('west.yml') }}
         restore-keys: |
-          ${{ runner.os }}-zerphyr-modules        
+          ${{ runner.os }}-zerphyr-modules
     - name: git
       run: |
         export
