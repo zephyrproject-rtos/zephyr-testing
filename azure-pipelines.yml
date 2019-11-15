@@ -17,13 +17,13 @@ jobs:
     path: zephyr
   - bash: |
       echo $(Build.Repository.Name)
+      git log
       which bash
       ls
       ls /
       echo "-- export --"
       export
       echo "--- PWD ---"
-      lscpu
       pwd
       uname -a
       id
@@ -36,7 +36,6 @@ jobs:
       export PATH=$HOME/.local/bin:$PATH
       echo $PATH
       source zephyr-env.sh
-      west --version
       cd ..
       west init -l zephyr || true
       cd zephyr
@@ -44,6 +43,7 @@ jobs:
       export CITOOLS=$(west list ci-tools -f"{abspath:18}")
       echo $CITOOLS
       sudo pip3 install -r ${CITOOLS}/requirements.txt
+
       ${CITOOLS}/scripts/what_changed.py -r ${MAIN_REPO_REPO_FULL_NAME} -p ${MAIN_REPO_PULL_REQUEST} --commits ${COMMIT_RANGE}
 
 
