@@ -41,8 +41,8 @@ jobs:
       export CITOOLS=$(west list ci-tools -f"{abspath:18}")
       echo $CITOOLS
       sudo pip3 install -r ${CITOOLS}/requirements.txt
-
-      ${CITOOLS}/scripts/what_changed.py -r ${BUILD_REPOSITORY_NAME} -p ${SYSTEM_PULLREQUEST_PULLREQUESTNUMBER} --commits ${COMMIT_RANGE}
+      make htmldocs
+      #${CITOOLS}/scripts/what_changed.py -r ${BUILD_REPOSITORY_NAME} -p ${SYSTEM_PULLREQUEST_PULLREQUESTNUMBER} --commits ${COMMIT_RANGE}
 
 
     displayName: Multiline Bash script
