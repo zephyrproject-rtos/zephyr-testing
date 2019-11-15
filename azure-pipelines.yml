@@ -33,6 +33,7 @@ jobs:
       pwd
       pip3 install setuptools wheel
       pip3 install west
+      pip3 install cmake
       export PATH=$HOME/.local/bin:$PATH
       source zephyr-env.sh
       export COMMIT_RANGE=origin/${SYSTEM_PULLREQUEST_TARGETBRANCH}..HEAD
