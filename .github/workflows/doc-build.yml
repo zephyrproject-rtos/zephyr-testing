@@ -6,6 +6,8 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
     - uses: geekodour/gh-actions-custom-status@v0.0.4
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -15,8 +17,6 @@ jobs:
          --state=pending
          --context=foo-status-update
          --target_url=https://github.com/${{ github.repository }}/actions
-    steps:
-    - uses: actions/checkout@v1
     - name: install-pkg
     - name: export
       run: |
