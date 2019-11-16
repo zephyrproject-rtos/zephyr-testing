@@ -19,7 +19,6 @@ jobs:
          echo cmake >> requirements.txt
          echo setuptools >> requirements.txt
          cat scripts/requirements.txt requirements.txt | sort -u > requirements.txt
-         sort -u
          cat requirements.txt
     - uses: actions/cache@v1
       with:
