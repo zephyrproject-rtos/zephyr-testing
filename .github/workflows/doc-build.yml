@@ -11,47 +11,9 @@ jobs:
       uses: actions/checkout@v1
       with:
         fetch-depth: 1
-    - name: install-pkg
-      run: |
-        sudo apt-get install -y ninja-build doxygen
-    - name: build-requirements.txt
-      run: |
-         curl -o requirements.txt -L https://raw.githubusercontent.com/zephyrproject-rtos/ci-tools/master/requirements.txt
-         echo cmake >> requirements.txt
-         echo setuptools >> requirements.txt
-         cat scripts/requirements.txt requirements.txt | sort -u > requirements.txt
-         cat requirements.txt
-    - name: cache-pip
-      uses: actions/cache@v1
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-          
-    - name: install-pip
-      run: |
-        pip3 install -r requirements.txt
-    - name: cache-zephyr-modules
-      uses: actions/cache@v1
-      with:
-        path: ../modules
-        key: ${{ runner.os }}-zephyr-modules-${{ hashFiles('west.yml') }}
-        restore-keys: |
-          ${{ runner.os }}-zerphyr-modules
-    - name: cache-zephyr-tools
-      uses: actions/cache@v1
-      with:
-        path: ../tools
-        key: ${{ runner.os }}-zephyr-tools-${{ hashFiles('west.yml') }}
-        restore-keys: |
-          ${{ runner.os }}-zerphyr-tools          
     - name: build-docs
       run: |
-        export PATH=$HOME/.local/bin:$PATH
-        source zephyr-env.sh
-        west init -l . || true
-        west update
-        #make htmldocs
+        echo "BUILD DOCS"
     - name: upload-log
       uses: actions/upload-artifact@master
       continue-on-error: True
