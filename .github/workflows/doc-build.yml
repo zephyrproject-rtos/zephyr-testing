@@ -55,3 +55,8 @@ jobs:
     - name: export
       run: |
         export
+    - name: upload-log
+      uses: actions/upload-artifact@master
+      with:
+        name: doc.warnings
+        path: doc/_build/doc.warnings        
