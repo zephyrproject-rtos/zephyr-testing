@@ -7,7 +7,8 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
+    - name: checkout
+      uses: actions/checkout@v1
       with:
         fetch-depth: 1
     - name: install-pkg
@@ -20,7 +21,8 @@ jobs:
          echo setuptools >> requirements.txt
          cat scripts/requirements.txt requirements.txt | sort -u > requirements.txt
          cat requirements.txt
-    - uses: actions/cache@v1
+    - name: cache-pip
+      uses: actions/cache@v1
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
@@ -29,13 +31,15 @@ jobs:
     - name: install-pip
       run: |
         pip3 install -r requirements.txt
-    - uses: actions/cache@v1
+    - name: cache-zephyr-modules
+      uses: actions/cache@v1
       with:
         path: ../modules
         key: ${{ runner.os }}-zephyr-modules-${{ hashFiles('west.yml') }}
         restore-keys: |
           ${{ runner.os }}-zerphyr-modules
-    - uses: actions/cache@v1
+    - name: cache-zephyr-tools
+      uses: actions/cache@v1
       with:
         path: ../tools
         key: ${{ runner.os }}-zephyr-tools-${{ hashFiles('west.yml') }}
@@ -50,4 +54,4 @@ jobs:
         #make htmldocs
     - name: export
       run: |
-        export 
+        export
