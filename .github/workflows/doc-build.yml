@@ -16,11 +16,10 @@ jobs:
     - name: build-requirements.txt
       run: |
          curl -o requirements.txt -L https://raw.githubusercontent.com/zephyrproject-rtos/ci-tools/master/requirements.txt
-         echo west >> requirements.txt
          echo cmake >> requirements.txt
          echo setuptools >> requirements.txt
-         echo wheel >> requirements.txt
-         cat scripts/requirements.txt >> requirements.txt
+         cat scripts/requirements.txt requirements.txt | sort -u > requirements.txt
+         sort -u
          cat requirements.txt
     - uses: actions/cache@v1
       with:
