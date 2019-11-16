@@ -52,11 +52,12 @@ jobs:
         west init -l . || true
         west update
         #make htmldocs
+    - name: upload-log
+      uses: actions/upload-artifact@master
+      continue-on-error: True
+      with:
+        name: doc.warnings
+        path: doc/_build/doc.warnings
     - name: export
       run: |
         export
-    - name: upload-log
-      uses: actions/upload-artifact@master
-      with:
-        name: doc.warnings
-        path: doc/_build/doc.warnings        
