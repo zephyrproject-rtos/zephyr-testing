@@ -1,0 +1,17 @@
+name: helloworld-build-fail
+
+on: [pull_request]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout
+      uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+    - name: fail
+      run: |
+        export
+        exit 1
