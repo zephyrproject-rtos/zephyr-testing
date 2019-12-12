@@ -25,6 +25,7 @@ jobs:
       path: $(LOCAL_DIR)
     displayName: local-cache
   - bash: |
+      export
       sudo apt-get install -y ninja-build doxygen
       pip3 install setuptools wheel
       pip3 install west
