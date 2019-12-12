@@ -11,6 +11,15 @@ jobs:
       uses: actions/checkout@v1
       with:
         fetch-depth: 1
+    - name: create-artifact
+      run: |
+        mkdir -p path/to/artifact
+        echo hello > path/to/artifact/world.txt
+    - name: artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: my-artifact
+        path: path/to/artifact
     - name: fail
       run: |
         export
