@@ -24,10 +24,8 @@ jobs:
             rm kernel/mailbox.c
             ./scripts/ci/run_ci.sh -c -b ${CIRCLE_BRANCH} -r origin -m 80 -M 1000
             pwd
-            mkdir test-results
-            cp sanity-out/sanitycheck.xml test-results
-            echo "=========="
-            ls ~/project/zephyr/test-results/
+            echo "=====XML====="
+            ls ~/project/zephyr/sanity-out/*.xml
       - store_test_results:
-           path: ~/project/zephyr/test-results/
+           path: ~/project/zephyr/sanity-out/
 
