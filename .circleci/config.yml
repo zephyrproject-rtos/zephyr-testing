@@ -15,4 +15,6 @@ jobs:
             ls
             ls zephyr
             export
+            cd zephyr
+            ./scripts/ci/run_ci.sh -c -b ${CIRCLE_BRANCH} -r origin -m ${CIRCLE_NODE_TOTAL} -M ${CIRCLE_NODE_TOTAL};
 
