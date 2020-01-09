@@ -14,8 +14,12 @@ jobs:
             pwd
             ls
             ls zephyr
+            export HELLO=$(($CIRCLE_NODE_INDEX+1))
             export
             cd zephyr
             cat /proc/cpuinfo
-            ./scripts/ci/run_ci.sh -c -b ${CIRCLE_BRANCH} -r origin -m ${CIRCLE_NODE_TOTAL} -M ${CIRCLE_NODE_TOTAL};
+            ./scripts/ci/run_ci.sh -c -b ${CIRCLE_BRANCH} -r origin -m 80 -M 1000
+            ls
+      - store_test_results:
+           path: ~/zephyr/sanity-out
 
