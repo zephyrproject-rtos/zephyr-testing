@@ -21,8 +21,7 @@ jobs:
             id
             cd zephyr
             cat /proc/cpuinfo
-            rm kernel/mailbox.c
-            ./scripts/ci/run_ci.sh -c -b ${CIRCLE_BRANCH} -r origin -m 80 -M 1000
+            ./scripts/ci/run_ci.sh -c -b ${CIRCLE_BRANCH} -r origin -m 80 -M 100
             pwd
             echo "=====XML====="
             ls ~/project/zephyr/sanity-out/*.xml
