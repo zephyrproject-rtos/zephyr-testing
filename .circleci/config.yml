@@ -22,9 +22,11 @@ jobs:
             cd zephyr
             cat /proc/cpuinfo
             ./scripts/ci/run_ci.sh -c -b ${CIRCLE_BRANCH} -r origin -m 80 -M 1000
-            ls
-            ls sanity-out
-            ls sanity-out.1
+            pwd
+            mkdir test-results
+            cp sanity-out/sanitycheck.xml test-results
+            echo "=========="
+            ls ~/project/zephyr/test-results/
       - store_test_results:
-           path: ~/zephyr/sanity-out
+           path: ~/project/zephyr/test-results/
 
