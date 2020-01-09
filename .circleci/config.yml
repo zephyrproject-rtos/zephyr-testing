@@ -16,5 +16,6 @@ jobs:
             ls zephyr
             export
             cd zephyr
+            cat /proc/cpuinfo
             ./scripts/ci/run_ci.sh -c -b ${CIRCLE_BRANCH} -r origin -m ${CIRCLE_NODE_TOTAL} -M ${CIRCLE_NODE_TOTAL};
 
