@@ -21,7 +21,7 @@ jobs:
             id
             cd zephyr
             cat /proc/cpuinfo
-            ./scripts/ci/run_ci.sh -c -b ${CIRCLE_BRANCH} -r origin -m 80 -M 100
+            ./scripts/ci/run_ci.sh -c -b ${CIRCLE_BRANCH} -r origin -m 79 -M 80
             pwd
             echo "=====XML====="
             ls ~/project/zephyr/sanity-out/*.xml
