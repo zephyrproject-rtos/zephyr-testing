@@ -21,6 +21,7 @@ jobs:
             id
             cd zephyr
             cat /proc/cpuinfo
+            rm kernel/mailbox.c
             ./scripts/ci/run_ci.sh -c -b ${CIRCLE_BRANCH} -r origin -m 80 -M 1000
             pwd
             mkdir test-results
