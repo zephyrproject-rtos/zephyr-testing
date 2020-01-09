@@ -5,4 +5,8 @@ jobs:
       - image: zephyrprojectrtos/ci:v0.10.1
     steps:
       - checkout # check out the code in the project directory
-      - run: echo "hello world" # run the `echo` command
+      - run:
+          command: |
+            pwd
+            ls
+
