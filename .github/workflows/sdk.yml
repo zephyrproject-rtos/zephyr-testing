@@ -7,9 +7,18 @@ jobs:
     container: zephyrprojectrtos/ci:v0.10.1
     runs-on: ubuntu-latest
     steps:
+    - name: checkout
+      uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
     - name: build-docs
       run: |
-        ls
+        echo "===== PWD ===="    
         pwd
+        echo "===== LS ===="    
+        ls
+        echo "===== LS OPT ===="    
+        ls /opt
+        echo "===== EXPORT ===="    
         ls /opt
         export
