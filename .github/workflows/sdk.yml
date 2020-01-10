@@ -1,0 +1,15 @@
+name: sdk-setup
+
+on: [pull_request]
+
+jobs:
+  build:
+    container: zephyrprojectrtos/ci:v0.10.1
+    runs-on: ubuntu-latest
+    steps:
+    - name: build-docs
+      run: |
+        ls
+        pwd
+        ls /opt
+        export
