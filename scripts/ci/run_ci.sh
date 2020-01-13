@@ -21,6 +21,7 @@
 set -xe
 
 sanitycheck_options=" --inline-logs -N -v"
+sanitycheck_jobs=""
 export BSIM_OUT_PATH="${BSIM_OUT_PATH:-/opt/bsim/}"
 if [ ! -d "${BSIM_OUT_PATH}" ]; then
         unset BSIM_OUT_PATH
@@ -136,10 +137,10 @@ function get_tests_to_run() {
 	./scripts/ci/get_modified_boards.py --commits ${commit_range} > modified_boards.args
 
 	if [ -s modified_boards.args ]; then
-		${sanitycheck} ${sanitycheck_options} +modified_boards.args --save-tests test_file_1.txt || exit 1
+		${sanitycheck} ${sanitycheck_options} ${sanitycheck_jobs} +modified_boards.args --save-tests test_file_1.txt || exit 1
 	fi
 	if [ -s modified_tests.args ]; then
-		${sanitycheck} ${sanitycheck_options} +modified_tests.args --save-tests test_file_2.txt || exit 1
+		${sanitycheck} ${sanitycheck_options} ${sanitycheck_jobs} +modified_tests.args --save-tests test_file_2.txt || exit 1
 	fi
 	rm -f modified_tests.args modified_boards.args
 }
@@ -157,7 +158,7 @@ function west_setup() {
 }
 
 
-while getopts ":p:m:b:r:M:cfslR:" opt; do
+while getopts ":p:m:b:r:M:cfslR:j:" opt; do
 	case $opt in
 		c)
 			echo "Execute CI" >&2
@@ -199,6 +200,11 @@ while getopts ":p:m:b:r:M:cfslR:" opt; do
 		R)
 			echo "Range: $OPTARG" >&2
 			range=$OPTARG
+			;;
+		j)
+			echo "Jobs: $OPTARG" >&2
+			job_arg=1
+			jobs=$OPTARG
 			;;
 		\?)
 			echo "Invalid option: -$OPTARG" >&2
@@ -259,6 +265,10 @@ if [ -n "$main_ci" ]; then
 		echo "Skipping west command tests"
 	fi
 
+        if [ -n "$job_arg" ]; then
+		sanitycheck_jobs="-j $jobs"
+	fi
+
 	# cleanup
 	rm -f test_file.txt
 	touch test_file_1.txt test_file_2.txt
@@ -269,11 +279,11 @@ if [ -n "$main_ci" ]; then
 	fi
 
 	# Save list of tests to be run
-	${sanitycheck} ${sanitycheck_options} --save-tests test_file_3.txt || exit 1
+	${sanitycheck} ${sanitycheck_options} ${sanitycheck_jobs} --save-tests test_file_3.txt || exit 1
 	cat test_file_1.txt test_file_2.txt test_file_3.txt > test_file.txt
 
 	# Run a subset of tests based on matrix size
-	${sanitycheck} ${sanitycheck_options} --load-tests test_file.txt \
+	${sanitycheck} ${sanitycheck_options} ${sanitycheck_jobs} --load-tests test_file.txt \
 		--subset ${matrix}/${matrix_builds} --retry-failed 3
 
 	# Run module tests on matrix #1
