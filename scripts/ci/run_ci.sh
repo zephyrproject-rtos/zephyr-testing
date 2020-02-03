@@ -147,7 +147,7 @@ function west_setup() {
 	pushd ..
 	if [ ! -d .west ]; then
 		west init -l ${git_dir}
-		west update
+		west -v update
 	fi
 	popd
 }
