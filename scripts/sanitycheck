@@ -4283,7 +4283,9 @@ def main():
                             key=lambda x: x[0][x[0].find("/") + 1:]))
 
         subset, sets = options.subset.split("/")
+        print("SUBSET %d" % subset)
         subset = int(subset)
+        print("SUBSET %d" % subset)
         sets = int(sets)
         total = len(suite.instances)
         per_set = round(total / sets)
@@ -4299,6 +4301,8 @@ def main():
             base = num_extra_sets * (per_set + 1)
             start = ((subset - num_extra_sets - 1) * per_set) + base
             end = start + per_set
+
+        print("TOTAL [%d] START [%d] END [%d]" % (total, start, end))
 
         sliced_instances = islice(suite.instances.items(), start, end)
         suite.instances = OrderedDict(sliced_instances)
