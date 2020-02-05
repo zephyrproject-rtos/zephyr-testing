@@ -4291,6 +4291,8 @@ def main():
         else:
             end = start + per_set
 
+        print("TOTAL %d start %d end %d" % (total, start, end))
+
         sliced_instances = islice(suite.instances.items(), start, end)
         suite.instances = OrderedDict(sliced_instances)
 
