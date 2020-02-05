@@ -24,6 +24,13 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
+    - name: cache-pip
+      uses: actions/cache@v1
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ matrix.python-version }}
+        restore-keys: |
+          ${{ runner.os }}-pip-${{ matrix.python-version }}
     - name: install pytest
       run: |
         pip3 install pytest west
