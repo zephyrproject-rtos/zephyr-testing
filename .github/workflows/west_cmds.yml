@@ -1,4 +1,7 @@
-name: Zephyr West command tests
+# Copyright (c) 2020 Linaro Limited.
+# SPDX-License-Identifier: Apache-2.0
+
+name: Zephyr West Command Tests
 
 on:
   push:
@@ -15,8 +18,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8]
-        os: [ubuntu-latest, windows-latest]
+        python-version: [3.6]
+        os: [windows-latest]
     steps:
     - name: checkout
       uses: actions/checkout@v2
@@ -25,17 +28,11 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: cache-pip
-      uses: actions/cache@v1
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ matrix.python-version }}
-        restore-keys: |
-          ${{ runner.os }}-pip-${{ matrix.python-version }}
     - name: install pytest
       run: |
         pip3 install pytest west
 
     - name: run pytest
       run: |
-        PYTHONPATH=./scripts/west_commands pytest ./scripts/west_commands/tests/
+        set PYTHONPATH=".\scripts\west_commands"
+        pytest ./scripts/west_commands/tests/
