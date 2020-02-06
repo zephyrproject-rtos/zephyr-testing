@@ -34,5 +34,4 @@ jobs:
 
     - name: run pytest
       run: |
-        set PYTHONPATH=".\scripts\west_commands"
-        pytest ./scripts/west_commands/tests/
+        cmd /C "set PYTHONPATH=.\scripts\west_commands && pytest ./scripts/west_commands/tests/"
