@@ -28,10 +28,24 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
+    - uses: actions/cache@v1
+      if: startsWith(runner.os, 'Windows')
+      with:
+        path: ~\AppData\Local\pip\Cache
+        key: ${{ runner.os }}-pip-${{ matrix.python-version }}
+        restore-keys: |
+          ${{ runner.os }}-pip-${{ matrix.python-version }}
+
     - name: install pytest
       run: |
         pip3 install pytest west
 
     - name: run pytest
+      if: runner.os != 'Windows'
+      run: |
+        PYTHONPATH=./scripts/west_commands pytest ./scripts/west_commands/tests/
+
+    - name: run pytest
+      if: runner.os == 'Windows'
       run: |
         cmd /C "set PYTHONPATH=.\scripts\west_commands && pytest ./scripts/west_commands/tests/"
