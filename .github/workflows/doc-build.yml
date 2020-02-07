@@ -7,58 +7,16 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-    - name: checkout
-      uses: actions/checkout@v2
     - name: install-pkg
       run: |
-        sudo apt-get install -y ninja-build doxygen
-    - name: build-requirements.txt
+        ls
+    - name: warn
       run: |
-         cp scripts/requirements.txt requirements.txt
-    - name: cache-pip
-      uses: actions/cache@v1
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-          
-    - name: install-pip
+        ls -1 > foobar
+        echo "::warning::$PATH"
+
+    - name: error
       run: |
-        pip3 install setuptools
-        pip3 install -r requirements.txt
-    - name: cache-zephyr-modules
-      uses: actions/cache@v1
-      with:
-        path: ../modules
-        key: ${{ runner.os }}-zephyr-modules-${{ hashFiles('west.yml') }}
-        restore-keys: |
-          ${{ runner.os }}-zerphyr-modules
-    - name: cache-zephyr-tools
-      uses: actions/cache@v1
-      with:
-        path: ../tools
-        key: ${{ runner.os }}-zephyr-tools-${{ hashFiles('west.yml') }}
-        restore-keys: |
-          ${{ runner.os }}-zerphyr-tools          
-    - name: build-docs
-      run: |
-        export PATH=$HOME/.local/bin:$PATH
-        source zephyr-env.sh
-        west init -l . || true
-        west update
-        make htmldocs
-    - name: upload-build
-      uses: actions/upload-artifact@master
-      continue-on-error: True
-      with:
-        name: doc-build
-        path: doc/_build/
-    - name: upload-log
-      uses: actions/upload-artifact@master
-      continue-on-error: True
-      with:
-        name: doc.warnings
-        path: doc/_build/doc.warnings
-    - name: export
-      run: |
-        export
+        echo -n "::error::"
+        cat foobar
+
