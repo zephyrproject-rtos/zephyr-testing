@@ -17,7 +17,7 @@ jobs:
 
     - name: error
       run: |
-        ls -1 / > KUMAR
+        ls -1 / > KUMARG
         cat foobar
         echo 
         description=$(ls /)
@@ -25,7 +25,7 @@ jobs:
         description="${description//$'\n'/'%0A'}"
         description="${description//$'\r'/'%0D'}" 
         if [ ! -s KUMAR ]; then
-           echo "::error::$description"
+           echo "::error file=doc.warnings::$description"
            exit 1
         fi
 
