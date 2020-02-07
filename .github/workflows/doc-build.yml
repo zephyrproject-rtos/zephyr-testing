@@ -17,7 +17,7 @@ jobs:
 
     - name: error
       run: |
-        ls -1 / > foobar
+        ls -1 / > KUMAR
         cat foobar
         echo 
         description=$(ls /)
