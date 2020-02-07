@@ -20,4 +20,6 @@ jobs:
         ls -1 / > foobar
         cat foobar
         sed -e 's/^/::error::/' foobar
+        echo -n "::error::"
+        cat foobar
 
