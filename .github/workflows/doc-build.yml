@@ -48,7 +48,13 @@ jobs:
         source zephyr-env.sh
         west init -l . || true
         west update
-        #make htmldocs
+        make htmldocs
+    - name: upload-build
+      uses: actions/upload-artifact@master
+      continue-on-error: True
+      with:
+        name: doc-build
+        path: doc/_build/
     - name: upload-log
       uses: actions/upload-artifact@master
       continue-on-error: True
