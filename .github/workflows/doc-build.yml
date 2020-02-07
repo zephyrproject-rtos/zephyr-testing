@@ -17,6 +17,7 @@ jobs:
 
     - name: error
       run: |
-        echo -n "::error::"
+        ls -1 / > foobar
         cat foobar
+        sed -e 's/^/::error::/' foobar
 
