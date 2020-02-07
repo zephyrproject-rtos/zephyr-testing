@@ -19,14 +19,14 @@ jobs:
       run: |
         ls -1 / > foobar
         cat foobar
-        echo -n "::error::"
-        cat foobar
         echo 
         description=$(ls /)
-        echo $description
         description="${description//'%'/'%25'}"
         description="${description//$'\n'/'%0A'}"
         description="${description//$'\r'/'%0D'}" 
-        echo "::error::$description" 
+        if [ ! -s KUMAR ]; then
+           echo "::error::$description"
+           exit 1
+        fi
 
 
