@@ -69,10 +69,11 @@ jobs:
     - name: check-warns
       run: |
         if [ -s doc/_build/doc.warnings ]; then
-           description=$(cat doc/_build/doc.warnings)
-           description="${description//'%'/'%25'}"
-           description="${description//$'\n'/'%0A'}"
-           description="${description//$'\r'/'%0D'}"
-           echo "::error file=doc.warnings::$description"
+           docwarn=$(cat doc/_build/doc.warnings)
+           docwarn="${docwarn//'%'/'%25'}"
+           docwarn="${docwarn//$'\n'/'%0A'}"
+           docwarn="${docwarn//$'\r'/'%0D'}"
+           # We treat doc warnings as errors
+           echo "::error file=doc.warnings::$docwarn"
            exit 1
         fi
