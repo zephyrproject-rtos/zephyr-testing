@@ -1,60 +1,78 @@
-name: doc-build
+# Copyright (c) 2020 Linaro Limited.
+# SPDX-License-Identifier: Apache-2.0
 
-on: [pull_request]
+name: Documentation
+
+on: [pull_request, push]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
+
     steps:
+    - name: Update PATH for west
+      run: |
+        echo "::add-path::$HOME/.local/bin"
+
     - name: checkout
-      uses: actions/checkout@v1
-      with:
-        fetch-depth: 1
-    - name: install-pkg
+      uses: actions/checkout@v2
+
+    - name: install-pkgs
       run: |
         sudo apt-get install -y ninja-build doxygen
-    - name: build-requirements.txt
-      run: |
-         cp scripts/requirements.txt requirements.txt
+
     - name: cache-pip
       uses: actions/cache@v1
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-          
+        key: ${{ runner.os }}-doc-pip
+
     - name: install-pip
       run: |
         pip3 install setuptools
-        pip3 install -r requirements.txt
+        pip3 install 'breathe>=4.9.1' 'docutils>=0.14' \
+                     'sphinx>=1.7.5' sphinx_rtd_theme sphinx-tabs \
+                     sphinxcontrib-svg2pdfconverter 'west>=0.6.2'
+
     - name: cache-zephyr-modules
       uses: actions/cache@v1
       with:
         path: ../modules
         key: ${{ runner.os }}-zephyr-modules-${{ hashFiles('west.yml') }}
-        restore-keys: |
-          ${{ runner.os }}-zerphyr-modules
+
     - name: cache-zephyr-tools
       uses: actions/cache@v1
       with:
         path: ../tools
         key: ${{ runner.os }}-zephyr-tools-${{ hashFiles('west.yml') }}
         restore-keys: |
-          ${{ runner.os }}-zerphyr-tools          
-    - name: build-docs
+          ${{ runner.os }}-doc-zephyr-tools
+
+    - name: west setup
       run: |
-        export PATH=$HOME/.local/bin:$PATH
-        source zephyr-env.sh
         west init -l . || true
         west update
-        #make htmldocs
-    - name: upload-log
+
+    - name: build-docs
+      run: |
+        source zephyr-env.sh
+        make htmldocs
+        tar cvf htmldocs.tar --directory=./doc/_build html
+
+    - name: upload-build
       uses: actions/upload-artifact@master
       continue-on-error: True
       with:
-        name: doc.warnings
-        path: doc/_build/doc.warnings
-    - name: export
+        name: htmldocs.tar
+        path: htmldocs.tar
+
+    - name: check-warns
       run: |
-        export
+        if [ -s doc/_build/doc.warnings ]; then
+           description=$(cat doc/_build/doc.warnings)
+           description="${description//'%'/'%25'}"
+           description="${description//$'\n'/'%0A'}"
+           description="${description//$'\r'/'%0D'}"
+           echo "::error file=doc.warnings::$description"
+           exit 1
+        fi
