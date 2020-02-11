@@ -3,7 +3,7 @@
 
 name: Documentation Daily build GH Workflow
 
-on: [push]
+on: [ push ]
 
 jobs:
   build:
