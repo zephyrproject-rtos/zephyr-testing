@@ -1,0 +1,18 @@
+# Copyright (c) 2020 Linaro Limited.
+# SPDX-License-Identifier: Apache-2.0
+
+name: test
+
+on:
+  schedule:
+    - cron:  '*/5 * * * *'
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Do something
+      run: |
+        export
