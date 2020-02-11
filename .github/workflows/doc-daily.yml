@@ -50,6 +50,7 @@ jobs:
         source zephyr-env.sh
         export
         make DOC_TAG=daily htmldocs
+        ls doc/_build
 
     - name: check-warns
       run: |
@@ -62,3 +63,8 @@ jobs:
            echo "::error file=doc.warnings::$docwarn"
            exit 1
         fi
+
+    - name: Upload to S3
+      run: |
+        aws s3 sync --quiet doc/_build/html s3://docs.zephyrproject.org/test-gh-latest --delete
+        ls doc/_build/doxygen
