@@ -70,5 +70,5 @@ jobs:
 
     - name: Upload to S3
       run: |
-        aws s3 sync --quiet doc/_build/html s3://docs.zephyrproject.org/test-gh-latest --delete
+        aws s3 sync --quiet doc/_build/html s3://docs.zephyrproject.org/test-gh-latest-kumar --delete
         ls doc/_build/doxygen
