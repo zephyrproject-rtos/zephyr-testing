@@ -1,7 +1,7 @@
 # Copyright (c) 2020 Linaro Limited.
 # SPDX-License-Identifier: Apache-2.0
 
-name: Documentation Daily build GH Workflow
+name: Doc build for Release or Daily
 
 # Either a daily based on schedule/cron or only on tag push
 on:
@@ -94,10 +94,10 @@ jobs:
       run: |
         echo "DOC_RELEASE=[$RELEASE]"
         if [ "$RELEASE" == "latest" ]; then
-           aws s3 sync --quiet doc/_build/html s3://docs.zephyrproject.org/test-latest --delete
+           aws s3 sync --quiet doc/_build/html s3://docs.zephyrproject.org/kumar-latest-${GITHUB_SHA} --delete
         else
            DOC_RELEASE=${RELEASE}.0
-           aws s3 sync --quiet doc/_build/html s3://docs.zephyrproject.org/test-${DOC_RELEASE}
+           aws s3 sync --quiet doc/_build/html s3://docs.zephyrproject.org/kumar-${DOC_RELEASE}-${GITHUB_SHA}
         fi
         if [ -d doc/_build/doxygen/html ]; then
            aws s3 sync --quiet doc/_build/doxygen/html s3://docs.zephyrproject.org/apidoc/test-${RELEASE} --delete
