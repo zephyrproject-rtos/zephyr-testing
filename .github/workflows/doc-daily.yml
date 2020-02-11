@@ -14,6 +14,21 @@ jobs:
       run: |
         echo "::add-path::$HOME/.local/bin"
 
+    - name: Determine tag
+      id: tag
+      run: |
+        # If push due to a normal commit to master GITHUB_REF will look like
+        # refs/heads/master convert that to 'latest'
+        if [ ${GITHUB_REF} == "refs/heads/master" ]; then
+           echo ::set-output name=TYPE::daily;
+           echo ::set-output name=RELEASE::latest;
+        else
+           # If push due to a tag GITHUB_REF will look like refs/tags/TAG-FOO
+           # chop of 'refs/tags' so RELEASE=TAG-FOO
+           echo ::set-output name=TYPE::release;
+           echo ::set-output name=RELEASE::${GITHUB_REF/refs\/tags\//};
+        fi
+
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
@@ -46,15 +61,12 @@ jobs:
         west init -l . || true
 
     - name: build-docs
+      env:
+        DOC_TAG: ${{ steps.tag.outputs.TYPE }}
       run: |
         source zephyr-env.sh
-        export
-        make DOC_TAG=daily htmldocs
-        ls doc/_build
-
-    - name: ls
-      run: |
-        ls -R doc/
+        echo "DOC_TAG=[$DOC_TAG]"
+        make DOC_TAG=${DOC_TAG} htmldocs
 
     - name: check-warns
       run: |
@@ -68,7 +80,17 @@ jobs:
            exit 1
         fi
 
-    - name: Upload to S3
+    - name: Upload to AWS S3
+      env:
+        RELEASE: ${{ steps.tag.outputs.RELEASE }}
       run: |
-        aws s3 sync --quiet doc/_build/html s3://docs.zephyrproject.org/test-gh-latest --delete
-        ls doc/_build/doxygen
+        echo "DOC_RELEASE=[$RELEASE]"
+        if [ "$RELEASE" == "latest" ]; then
+           aws s3 sync --quiet doc/_build/html s3://docs.zephyrproject.org/test-latest --delete
+        else
+           DOC_RELEASE=${RELEASE}.0
+           aws s3 sync --quiet doc/_build/html s3://docs.zephyrproject.org/test-${DOC_RELEASE}
+        fi
+        if [ -d doc/_build/doxygen/html ]; then
+           aws s3 sync --quiet doc/_build/doxygen/html s3://docs.zephyrproject.org/apidoc/test-${RELEASE} --delete
+        fi
