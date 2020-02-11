@@ -5,8 +5,10 @@ name: test
 
 on:
   schedule:
-    - cron:  '*/5 * * * *'
+    - cron:  '* * * * *'
   push:
+    tags:
+    - '*'
 
 jobs:
   build:
