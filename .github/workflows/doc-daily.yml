@@ -3,7 +3,13 @@
 
 name: Documentation Daily build GH Workflow
 
-on: [ push ]
+# Either a daily based on schedule/cron or only on tag push
+on:
+  schedule:
+    - cron:  '* * * * *'
+  push:
+    tags:
+    - '*'
 
 jobs:
   build:
@@ -19,14 +25,16 @@ jobs:
       run: |
         # If push due to a normal commit to master GITHUB_REF will look like
         # refs/heads/master convert that to 'latest'
-        if [ ${GITHUB_REF} == "refs/heads/master" ]; then
+        if [ ${GITHUB_EVENT_NAME} == "schedule" ]; then
            echo ::set-output name=TYPE::daily;
            echo ::set-output name=RELEASE::latest;
-        else
+        elif [ ${GITHUB_EVENT_NAME} == "push"]; then
            # If push due to a tag GITHUB_REF will look like refs/tags/TAG-FOO
            # chop of 'refs/tags' so RELEASE=TAG-FOO
            echo ::set-output name=TYPE::release;
            echo ::set-output name=RELEASE::${GITHUB_REF/refs\/tags\//};
+        else
+           exit 1
         fi
 
     - name: Configure AWS Credentials
