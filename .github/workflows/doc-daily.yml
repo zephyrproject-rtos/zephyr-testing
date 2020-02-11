@@ -25,14 +25,16 @@ jobs:
       run: |
         # If push due to a normal commit to master GITHUB_REF will look like
         # refs/heads/master convert that to 'latest'
+        echo "EVENT: ${GITHUB_EVENT_NAME}"
         if [ ${GITHUB_EVENT_NAME} == "schedule" ]; then
            echo ::set-output name=TYPE::daily;
            echo ::set-output name=RELEASE::latest;
-        elif [ ${GITHUB_EVENT_NAME} == "push"]; then
+        elif [ ${GITHUB_EVENT_NAME} == "push" ]; then
            # If push due to a tag GITHUB_REF will look like refs/tags/TAG-FOO
            # chop of 'refs/tags' so RELEASE=TAG-FOO
            echo ::set-output name=TYPE::release;
            echo ::set-output name=RELEASE::${GITHUB_REF/refs\/tags\//};
+           echo "REL: ${GITHUB_REF/refs\/tags\//}";
         else
            exit 1
         fi
