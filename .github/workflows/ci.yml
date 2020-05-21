@@ -8,6 +8,7 @@ on: [pull_request, push]
 jobs:
   build:
     runs-on: self-hosted
+    container: zephyrprojectrtos/ci:v0.11.8
 
     steps:
     - name: Update PATH for west
