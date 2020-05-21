@@ -1,0 +1,26 @@
+# Copyright (c) 2020 Linaro Limited.
+# SPDX-License-Identifier: Apache-2.0
+
+name: self hosted GitHub Workflow
+
+on: [pull_request, push]
+
+jobs:
+  build:
+    runs-on: self-hosted
+
+    steps:
+    - name: Update PATH for west
+      run: |
+        ls
+        pwd
+        echo "::add-path::$HOME/.local/bin"
+
+    - name: checkout
+      uses: actions/checkout@v2
+
+    - name: Update PATH for west
+      run: |
+        ls
+        pwd
+
