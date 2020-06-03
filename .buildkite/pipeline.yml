@@ -1,0 +1,63 @@
+steps:
+  - command:
+    - >
+      if [ -n "\${BUILDKITE_PULL_REQUEST_BASE_BRANCH}" ]; then
+         git fetch -v origin "\${BUILDKITE_PULL_REQUEST_BASE_BRANCH}"
+         git checkout FETCH_HEAD
+         # env vars to ensure merge is non-interactive
+         GIT_AUTHOR_NAME="zephyr-auto-merge-pr" \\
+         GIT_COMMITTER_EMAIL="zephyr-auto-merge-pr@buildkite" \\
+         GIT_COMMITTER_NAME="zephyr-auto-merge-pr-hook" \\
+         git merge --no-edit "\${BUILDKITE_COMMIT}" || {
+             local merge_result=\$?
+             echo "Merge failed: \${merge_result}"
+             git merge --abort
+             exit \$merge_result
+         }
+      fi
+    - git log -n 5 --oneline --decorate --abbrev=12
+    - "mkdir -p /var/lib/buildkite-agent/cache/modules"
+    - "mkdir -p /var/lib/buildkite-agent/cache/tools"
+    - "mkdir -p /var/lib/buildkite-agent/cache/bootloader"
+    - "cd .."
+    - "ln -s /var/lib/buildkite-agent/cache/modules"
+    - "ln -s /var/lib/buildkite-agent/cache/tools"
+    - "ln -s /var/lib/buildkite-agent/cache/bootloader"
+    - ls /workdir
+    - "cd /workdir/zephyr"
+    - export JOB_NUM=$(($${BUILDKITE_PARALLEL_JOB}+1))
+    - echo "JOBNUM:"
+    - echo $${BUILDKITE_PARALLEL_JOB_COUNT}
+    - echo $$JOB_NUM
+    - >
+      if [ "$${BUILDKITE_PULL_REQUEST}" = "false" ]; then
+         west init -l .
+         west -v update
+         export START_JOB=$(($${BUILDKITE_PARALLEL_JOB}+1))
+         ./scripts/sanitycheck --build-only --subset $${START_JOB}/9000 --inline-logs -N --build-only --all --retry-failed 3 -v
+         mv sanity-out/sanitycheck.xml sanitycheck-$${BUILDKITE_JOB_ID}.xml
+         buildkite-agent artifact upload sanitycheck-$${BUILDKITE_JOB_ID}.xml
+      else
+         echo "#### PR #####"
+         git merge -q --no-edit origin/master
+         git log -n 5 --oneline --decorate --abbrev=12
+         ./scripts/ci/run_ci.sh  -c -b ${BUILDKITE_PULL_REQUEST_BASE_BRANCH} -r origin -m $${JOB_NUM} -M $${BUILDKITE_PARALLEL_JOB_COUNT} -p ${BUILDKITE_PULL_REQUEST}
+      fi;
+    env:
+      ZEPHYR_TOOLCHAIN_VARIANT: "zephyr"
+      ZEPHYR_SDK_INSTALL_DIR: "/opt/sdk/zephyr-sdk-0.11.3"
+    parallelism: 3
+    retry:
+      manual: true
+    plugins:
+      - docker#v3.5.0:
+          image: "zephyrprojectrtos/ci:v0.11.8"
+          propagate-environment: true
+          volumes:
+            - "/var/lib/buildkite-agent/git-mirrors:/var/lib/buildkite-agent/git-mirrors"
+            - "/var/lib/buildkite-agent/cache:/var/lib/buildkite-agent/cache"
+          workdir: "/workdir/zephyr"
+      - junit-annotate#v1.7.0:
+          artifacts: sanitycheck-*.xml
+    agents:
+    - "queue=default"
