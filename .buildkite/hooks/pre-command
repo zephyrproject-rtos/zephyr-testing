@@ -1,0 +1,6 @@
+#!/bin/sh
+export
+echo "IN PRECOMMAND"
+if [ -n "${BUILDKITE_PULL_REQUEST_BASE_BRANCH}" ]; then
+   echo "FOO"
+fi
