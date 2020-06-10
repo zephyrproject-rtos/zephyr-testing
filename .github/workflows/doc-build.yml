@@ -14,12 +14,12 @@ jobs:
       run: |
         echo "::add-path::$HOME/.local/bin"
 
-    - name: checkout
-      uses: actions/checkout@v2
 
     - name: install-pkgs
       run: |
-        sudo apt-get install -y ninja-build doxygen
+        docker -v
+        docker --help
+        docker buildx
 
     - name: cache-pip
       uses: actions/cache@v1
