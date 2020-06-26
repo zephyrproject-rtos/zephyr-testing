@@ -22,13 +22,17 @@ echo "--- ccache stats at start"
 ccache -s
 
 ls -lsa .git
-if [ -n "${BUILDKITE_PULL_REQUEST_BASE_BRANCH}" ]; then
-   ./scripts/ci/run_ci.sh  -c -b ${BUILDKITE_PULL_REQUEST_BASE_BRANCH} -r origin \
-	   -m ${JOB_NUM} -M ${BUILDKITE_PARALLEL_JOB_COUNT} -p ${BUILDKITE_PULL_REQUEST}
+if [ -n "${DAILY_BUILD}" ]; then
+   echo "DO DAILY STUFF"
 else
-   ./scripts/ci/run_ci.sh -c -b ${BUILDKITE_BRANCH} -r origin \
+   if [ -n "${BUILDKITE_PULL_REQUEST_BASE_BRANCH}" ]; then
+      ./scripts/ci/run_ci.sh  -c -b ${BUILDKITE_PULL_REQUEST_BASE_BRANCH} -r origin \
+	   -m ${JOB_NUM} -M ${BUILDKITE_PARALLEL_JOB_COUNT} -p ${BUILDKITE_PULL_REQUEST}
+   else
+       ./scripts/ci/run_ci.sh -c -b ${BUILDKITE_BRANCH} -r origin \
 	   -m ${JOB_NUM} -M ${BUILDKITE_PARALLEL_JOB_COUNT};
-fi;
+   fi
+fi
 
 SANITY_EXIT_STATUS=$?
 
