@@ -21,9 +21,14 @@ echo ""
 echo "--- ccache stats at start"
 ccache -s
 
-ls -lsa .git
 if [ -n "${DAILY_BUILD}" ]; then
-   echo "DO DAILY STUFF"
+   SANITYCHECK_OPTIONS=" --inline-logs -N --build-only --all --retry-failed 3 -v "
+   echo "--- DO DAILY STUFF"
+   west init -l .
+   west update 1> west.update.log
+   west forall -c 'git reset --hard HEAD'
+   source zephyr-env.sh
+   ./scripts/sanitycheck --subset ${JOB_NUM}/${BUILDKITE_PARALLEL_JOB_COUNT} ${SANITYCHECK_OPTIONS}
 else
    if [ -n "${BUILDKITE_PULL_REQUEST_BASE_BRANCH}" ]; then
       ./scripts/ci/run_ci.sh  -c -b ${BUILDKITE_PULL_REQUEST_BASE_BRANCH} -r origin \
