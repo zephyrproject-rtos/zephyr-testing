@@ -57,9 +57,9 @@ jobs:
           export ZEPHYR_BASE=${PWD}
           export ZEPHYR_TOOLCHAIN_VARIANT=zephyr
           export BSIM_OUT_PATH="/opt/bsim/"
-	        WORK_DIR=${ZEPHYR_BASE}/bsim_bt_out tests/bluetooth/bsim_bt/compile.sh
-	        RESULTS_FILE=${ZEPHYR_BASE}/${bsim_bt_test_results_file} \
-	        SEARCH_PATH=tests/bluetooth/bsim_bt/ tests/bluetooth/bsim_bt/run_parallel.sh
+          WORK_DIR=${ZEPHYR_BASE}/bsim_bt_out tests/bluetooth/bsim_bt/compile.sh
+          RESULTS_FILE=${ZEPHYR_BASE}/${bsim_bt_test_results_file} \
+          SEARCH_PATH=tests/bluetooth/bsim_bt/ tests/bluetooth/bsim_bt/run_parallel.sh
 
       - name: Upload Unit Test Results
         if: always()
