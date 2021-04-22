@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: clang-build-cancel
     container:
-      image: zephyrprojectrtos/ci:v0.17.0-alpha2
+      image: zephyrprojectrtos/ci:v0.17.0-rc1
       options: '--entrypoint /bin/bash'
     strategy:
       fail-fast: false
@@ -81,7 +81,7 @@ jobs:
         run: ls -R
 
       - name: Publish Unit Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v1.6
+        uses: EnricoMi/publish-unit-test-result-action@v1.12
         with:
           check_name: Unit Test Results
           github_token: ${{ secrets.GITHUB_TOKEN }}
