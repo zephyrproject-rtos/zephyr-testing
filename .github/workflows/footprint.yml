@@ -60,5 +60,14 @@ jobs:
           cp build/ram.json ram1.json
           cp build/rom.json rom1.json
 
-          ./scripts/footprint/fpdiff.py ram1.json ram2.json
-          ./scripts/footprint/fpdiff.py rom1.json rom2.json
+          ./scripts/footprint/fpdiff.py ram1.json ram2.json > fpdiff.txt
+          echo "---------------" >> fpdiff.txt
+          ./scripts/footprint/fpdiff.py rom1.json rom2.json >> fpdiff.txt
+
+      - uses: pytorch/add-annotations-github-action@master
+        with:
+          check_name: footprint
+          linter_output_path: fpdiff.txt
+          commit_sha: ${{ github.event.pull_request.head.sha }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
