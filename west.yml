@@ -157,5 +157,5 @@ manifest:
       revision: dc70a45a7cc12c25726a32cd91b28be59e7bc596
 
   self:
-    path: zephyr
+    path: zephyr-testing
     west-commands: scripts/west-commands.yml

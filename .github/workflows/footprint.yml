@@ -39,9 +39,6 @@ jobs:
 
       - name: west setup
         run: |
-          cd ..
-          mv zephyr-testing zephyr
-          cd zephyr
           west init -l . || true
           west update
 
