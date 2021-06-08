@@ -47,23 +47,19 @@ jobs:
           BASE_REF: ${{ github.base_ref }}
         run: |
           export ZEPHYR_BASE=${PWD}
-          export ZEPHYR_BASE=$PWD
           git config --global user.email "actions@zephyrproject.org"
           git config --global user.name "Github Actions"
           git remote -v
           git rebase origin/${BASE_REF}
           git checkout -b this_pr
-          west build -b frdm_k64f  tests/benchmarks/footprints -t ram_report
-          cp build/ram.json ram2.json
-          west build -b frdm_k64f  tests/benchmarks/footprints -t rom_report
+          west build -b frdm_k64f  tests/benchmarks/footprints -t footprint
           cp build/rom.json rom2.json
+          cp build/ram.json ram2.json
 
           git checkout origin/${BASE_REF}
-          west build -p always -b frdm_k64f  tests/benchmarks/footprints -t ram_report
-          west build -b frdm_k64f  tests/benchmarks/footprints -t rom_report
+          west build -p always -b frdm_k64f  tests/benchmarks/footprints -t footprint
           cp build/ram.json ram1.json
           cp build/rom.json rom1.json
 
-          git checkout this_pr
           ./scripts/footprint/fpdiff.py ram1.json ram2.json
           ./scripts/footprint/fpdiff.py rom1.json rom2.json
