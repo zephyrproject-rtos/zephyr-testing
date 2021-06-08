@@ -39,6 +39,9 @@ jobs:
 
       - name: west setup
         run: |
+          cd ..
+          mv zephyr-testing zephyr
+          cd zephyr
           west init -l . || true
           west update
 
@@ -51,7 +54,6 @@ jobs:
           git config --global user.name "Github Actions"
           git remote -v
           git rebase origin/${BASE_REF}
-          git checkout -b this_pr
           west build -b frdm_k64f  tests/benchmarks/footprints -t footprint
           cp build/rom.json rom2.json
           cp build/ram.json ram2.json
