@@ -1,6 +1,6 @@
 name: Run full testsuite with twister
 
-on: push
+on: pull_request_target
 
 jobs:
   twister-build-cancel:
