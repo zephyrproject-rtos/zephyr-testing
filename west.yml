@@ -243,6 +243,6 @@ manifest:
     - -ci
 
   self:
-    path: zephyr
+    path: zephyr-testing
     west-commands: scripts/west-commands.yml
     import: submanifests
