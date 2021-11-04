@@ -1,29 +1,53 @@
 name: Run full testsuite with twister
 
-on: pull_request_target
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  schedule:
+    - cron: '*/10 * * * *'
 
 jobs:
-  twister-build-cancel:
+  twister-build-prep:
     runs-on: ubuntu-latest
+    outputs:
+      subset: ${{ steps.output-services.outputs.subset }}
+    env:
+      MATRIX_SIZE: 10
+      DAILY_MATRIX_SIZE: 100
     steps:
       - name: Cancel Previous Runs
         uses: styfle/cancel-workflow-action@0.6.0
         with:
           access_token: ${{ github.token }}
+      - name: Determine matrix size for push events
+        id: output-services
+        run: |
+          if [ ${{github.event_name}} == "push" -o ${{github.event_name}} == "pull_request" ]; then
+            echo "::set-output name=subset::[$(seq -s',' 1 ${MATRIX_SIZE})]";
+          else
+            echo "::set-output name=subset::[$(seq -s',' 1 ${DAILY_MATRIX_SIZE})]";
+          fi
+
   twister-build:
     runs-on: zephyr_runner
-    needs: twister-build-cancel
+    needs: twister-build-prep
     container:
       image: zephyrprojectrtos/ci:v0.18.4
       options: '--entrypoint /bin/bash'
     strategy:
       fail-fast: false
       matrix:
-        subset: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        subset: ${{fromJSON(needs.twister-build-prep.outputs.subset)}}
     env:
+      MATRIX_SIZE: 10
+      DAILY_MATRIX_SIZE: 100
       ZEPHYR_SDK_INSTALL_DIR: /opt/toolchains/zephyr-sdk-0.13.1
       CLANG_ROOT_DIR: /usr/lib/llvm-12
-      MATRIX_SIZE: 10
+      DAILY_OPTIONS: ' --inline-logs -M -N --build-only --all --retry-failed 3 -v '
     steps:
       - name: Update PATH for west
         run: |
@@ -47,12 +71,26 @@ jobs:
           gcc --version
           ls -la
 
-      - name: Run Tests with Twister
+      - if: github.event_name == 'push'
+        name: Run Tests with Twister
         run: |
-          #source zephyr-env.sh
           export ZEPHYR_BASE=${PWD}
           export ZEPHYR_TOOLCHAIN_VARIANT=zephyr
           ./scripts/ci/run_ci.sh -c -b main -r origin -m ${{matrix.subset}} -M ${MATRIX_SIZE}
+
+      - if: github.event_name == 'pull_request'
+        name: Run Tests with Twister
+        run: |
+          export ZEPHYR_BASE=${PWD}
+          export ZEPHYR_TOOLCHAIN_VARIANT=zephyr
+          ./scripts/ci/run_ci.sh -c -b main -r origin -m ${{matrix.subset}} -M ${MATRIX_SIZE}
+
+      - if: github.event_name == 'schedule'
+        name: Run Tests with Twister
+        run: |
+          export ZEPHYR_BASE=${PWD}
+          export ZEPHYR_TOOLCHAIN_VARIANT=zephyr
+          ./scripts/twister --subset ${{matrix.subset}}/${DAILY_MATRIX_SIZE} ${DAILY_OPTIONS}
 
       - name: Upload Unit Test Results
         if: always()
