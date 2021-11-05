@@ -246,6 +246,8 @@ if [ -n "$main_ci" ]; then
 
 	echo "+++ run twister"
 
+	cat test_file.txt
+
 	# Run a subset of tests based on matrix size
 	${twister} ${twister_options} --load-tests test_file.txt \
 		--subset ${matrix}/${matrix_builds} --retry-failed 3
