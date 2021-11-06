@@ -1,5 +1,6 @@
 .. raw:: html
 
+
    <a href="https://www.zephyrproject.org">
      <p align="center">
        <img src="doc/_static/images/logo-readme.png">
