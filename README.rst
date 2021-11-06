@@ -6,6 +6,7 @@
      </p>
    </a>
 
+   o
    <a href="https://bestpractices.coreinfrastructure.org/projects/74"><img
    src="https://bestpractices.coreinfrastructure.org/projects/74/badge"></a>
    <a href="https://buildkite.com/zephyr/zephyr">
