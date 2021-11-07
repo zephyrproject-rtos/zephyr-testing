@@ -1,4 +1,4 @@
-name: Code Coverage
+name: Code Coverage with codecov
 
 on:
   push:
@@ -11,8 +11,6 @@ on:
 jobs:
   codeocov-prep:
     runs-on: ubuntu-latest
-    outputs:
-      subset: ${{ steps.output-services.outputs.subset }}
     steps:
       - name: Cancel Previous Runs
         uses: styfle/cancel-workflow-action@0.6.0
