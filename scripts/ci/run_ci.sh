@@ -247,7 +247,7 @@ if [ -n "$main_ci" ]; then
 
 	build_test_file
 	if [ -n ${output_plan} ]; then
-		return
+		exit 0
 	fi
 
 	echo "+++ run twister"
