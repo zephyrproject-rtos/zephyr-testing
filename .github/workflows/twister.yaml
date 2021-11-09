@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-  pull_request:
+  pull_request_target:
     branches:
       - main
   schedule:
@@ -26,7 +26,7 @@ jobs:
       - name: Determine matrix size for push events
         id: output-services
         run: |
-          if [ ${{github.event_name}} == "push" -o ${{github.event_name}} == "pull_request" ]; then
+          if [ ${{github.event_name}} == "push" -o ${{github.event_name}} == "pull_request_target" ]; then
             echo "::set-output name=subset::[$(seq -s',' 1 ${MATRIX_SIZE})]";
           else
             echo "::set-output name=subset::[$(seq -s',' 1 ${DAILY_MATRIX_SIZE})]";
@@ -104,7 +104,7 @@ jobs:
           ./scripts/ci/run_ci.sh -c -b main -r origin -m ${{matrix.subset}} -M ${MATRIX_SIZE}
           #./scripts/twister -NM -v -p native_posix --subset ${{matrix.subset}}/${MATRIX_SIZE}
 
-      - if: github.event_name == 'pull_request'
+      - if: github.event_name == 'pull_request_target'
         name: Run Tests with Twister (Pull Request)
         run: |
           git config --global user.email "you@example.com"
