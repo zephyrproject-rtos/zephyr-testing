@@ -56,11 +56,7 @@ jobs:
       - name: Determine matrix size for push events
         id: output-services
         run: |
-          if [ "${{github.event_name}}" == "push" -o "${{github.event_name}}" == "pull_request_target" ]; then
-            echo "::set-output name=subset::[$(seq -s',' 1 ${MATRIX_SIZE})]";
-          else
-            echo "::set-output name=subset::[$(seq -s',' 1 ${DAILY_MATRIX_SIZE})]";
-          fi
+          echo "::set-output name=subset::[$(seq -s',' 1 ${MATRIX_SIZE})]";
 
   twister-build:
     runs-on: zephyr_runner
