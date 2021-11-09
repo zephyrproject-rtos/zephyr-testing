@@ -190,6 +190,9 @@ while getopts ":p:m:b:r:M:cfslR:" opt; do
 			echo "Base Branch: $OPTARG" >&2
 			branch=$OPTARG
 			;;
+		S)
+			output_plan=1
+			;;
 		r)
 			echo "Remote: $OPTARG" >&2
 			remote=$OPTARG
@@ -243,6 +246,9 @@ if [ -n "$main_ci" ]; then
 	$short_git_log
 
 	build_test_file
+	if [ -n ${output_plan} ]; then
+		return
+	fi
 
 	echo "+++ run twister"
 
