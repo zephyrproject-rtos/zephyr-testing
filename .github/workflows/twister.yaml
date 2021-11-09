@@ -29,20 +29,15 @@ jobs:
         with:
           access_token: ${{ github.token }}
 
-      - if: github.event_name == 'pull_request_target'
-        name: checkout
+      - name: Checkout and Create Plan
+        if: github.event_name == 'pull_request_target'
         uses: actions/checkout@v2
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
-      - if: github.event_name == 'pull_request_target'
-        name: west setup
         run: |
           west init -l . || true
           west update || ( rm -rf ../modules && west update)
-      - if: github.event_name == 'pull_request_target'
-        name: Generate Test Plan with Twister
-        run: |
           git config --global user.email "you@example.com"
           git config --global user.name "Your Name"
           export ZEPHYR_BASE=${PWD}
