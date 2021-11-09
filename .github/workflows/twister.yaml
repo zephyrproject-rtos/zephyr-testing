@@ -12,17 +12,45 @@ on:
 
 jobs:
   twister-build-prep:
-    runs-on: ubuntu-latest
+    runs-on: zephyr_runner
+    container:
+      image: zephyrprojectrtos/ci:v0.18.4
+      options: '--entrypoint /bin/bash'
     outputs:
       subset: ${{ steps.output-services.outputs.subset }}
     env:
       MATRIX_SIZE: 10
       DAILY_MATRIX_SIZE: 100
+      ZEPHYR_SDK_INSTALL_DIR: /opt/toolchains/zephyr-sdk-0.13.1
+      CLANG_ROOT_DIR: /usr/lib/llvm-12
     steps:
       - name: Cancel Previous Runs
         uses: styfle/cancel-workflow-action@0.6.0
         with:
           access_token: ${{ github.token }}
+
+      - if: github.event_name == 'pull_request_target'
+        name: checkout
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - if: github.event_name == 'pull_request_target'
+        name: west setup
+        run: |
+          west init -l . || true
+          west update || ( rm -rf ../modules && west update)
+      - if: github.event_name == 'pull_request_target'
+        name: Generate Test Plan with Twister
+        run: |
+          git config --global user.email "you@example.com"
+          git config --global user.name "Your Name"
+          export ZEPHYR_BASE=${PWD}
+          export ZEPHYR_TOOLCHAIN_VARIANT=zephyr
+          ./scripts/ci/run_ci.sh -c -b ${{github.base_ref}} -r origin -p ${{github.event.pull_request.number}}
+          wc -l test_file.txt
+          rm test_file.txt
+
       - name: Determine matrix size for push events
         id: output-services
         run: |
