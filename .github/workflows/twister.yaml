@@ -140,7 +140,7 @@ jobs:
         run: |
           export ZEPHYR_BASE=${PWD}
           export ZEPHYR_TOOLCHAIN_VARIANT=zephyr
-          ./scripts/ci/run_ci.sh -c -b main -r origin -m ${{matrix.subset}} -M ${MATRIX_SIZE}
+          ./scripts/ci/run_ci.sh -c -b main -r origin -m ${{matrix.subset}} -M ${{ strategy.job-total }}
           #./scripts/twister -NM -v -p native_posix --subset ${{matrix.subset}}/${MATRIX_SIZE}
 
       - if: github.event_name == 'pull_request_target'
@@ -151,14 +151,14 @@ jobs:
           export ZEPHYR_BASE=${PWD}
           export ZEPHYR_TOOLCHAIN_VARIANT=zephyr
           ./scripts/ci/run_ci.sh -c -b ${{github.base_ref}} -r origin \
-                     -m ${{matrix.subset}} -M ${MATRIX_SIZE} -p ${{github.event.pull_request.number}}
+                     -m ${{matrix.subset}} -M  ${{ strategy.job-total }} -p ${{github.event.pull_request.number}}
 
       - if: github.event_name == 'schedule'
         name: Run Tests with Twister (Daily)
         run: |
           export ZEPHYR_BASE=${PWD}
           export ZEPHYR_TOOLCHAIN_VARIANT=zephyr
-          ./scripts/twister --subset ${{matrix.subset}}/${DAILY_MATRIX_SIZE} ${DAILY_OPTIONS}
+          ./scripts/twister --subset ${{matrix.subset}}/${{ strategy.job-total }} ${DAILY_OPTIONS}
 
       - name: ccache stats post
         run: |
