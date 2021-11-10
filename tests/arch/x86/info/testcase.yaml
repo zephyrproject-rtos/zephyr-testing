@@ -1,5 +1,5 @@
 tests:
-  arch.x86.info:
+  arch.x86.infox:
     arch_allow: x86
     platform_allow: qemu_x86 ehl_crb up_squared
     harness: console
