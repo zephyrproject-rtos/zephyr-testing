@@ -57,11 +57,12 @@ jobs:
           if [ "$lines" = 1 ]; then
             nodes=0
             echo "::set-output name=subset::${nodes}";
-          fi
-          nodes=$(echo "${lines} / 700" | bc)
-          if [ "${nodes}" = 0 ]; then
-            nodes=1
-            echo "::set-output name=calculated_matrix_size::${nodes}";
+          else
+            nodes=$(echo "${lines} / 700" | bc)
+            if [ "${nodes}" = 0 ]; then
+              nodes=1
+              echo "::set-output name=calculated_matrix_size::${nodes}";
+            fi
           fi
           rm test_file.txt no_skipped.txt
 
@@ -86,7 +87,7 @@ jobs:
   twister-build:
     runs-on: zephyr_runner
     needs: twister-build-prep
-    if: needs.twister-build-prep.outputs.subset == 0
+    if: needs.twister-build-prep.outputs.subset != 0
     container:
       image: zephyrprojectrtos/ci:v0.18.4
       options: '--entrypoint /bin/bash'
