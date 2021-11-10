@@ -18,6 +18,7 @@ jobs:
       options: '--entrypoint /bin/bash'
     outputs:
       subset: ${{ steps.output-services.outputs.subset }}
+      size: ${{ steps.output-services.outputs.size }}
     env:
       MATRIX_SIZE: 10
       DAILY_MATRIX_SIZE: 100
@@ -74,19 +75,20 @@ jobs:
             else
               echo "::set-output name=subset::[$(seq -s',' 1 ${MATRIX_SIZE})]";
             fi
+            echo "::set-output name=size::${{ steps.test-plan.outputs.calculated_matrix_size }}";
           elif [ "${{github.event_name}}" = "push" ]; then
             echo "::set-output name=subset::[$(seq -s',' 1 ${MATRIX_SIZE})]";
-            echo "::set-output name=calculated_matrix_size::${MATRIX_SIZE}";
+            echo "::set-output name=size::${MATRIX_SIZE}";
           else
             echo "::set-output name=subset::[$(seq -s',' 1 ${DAILY_MATRIX_SIZE})]";
-            echo "::set-output name=calculated_matrix_size::${DAILY_MATRIX_SIZE}";
+            echo "::set-output name=size::${DAILY_MATRIX_SIZE}";
           fi
 
 
   twister-build:
     runs-on: zephyr_runner
     needs: twister-build-prep
-    if: needs.twister-build-prep.outputs.calculated_matrix_size != 0
+    if: needs.twister-build-prep.outputs.size != 0
     container:
       image: zephyrprojectrtos/ci:v0.18.4
       options: '--entrypoint /bin/bash'
