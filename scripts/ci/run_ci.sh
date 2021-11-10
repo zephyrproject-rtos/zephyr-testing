@@ -247,6 +247,7 @@ if [ -n "$main_ci" ]; then
 
 	build_test_file
 
+	grep -v skipped test_file.txt | wc -l
 	if [ -n "${output_plan}" ]; then
 		exit 0
 	fi
