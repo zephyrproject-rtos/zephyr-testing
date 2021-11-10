@@ -59,7 +59,7 @@ jobs:
           if [ "${{github.event_name}}" == "push" -o "${{github.event_name}}" == "pull_request_target" ]; then
             echo "::set-output name=subset::[$(seq -s',' 1 ${MATRIX_SIZE})]";
           else
-            echo "::set-output name=subset::[$(seq -s',' 1 ${DAILY_MATRIX_SIZE})]";
+            echo "::set-output name=subset::[$(seq -s',' 1 ${MATRIX_SIZE})]";
           fi
 
   twister-build:
