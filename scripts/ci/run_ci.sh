@@ -99,9 +99,9 @@ function build_test_file() {
 		./scripts/zephyr_module.py --twister-out module_tests.args
 		./scripts/ci/get_twister_opt.py --commits ${commit_range}
 
-		if [ -s modified_tags.args ]; then
-			twister_exclude_tag_opt="+modified_tags.args"
-		fi
+		#if [ -s modified_tags.args ]; then
+		#	twister_exclude_tag_opt="+modified_tags.args"
+		#fi
 
 		if [ -s modified_boards.args ]; then
 			${twister} ${twister_options} ${twister_exclude_tag_opt} \
