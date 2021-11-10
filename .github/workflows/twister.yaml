@@ -54,11 +54,15 @@ jobs:
           ./scripts/ci/run_ci.sh -S -c -b ${{github.base_ref}} -r origin -p ${{github.event.pull_request.number}}
           grep -v skipped test_file.txt > no_skipped.txt
           lines=$(wc -l < no_skipped.txt)
+          if [ "$lines" = 1 ]; then
+            nodes=0
+            echo "::set-output name=subset::${nodes}";
+          fi
           nodes=$(echo "${lines} / 700" | bc)
           if [ "${nodes}" = 0 ]; then
             nodes=1
+            echo "::set-output name=calculated_matrix_size::${nodes}";
           fi
-          echo "::set-output name=calculated_matrix_size::${nodes}";
           rm test_file.txt no_skipped.txt
 
       - name: Determine matrix size for push events
@@ -68,7 +72,11 @@ jobs:
             if [ -n ${{steps.test-plan.outputs.calculated_matrix_size}} ]; then
               echo "::set-output name=subset::[$(seq -s',' 1 ${{steps.test-plan.outputs.calculated_matrix_size}})]";
             else
-              echo "::set-output name=subset::[$(seq -s',' 1 ${MATRIX_SIZE})]";
+              if [ -n "${{steps.test-plan.outputs.subset}}" ]; then
+                echo "::set-output name=subset::0";
+              else
+                echo "::set-output name=subset::[$(seq -s',' 1 ${MATRIX_SIZE})]";
+              fi
             fi
           else
             echo "::set-output name=subset::[$(seq -s',' 1 ${DAILY_MATRIX_SIZE})]";
@@ -78,6 +86,7 @@ jobs:
   twister-build:
     runs-on: zephyr_runner
     needs: twister-build-prep
+    if: needs.twister-build-prep.outputs.subset == 0
     container:
       image: zephyrprojectrtos/ci:v0.18.4
       options: '--entrypoint /bin/bash'
