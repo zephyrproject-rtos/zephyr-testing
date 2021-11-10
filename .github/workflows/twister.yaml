@@ -62,20 +62,24 @@ jobs:
               nodes=1
             fi
           fi
-          echo "::set-output name=calculated_matrix_siz::${nodes}";
+          echo "::set-output name=calculated_matrix_size::${nodes}";
           rm test_file.txt no_skipped.txt
 
       - name: Determine matrix size for push events
         id: output-services
         run: |
-          if [ "${{github.event_name}}" = "push" -o "${{github.event_name}}" = "pull_request_target" ]; then
-            if [ -n ${{steps.test-plan.outputs.calculated_matrix_size}} ]; then
+          if [ "${{github.event_name}}" = "pull_request_target" ]; then
+            if [ -n "${{steps.test-plan.outputs.calculated_matrix_size}}" ]; then
               echo "::set-output name=subset::[$(seq -s',' 1 ${{steps.test-plan.outputs.calculated_matrix_size}})]";
             else
               echo "::set-output name=subset::[$(seq -s',' 1 ${MATRIX_SIZE})]";
             fi
+          elif [ "${{github.event_name}}" = "push" ]; then
+            echo "::set-output name=subset::[$(seq -s',' 1 ${MATRIX_SIZE})]";
+            echo "::set-output name=calculated_matrix_size::${MATRIX_SIZE}";
           else
             echo "::set-output name=subset::[$(seq -s',' 1 ${DAILY_MATRIX_SIZE})]";
+            echo "::set-output name=calculated_matrix_size::${DAILY_MATRIX_SIZE}";
           fi
 
 
