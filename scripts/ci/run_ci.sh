@@ -155,7 +155,7 @@ function west_setup() {
 }
 
 
-while getopts ":p:m:b:r:M:cfslR:" opt; do
+while getopts ":p:m:b:r:M:cSfslR:" opt; do
 	case $opt in
 		c)
 			echo "Execute CI" >&2
@@ -246,7 +246,8 @@ if [ -n "$main_ci" ]; then
 	$short_git_log
 
 	build_test_file
-	if [ -n ${output_plan} ]; then
+
+	if [ -n "${output_plan}" ]; then
 		exit 0
 	fi
 
