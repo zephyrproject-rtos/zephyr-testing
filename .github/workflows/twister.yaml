@@ -62,8 +62,8 @@ jobs:
         id: output-services
         run: |
           if [ "${{github.event_name}}" = "push" -o "${{github.event_name}}" = "pull_request_target" ]; then
-            if [ -n ${{steps.vars.outputs.calculated_matrix_size}} ]; then
-              echo "::set-output name=subset::[$(seq -s',' 1 ${{steps.vars.outputs.calculated_matrix_size}})]";
+            if [ -n ${{steps.test-plan.outputs.calculated_matrix_size}} ]; then
+              echo "::set-output name=subset::[$(seq -s',' 1 ${{steps.test-plan.outputs.calculated_matrix_size}})]";
             else
               echo "::set-output name=subset::[$(seq -s',' 1 ${MATRIX_SIZE})]";
             fi
