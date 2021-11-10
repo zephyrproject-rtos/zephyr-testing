@@ -136,10 +136,23 @@ function build_test_file() {
 	tail -n +2 test_file_tests.txt > test_file_tests_in.txt
 	tail -n +2 test_file_boards.txt > test_file_boards_in.txt
 
+	echo -n "Full: "
+	wc -l test_file_full.txt
+	echo -n "Arch: "
+	wc -l test_file_archs.txt
+	echo -n "Tests: "
+	wc -l test_file_tests.txt
+	echo -n "Boards: "
+	wc -l test_file_boards.txt
+
+
 	echo "test,arch,platform,status,extra_args,handler,handler_time,ram_size,rom_size" \
 		> test_file.txt
 	cat test_file_full_in.txt test_file_archs_in.txt test_file_tests_in.txt \
 		test_file_boards_in.txt >> test_file.txt
+
+	echo -n "Total: "
+	wc -l test_file.txt
 }
 
 function west_setup() {
@@ -247,7 +260,6 @@ if [ -n "$main_ci" ]; then
 
 	build_test_file
 
-	grep -v skipped test_file.txt | wc -l
 	if [ -n "${output_plan}" ]; then
 		exit 0
 	fi
