@@ -44,22 +44,30 @@ jobs:
 
       - name: Generate Test Plan with Twister
         if: github.event_name == 'pull_request_target'
+        id: test-plan
         run: |
           git config --global user.email "you@example.com"
           git config --global user.name "Your Name"
           export ZEPHYR_BASE=${PWD}
           export ZEPHYR_TOOLCHAIN_VARIANT=zephyr
           ./scripts/ci/run_ci.sh -S -c -b ${{github.base_ref}} -r origin -p ${{github.event.pull_request.number}}
-          wc -l test_file.txt
-          rm test_file.txt
+          grep -v skipped test_file.txt > no_skipped.txt
+          lines=$(wc -l < no_skipped.txt)
+          nodes=$(echo "${lines} / 700" | bc)
+          echo "::set-env name=CALCULATED_MATRIX_SIZE::[$(seq -s',' 1 $nodes})]";
+          rm test_file.txt no_skipped.txt
 
       - name: Determine matrix size for push events
         id: output-services
         run: |
           if [ "${{github.event_name}}" = "push" -o "${{github.event_name}}" = "pull_request_target" ]; then
-            echo "::set-output name=subset::[$(seq -s',' 1 ${MATRIX_SIZE})]";
+            if [ -n "${CALCULATED_MATRIX_SIZE}" ]; then
+              echo "::set-output name=subset::[$(seq -s',' 1 ${CALCULATED_MATRIX_SIZE})]";
+            else
+              echo "::set-output name=subset::[$(seq -s',' 1 ${MATRIX_SIZE})]";
+            fi
           else
-            echo "::set-output name=subset::[$(seq -s',' 1 ${MATRIX_SIZE})]";
+            echo "::set-output name=subset::[$(seq -s',' 1 ${DAILY_MATRIX_SIZE})]";
           fi
 
   twister-build:
