@@ -55,6 +55,9 @@ jobs:
           grep -v skipped test_file.txt > no_skipped.txt
           lines=$(wc -l < no_skipped.txt)
           nodes=$(echo "${lines} / 700" | bc)
+          if [ "${nodes}" = 0 ]; then
+            nodes=1
+          fi
           echo "::set-output name=calculated_matrix_size::${nodes}";
           rm test_file.txt no_skipped.txt
 
