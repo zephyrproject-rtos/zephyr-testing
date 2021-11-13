@@ -1,0 +1,80 @@
+name: Static Analysis with Parasoft
+
+on: pull_request
+
+jobs:
+  parasoft-build-prep:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.6.0
+        with:
+          access_token: ${{ github.token }}
+  parasoft-build:
+    runs-on: zephyr_runner
+    needs: parasoft-build-prep
+    container:
+      image: zephyrprojectrtos/ci:v0.18.4
+      options: '--entrypoint /bin/bash'
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: ["qemu_x86"]
+    env:
+      ZEPHYR_SDK_INSTALL_DIR: /opt/toolchains/zephyr-sdk-0.13.1
+    outputs:
+      report_needed: ${{ steps.twister.outputs.report_needed }}
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.6.0
+        with:
+          access_token: ${{ github.token }}
+      - name: Update PATH for west
+        run: |
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: checkout
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: west setup
+        run: |
+          west init -l . || true
+          # In some cases modules are left in a state where they can't be
+          # updated (i.e. when we cancel a job and the builder is killed),
+          # So first retry to update, if that does not work, remove all modules
+          # and start over. (Workaround until we implement more robust module
+          # west caching).
+          west update 1> west.update.log || west update 1> west.update-2.log || ( rm -rf ../modules && west update)
+
+      - name: Check Environment
+        run: |
+          cmake --version
+          ${CLANG_ROOT_DIR}/bin/clang --version
+          gcc --version
+          ls -la
+
+      - name: Run Tests with Twister
+        id: twister
+        run: |
+          git config --global user.email "bot@zephyrproject.org"
+          git config --global user.name "Zephyr Builder"
+          export ZEPHYR_BASE=${PWD}
+          export ZEPHYR_TOOLCHAIN_VARIANT=llvm
+          #
+          git rebase origin/main
+          commit_range="origin/${{github.base_ref}}..HEAD"
+          # check if we need to run a full twister or not based on files changed
+          SC=$(./scripts/ci/what_changed.py --commits ${commit_range})
+          # Get twister arguments based on the files changed
+          ./scripts/ci/get_twister_opt.py --commits ${commit_range}
+          if [ "$SC" = "full" ]; then
+          cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DBOARD=qemu_x86 -Bbuild -Stests/benchmarks/footprints
+          cmake --build  build
+          fi
+      - name: Run C/C++test
+        uses: parasoft/run-cpptest-action@1.0.1
+        with:
+          input: build/compile_commands.json
