@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-  pull_request_target:
+  pull_request:
     branches:
       - main
   schedule:
@@ -34,14 +34,14 @@ jobs:
           access_token: ${{ github.token }}
 
       - name: checkout
-        if: github.event_name == 'pull_request_target'
+        if: github.event_name == 'pull_request'
         uses: actions/checkout@v2
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
       - name: west setup
-        if: github.event_name == 'pull_request_target'
+        if: github.event_name == 'pull_request'
         run: |
           west init -l . || true
           west config --global update.narrow true
@@ -49,7 +49,7 @@ jobs:
           west forall -c 'git reset --hard HEAD'
 
       - name: Generate Test Plan with Twister
-        if: github.event_name == 'pull_request_target'
+        if: github.event_name == 'pull_request'
         id: test-plan
         run: |
           sudo apt-get install -y bc
@@ -79,7 +79,7 @@ jobs:
       - name: Determine matrix size
         id: output-services
         run: |
-          if [ "${{github.event_name}}" = "pull_request_target" ]; then
+          if [ "${{github.event_name}}" = "pull_request" ]; then
             if [ -n "${{steps.test-plan.outputs.calculated_matrix_size}}" ]; then
               subset="[$(seq -s',' 1 ${{steps.test-plan.outputs.calculated_matrix_size}})]"
             else
@@ -174,7 +174,7 @@ jobs:
           ./scripts/ci/run_ci.sh -c -b main -r origin -m ${{matrix.subset}} \
                     -M ${{ strategy.job-total }}
 
-      - if: github.event_name == 'pull_request_target'
+      - if: github.event_name == 'pull_request'
         name: Run Tests with Twister (Pull Request)
         run: |
           git config --global user.email "bot@zephyrproject.org"
