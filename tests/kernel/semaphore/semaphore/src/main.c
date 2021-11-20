@@ -8,6 +8,7 @@
 #include <irq_offload.h>
 #include <ztest_error_hook.h>
 
+
 /* Macro declarations */
 #define SEM_INIT_VAL (0U)
 #define SEM_MAX_VAL  (10U)
