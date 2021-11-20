@@ -49,6 +49,7 @@ jobs:
           # So first retry to update, if that does not work, remove all modules
           # and start over. (Workaround until we implement more robust module
           # west caching).
+          west config --global update.narrow true
           west update 2>&1 1> west.log || west update 2>&1 1> west2.log || ( rm -rf ../modules && west update)
 
       - name: Check Environment
@@ -69,7 +70,7 @@ jobs:
         id: cache-ccache
         uses: nashif/action-s3-cache@master
         with:
-          key: ${{ steps.ccache_cache_timestamp.outputs.repo }}-clang-${{ matrix.platform }}-ccache
+          key: ${{ steps.ccache_cache_timestamp.outputs.repo }}-${{ github.base_ref }}-clang-${{ matrix.platform }}-ccache
           path: /github/home/.ccache
           aws-s3-bucket: ccache.zephyrproject.org
           aws-access-key-id: ${{ secrets.CCACHE_S3_ACCESS_KEY_ID }}
@@ -78,7 +79,7 @@ jobs:
 
       - name: ccache stats initial
         run: |
-          test -d github/home/.ccache && mv github/home/.ccache /github/home/.ccache
+          test -d github/home/.ccache && ! test -d /github/home/.ccache && mv github/home/.ccache /github/home/.ccache
           ccache -M 10G -s
 
       - name: Run Tests with Twister
@@ -139,4 +140,4 @@ jobs:
           check_name: Unit Test Results
           github_token: ${{ secrets.GITHUB_TOKEN }}
           files: "**/twister.xml"
-          comment_mode: off
+          comment_mode: update last
