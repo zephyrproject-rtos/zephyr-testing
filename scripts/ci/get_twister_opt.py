@@ -24,6 +24,8 @@ def parse_args():
                 description="Generate twister argument files based on modified file")
     parser.add_argument('-c', '--commits', default=None,
             help="Commit range in the form: a..b")
+    parser.add_argument('-f', '--changes-file', default=None,
+            help="File with information about changed/deleted/added files.")
     return parser.parse_args()
 
 def find_archs(files):

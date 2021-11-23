@@ -52,10 +52,19 @@ jobs:
           west update 2>&1 1> west.update.log || west update 2>&1 1> west.update.log
           west forall -c 'git reset --hard HEAD'
 
+      - id: files
+        if: github.event_name == 'pull_request_target'
+        uses: jitterbit/get-changed-files@v1
+        with:
+          format: 'json'
+
       - name: Generate Test Plan with Twister
         if: github.event_name == 'pull_request_target'
         id: test-plan
         run: |
+          cat ${{ steps.files.outputs.removed }}
+          cat ${{ steps.files.outputs.all }}
+
           git config --global user.email "bot@zephyrproject.org"
           git config --global user.name "Zephyr Bot"
           export ZEPHYR_BASE=${PWD}
