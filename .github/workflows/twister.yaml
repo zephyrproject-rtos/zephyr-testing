@@ -96,7 +96,7 @@ jobs:
       - name: Determine matrix size
         id: output-services
         run: |
-          if [ "${{github.event_name}}" = "pull_request" ]; then
+          if [ "${{github.event_name}}" = "pull_request_target" ]; then
             if [ -n "${{steps.test-plan.outputs.calculated_matrix_size}}" ]; then
               subset="[$(seq -s',' 1 ${{steps.test-plan.outputs.calculated_matrix_size}})]"
             else
@@ -106,7 +106,7 @@ jobs:
           elif [ "${{github.event_name}}" = "push" ]; then
             subset="[$(seq -s',' 1 ${MATRIX_SIZE})]"
             size=${MATRIX_SIZE}
-          else
+          elif [ "${{github.event_name}}" = "schedule" ]; then
             subset="[$(seq -s',' 1 ${DAILY_MATRIX_SIZE})]"
             size=${DAILY_MATRIX_SIZE}
           fi
