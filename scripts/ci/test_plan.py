@@ -102,7 +102,9 @@ class Filters:
 
     def get_plan(self, options):
         fname = "_test_plan_partial.csv"
-        cmd = ["scripts/twister", "-c" ] + options + ["--save-tests", fname ]
+        cmd = ["scripts/twister", "-c"] + options + ["--save-tests", fname ]
+        if self.pull_request:
+            cmd.append("--integration")
 
         p = subprocess.call(cmd)
         with open(fname, newline='') as csvfile:

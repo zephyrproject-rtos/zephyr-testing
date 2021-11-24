@@ -84,7 +84,7 @@ jobs:
           ccache -M 10G -s
 
       - name: Generate changed file list
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request_target'
         id: files
         uses: Ana06/get-changed-files@v1.1
         with:
