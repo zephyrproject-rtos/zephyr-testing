@@ -41,7 +41,7 @@ jobs:
       - name: cleanup
         run: |
           # hotfix, until we have a better way to deal with existing data
-          rm -rf zephyr
+          rm -rf zephyr zephyr-testing
 
       - name: checkout
         if: github.event_name == 'pull_request_target'
@@ -50,11 +50,12 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
-      - name: environment setup
+      - name: Environment setup
         if: github.event_name == 'pull_request_target'
         run: |
           pip3 install GitPython
           west init -l . || true
+          git log -n 20 --oneline --decorate --abbrev=12 ${COMMIT_RANGE}
 
       - name: Generate changed file list
         if: github.event_name == 'pull_request_target'
