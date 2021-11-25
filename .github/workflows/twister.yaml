@@ -38,6 +38,11 @@ jobs:
       TESTS_PER_BUILDER: 700
       COMMIT_RANGE: ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}
     steps:
+      - name: cleanup
+        run: |
+          # hotfix, until we have a better way to deal with existing data
+          rm -rf zephyr
+
       - name: checkout
         if: github.event_name == 'pull_request_target'
         uses: actions/checkout@v2
@@ -50,9 +55,6 @@ jobs:
         run: |
           pip3 install GitPython
           west init -l . || true
-          #west config --global update.narrow true
-          #west update 2>&1 1> west.update.log || west update 2>&1 1> west.update.log
-          #west forall -c 'git reset --hard HEAD'
 
       - name: Generate changed file list
         if: github.event_name == 'pull_request_target'
