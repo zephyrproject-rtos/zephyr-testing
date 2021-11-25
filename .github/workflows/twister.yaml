@@ -29,7 +29,6 @@ jobs:
     outputs:
       subset: ${{ steps.output-services.outputs.subset }}
       size: ${{ steps.output-services.outputs.size }}
-      modified: ${{ steps.files.outputs.added_modified }}
     env:
       MATRIX_SIZE: 15
       DAILY_MATRIX_SIZE: 120
@@ -37,6 +36,7 @@ jobs:
       CLANG_ROOT_DIR: /usr/lib/llvm-12
       TESTS_PER_BUILDER: 700
       COMMIT_RANGE: ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}
+      BASE_REF: ${{ github.base_ref }}
     steps:
       - name: cleanup
         run: |
@@ -54,24 +54,17 @@ jobs:
         if: github.event_name == 'pull_request_target'
         run: |
           pip3 install GitPython
+          git config --global user.email "bot@zephyrproject.org"
+          git config --global user.name "Zephyr Bot"
+          git rebase origin/${BASE_REF}
+          git log  --pretty=oneline | head -n 10
           west init -l . || true
-          git log -n 20 --oneline --decorate --abbrev=12 ${COMMIT_RANGE}
-
-      - name: Generate changed file list
-        if: github.event_name == 'pull_request_target'
-        id: files
-        uses: Ana06/get-changed-files@v1.1
-        with:
-          format: 'json'
+          # no need for west update here
 
       - name: Generate Test Plan with Twister
         if: github.event_name == 'pull_request_target'
         id: test-plan
         run: |
-          echo '${{ steps.files.outputs.added_modified }}' > modified.json
-
-          git config --global user.email "bot@zephyrproject.org"
-          git config --global user.name "Zephyr Bot"
           export ZEPHYR_BASE=${PWD}
           export ZEPHYR_TOOLCHAIN_VARIANT=zephyr
           # temporary until we have all PRs rebased on top of this commit.
@@ -79,7 +72,7 @@ jobs:
             echo "Your branch is not up to date, you need to rebase on top of latest HEAD of main branch"
             exit 1
           )
-          python3 ./scripts/ci/test_plan.py --modified-files modified.json --pull-request
+          python3 ./scripts/ci/test_plan.py -c origin/${BASE_REF}.. --pull-request
 
           # get number of tests
           lines=$(wc -l < testplan.csv)
@@ -136,6 +129,7 @@ jobs:
       PR_OPTIONS: ' --clobber-output --integration '
       PUSH_OPTIONS: ' --clobber-output -M '
       COMMIT_RANGE: ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}
+      BASE_REF: ${{ github.base_ref }}
     steps:
       - name: Update PATH for west
         run: |
@@ -150,6 +144,13 @@ jobs:
       - name: west setup
         run: |
           pip3 install GitPython
+          if [ "${{github.event_name}}" = "pull_request_target" ]; then
+            git config --global user.email "bot@zephyrproject.org"
+            git config --global user.name "Zephyr Builder"
+            git rebase origin/${BASE_REF}
+            git log  --pretty=oneline | head -n 10
+          fi
+
           west init -l . || true
           west config --global update.narrow true
           west update 2>&1 1> west.update.log || west update 2>&1 1> west.update.log
@@ -200,12 +201,9 @@ jobs:
       - if: github.event_name == 'pull_request_target'
         name: Run Tests with Twister (Pull Request)
         run: |
-          echo '${{ needs.twister-build-prep.outputs.modified }}' > modified.json
-          git config --global user.email "bot@zephyrproject.org"
-          git config --global user.name "Zephyr Builder"
           export ZEPHYR_BASE=${PWD}
           export ZEPHYR_TOOLCHAIN_VARIANT=zephyr
-          python3 ./scripts/ci/test_plan.py -m modified.json -P
+          python3 ./scripts/ci/test_plan.py -c origin/${BASE_REF}.. --pull-request
           ./scripts/twister --subset ${{matrix.subset}}/${{ strategy.job-total }} --load-tests testplan.csv ${TWISTER_COMMON} ${PR_OPTIONS}
 
       - if: github.event_name == 'schedule'
