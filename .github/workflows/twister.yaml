@@ -115,7 +115,6 @@ jobs:
           echo "::set-output name=subset::${subset}";
           echo "::set-output name=size::${size}";
 
-
   twister-build:
     runs-on: zephyr_runner
     needs: twister-build-prep
@@ -163,7 +162,7 @@ jobs:
 
           west init -l . || true
           west config --global update.narrow true
-          west update --path-cache /github/cache/zephyrproject 2>&1 1> west.update.log || west update --path-cache /github/cache/zephyrproject 2>&1 1> west.update.log
+          west update --path-cache /github/cache/zephyrproject 2>&1 1> west.update.log || west update --path-cache /github/cache/zephyrproject 2>&1 1> west.update.log || ( rm -rf ../modules && west update --path-cache /github/cache/zephyrproject)
           west forall -c 'git reset --hard HEAD'
 
       - name: Check Environment
@@ -211,6 +210,7 @@ jobs:
       - if: github.event_name == 'pull_request_target'
         name: Run Tests with Twister (Pull Request)
         run: |
+          rm -f testplan.csv
           export ZEPHYR_BASE=${PWD}
           export ZEPHYR_TOOLCHAIN_VARIANT=zephyr
           python3 ./scripts/ci/test_plan.py -c origin/${BASE_REF}.. --pull-request
@@ -227,12 +227,21 @@ jobs:
         run: |
           ccache -s
 
+      - name: Upload Test plan
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: Test Plan (Subset ${{ matrix.subset }})
+          path: testplan.csv
+          if-no-files-found: ignore
+
       - name: Upload Unit Test Results
         if: always()
         uses: actions/upload-artifact@v2
         with:
           name: Unit Test Results (Subset ${{ matrix.subset }})
           path: twister-out/twister.xml
+          if-no-files-found: ignore
 
   twister-test-results:
     name: "Publish Unit Tests Results"
