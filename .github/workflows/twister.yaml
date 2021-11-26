@@ -26,6 +26,8 @@ jobs:
     container:
       image: zephyrprojectrtos/ci:v0.21.0
       options: '--entrypoint /bin/bash'
+      volumes:
+        - /home/runners/zephyrproject:/github/cache/zephyrproject
     outputs:
       subset: ${{ steps.output-services.outputs.subset }}
       size: ${{ steps.output-services.outputs.size }}
@@ -42,6 +44,10 @@ jobs:
         run: |
           # hotfix, until we have a better way to deal with existing data
           rm -rf zephyr zephyr-testing
+          ls -la $HOME
+          echo ${{ github.workspace }}
+          ls -lR /github/cache
+          exit 1
 
       - name: Checkout
         if: github.event_name == 'pull_request_target'
