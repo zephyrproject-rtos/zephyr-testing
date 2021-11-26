@@ -227,21 +227,15 @@ jobs:
         run: |
           ccache -s
 
-      - name: Upload Test plan
-        if: always()
-        uses: actions/upload-artifact@v2
-        with:
-          name: Test Plan (Subset ${{ matrix.subset }})
-          path: testplan.csv
-          if-no-files-found: ignore
-
       - name: Upload Unit Test Results
         if: always()
         uses: actions/upload-artifact@v2
         with:
           name: Unit Test Results (Subset ${{ matrix.subset }})
-          path: twister-out/twister.xml
           if-no-files-found: ignore
+          path: |
+            twister-out/twister.xml
+            testplan.csv
 
   twister-test-results:
     name: "Publish Unit Tests Results"
