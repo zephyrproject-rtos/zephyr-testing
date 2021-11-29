@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 #include <ztest.h>
 
 #if defined(CONFIG_ARCH_POSIX)
