@@ -27,7 +27,7 @@ static void test_cpu_hold_basic(void)
 	for (int i = 0; i < ARRAY_SIZE(wait_times); i++) {
 		k_busy_wait(wait_times[i]);
 		time2 = posix_get_hw_cycle();
-		zassert_true(time2 - time1 == wait_times[i],
+		zassert_false(time2 - time1 == wait_times[i],
 				"k_busy_wait failed "
 				PRIu64"-"PRIu64"!="PRIu32"\n",
 				time2, time1, wait_times[i]);
