@@ -133,7 +133,7 @@ jobs:
         run: |
           ls -lR artifacts
           pip3 install junitparser junit2html
-          junitparser merge artifacts/*/*/twister.xml junit.xml
+          junitparser merge artifacts/*/twister.xml junit.xml
           junit2html junit.xml junit-clang.html
 
       - name: Upload Unit Test Results in HTML
