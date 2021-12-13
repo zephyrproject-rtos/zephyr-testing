@@ -38,6 +38,7 @@
  */
 static struct k_spinlock lock;
 
+
 int z_impl_k_sem_init(struct k_sem *sem, unsigned int initial_count,
 		      unsigned int limit)
 {
