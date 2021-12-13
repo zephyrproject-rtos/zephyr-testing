@@ -1,0 +1,12 @@
+extraction:
+  cpp:
+    prepare:
+      packages:
+        - cmake
+    after_prepare:
+      - cmake -Bbuild -S tests/benchmarks/footprints -DBOARD=native_posix
+    configure:
+      command: ./configure --with-bundled-pegtl
+		index:
+			build_command: cmake --build build
+
