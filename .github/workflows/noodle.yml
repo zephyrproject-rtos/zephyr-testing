@@ -1,0 +1,30 @@
+name: Noodling
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  noodle:
+    name: Noodle
+    runs-on: zephyr_runner
+    container:
+      image: zephyrprojectrtos/ci:v0.21.0
+      options: '--entrypoint /bin/bash'
+
+    steps:
+    - name: env stuff
+      run: |
+        set -x
+        echo "$GITHUB_TOKEN"
+        echo "${{ env.GITHUB_TOKEN }}"
+        echo "${{ secrets.GITHUB_TOKEN }}"
+
+    - name: Check out
+      uses: actions/checkout@v2
+
+    - name: other stuff
+      run: |
+        set -x
+        whoami
+        pwd
