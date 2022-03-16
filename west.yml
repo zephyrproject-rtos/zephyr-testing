@@ -344,6 +344,6 @@ manifest:
       path: modules/lib/zcbor
 
   self:
-    path: zephyr
+    path: zephyr-testing
     west-commands: scripts/west-commands.yml
     import: submanifests
