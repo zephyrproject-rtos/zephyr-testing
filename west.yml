@@ -271,6 +271,6 @@ manifest:
       revision: 10023645a0e6cb7ce23fcd7fd3dbac9f18df6234
 
   self:
-    path: zephyr
+    path: zephyr-testing
     west-commands: scripts/west-commands.yml
     import: submanifests
