@@ -29,6 +29,8 @@ the LICENSE file in the project's `GitHub repo`_).  The Zephyr OS also
 imports or reuses packages, scripts, and other files that use other
 licensing, as described in :ref:`Zephyr_Licensing`.
 
+SOME ADDITIONAL STUFF
+
 
 .. raw:: html
 
