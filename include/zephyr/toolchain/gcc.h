@@ -14,6 +14,7 @@
  * Macros to abstract compiler capabilities for GCC toolchain.
  */
 
+#undef GCC_VERSION	/* clear out any existing definition */
 #define GCC_VERSION \
 	((__GNUC__ * 10000) + (__GNUC_MINOR__ * 100) + __GNUC_PATCHLEVEL__)
 
@@ -64,6 +65,7 @@
 #endif
 
 
+#undef BUILD_ASSERT /* clear out common version */
 /* C++11 has static_assert built in */
 #if defined(__cplusplus) && (__cplusplus >= 201103L)
 #define BUILD_ASSERT(EXPR, MSG...) static_assert(EXPR, "" MSG)
