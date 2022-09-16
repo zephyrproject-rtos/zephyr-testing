@@ -92,3 +92,5 @@ void main(void)
 	/* But because we are lazy, we will just decode it immediately. */
 	decode_message(buffer, message_length);
 }
+
+/* dummy change */
