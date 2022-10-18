@@ -17,6 +17,7 @@ config SUPPORT_MINIMAL_LIBC
 
 config PICOLIBC_SUPPORTED
 	bool
+	depends on !BOARD_QEMU_X86_TINY
 	depends on ARC || ARM || ARM64 || MIPS || RISCV
 	depends on "$(ZEPHYR_TOOLCHAIN_VARIANT)" != "arcmwdt"
 	default y
