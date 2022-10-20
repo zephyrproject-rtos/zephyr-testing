@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   twister-build-prep:
-    runs-on: zephyr_runner
+    runs-on: example-runner
     container:
       image: ghcr.io/zephyrproject-rtos/ci:v0.24.5
       options: '--entrypoint /bin/bash'
@@ -111,7 +111,7 @@ jobs:
           echo "fullrun=${TWISTER_FULL}" >> $GITHUB_OUTPUT
 
   twister-build:
-    runs-on: zephyr_runner
+    runs-on: example-runner
     needs: twister-build-prep
     if: needs.twister-build-prep.outputs.size != 0
     container:
