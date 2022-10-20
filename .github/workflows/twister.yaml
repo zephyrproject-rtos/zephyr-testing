@@ -46,6 +46,14 @@ jobs:
           #        GitHub comes up with a fundamental fix for this problem.
           git config --global --add safe.directory ${GITHUB_WORKSPACE}
 
+      - name: Print runner information
+        run: |
+          set -x
+          lscpu
+          lsmem
+          lsblk
+          df -h
+
       - name: Cleanup
         run: |
           # hotfix, until we have a better way to deal with existing data
