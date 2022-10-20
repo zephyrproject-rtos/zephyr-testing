@@ -47,6 +47,14 @@ jobs:
           #        GitHub comes up with a fundamental fix for this problem.
           git config --global --add safe.directory ${GITHUB_WORKSPACE}
 
+      - name: Print runner information
+        run: |
+          set -x
+          lscpu
+          lsmem
+          lsblk
+          df -h
+
       - name: Clone cached Zephyr repository
         if: github.event_name == 'pull_request_target'
         continue-on-error: true
