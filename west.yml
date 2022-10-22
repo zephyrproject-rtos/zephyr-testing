@@ -21,6 +21,8 @@ manifest:
   remotes:
     - name: upstream
       url-base: https://github.com/zephyrproject-rtos
+    - name: keithp
+      url-base: https://github.com/keith-packard
 
   #
   # Please add items below based on alphabetical order
@@ -93,7 +95,8 @@ manifest:
       groups:
         - hal
     - name: hal_openisa
-      revision: 40d049f69c50b58ea20473bee14cf93f518bf262
+      remote: keithp
+      revision: 218777415d46015a4dfefa27a6648e82f25babcb
       path: modules/hal/openisa
       groups:
         - hal
@@ -135,7 +138,8 @@ manifest:
       groups:
         - hal
     - name: hal_ti
-      revision: a5ffc6dc73c2ee4c4eaa813418453cd3094c33dd
+      remote: keithp
+      revision: ff55438ec4c6d4d316b38c4927fe424b590518d8
       path: modules/hal/ti
       groups:
         - hal
