@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - opensearch
       - v*-branch
   pull_request_target:
     branches:
@@ -31,7 +32,7 @@ jobs:
       fullrun: ${{ steps.output-services.outputs.fullrun }}
     env:
       MATRIX_SIZE: 10
-      PUSH_MATRIX_SIZE: 15
+      PUSH_MATRIX_SIZE: 5
       DAILY_MATRIX_SIZE: 80
       ZEPHYR_SDK_INSTALL_DIR: /opt/toolchains/zephyr-sdk-0.15.1
       TESTS_PER_BUILDER: 700
@@ -211,7 +212,7 @@ jobs:
         run: |
           export ZEPHYR_BASE=${PWD}
           export ZEPHYR_TOOLCHAIN_VARIANT=zephyr
-          ./scripts/twister --subset ${{matrix.subset}}/${{ strategy.job-total }} ${TWISTER_COMMON} ${PUSH_OPTIONS}
+          ./scripts/twister -T tests/kernel/sched --subset ${{matrix.subset}}/${{ strategy.job-total }} ${TWISTER_COMMON} ${PUSH_OPTIONS}
           if [ "${{matrix.subset}}" = "1" ]; then
             ./scripts/zephyr_module.py --twister-out module_tests.args
             if [ -s module_tests.args ]; then
@@ -259,21 +260,37 @@ jobs:
           if-no-files-found: ignore
           path: |
             twister-out/twister.xml
+            twister-out/twister.json
             module_tests/twister.xml
             testplan.json
 
   twister-test-results:
     name: "Publish Unit Tests Results"
+    env:
+      OPENSEARCH_USER: ${{ secrets.OPENSEARCH_USER }}
+      OPENSEARCH_PASS: ${{ secrets.OPENSEARCH_PASS }}
     needs: twister-build
     runs-on: ubuntu-20.04
       # the build-and-test job might be skipped, we don't need to run this job then
     if: success() || failure()
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
       - name: Download Artifacts
         uses: actions/download-artifact@v2
         with:
           path: artifacts
+
+      - name: Upload to opensearch
+        run: |
+          pip3 install opensearch-py
+          python3 ./scripts/ci/upload_test_results.py artifacts/*/*/twister.json
 
       - name: Merge Test Results
         run: |
