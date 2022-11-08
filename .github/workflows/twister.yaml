@@ -121,7 +121,7 @@ jobs:
           echo "fullrun=${TWISTER_FULL}" >> $GITHUB_OUTPUT
 
   twister-build:
-    runs-on: test-runner
+    runs-on: test-runner2
     needs: twister-build-prep
     if: needs.twister-build-prep.outputs.size != 0
     container:
