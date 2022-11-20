@@ -1,0 +1,18 @@
+name: Add bugs to bugs project
+
+on:
+  issues:
+    types:
+      - opened
+
+jobs:
+  add-to-project:
+    name: Add issue to project
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/add-to-project@0.3.0
+        with:
+          project-url: https://github.com/orgs/zephyrproject-rtos/projects/16
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          labeled: bug, needs-triage
+          label-operator: OR
