@@ -1118,3 +1118,11 @@ int k_thread_runtime_stats_all_get(k_thread_runtime_stats_t *stats)
 
 	return 0;
 }
+
+void z_describe_thread(k_tid_t thread, const char *description)
+{
+    int description_size = 1000; /* Max size of a description */
+    static char thread_description[description_size];
+
+    memcpy(thread_description, description, description_size);
+}
