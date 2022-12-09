@@ -5832,13 +5832,21 @@ int k_thread_runtime_stats_get(k_tid_t thread,
  */
 int k_thread_runtime_stats_all_get(k_thread_runtime_stats_t *stats);
 
-/** 
+/**
+ * @brief Retrieve a human readable description for a thread
+ *
+ * @param thread ID of thread
+ * @return 0 on success, negative error code on failure
+ */
+char *z_thread_get_friendly_name(k_tid_t thread);
+
+/**
  * @brief Store a human readable description for a thread
  *
  * @param thread ID of thread
  * @return 0 on success, negative error code on failure
  */
-void z_describe_thread(k_tid_t thread, const char *description);
+void z_thread_set_friendly_name(k_tid_t thread, const char *name);
 
 /**
  * @brief Enable gathering of runtime statistics for specified thread
