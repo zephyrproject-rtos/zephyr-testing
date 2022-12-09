@@ -1119,10 +1119,15 @@ int k_thread_runtime_stats_all_get(k_thread_runtime_stats_t *stats)
 	return 0;
 }
 
-void z_describe_thread(k_tid_t thread, const char *description)
-{
-    int description_size = 1000; /* Max size of a description */
-    static char thread_description[description_size];
+int friendly_name_size = 128; /* Max size of a description */
+static char thread_friendly_name[friendly_name_size];
 
-    memcpy(thread_description, description, description_size);
+char *z_thread_get_friendly_name(k_tid_t thread)
+{
+	return thread_friendly_name;
+}
+
+void z_thread_set_friendly_name(k_tid_t thread, const char *name)
+{
+	memcpy(thread_friendly_name, name, friendly_name_size);
 }
