@@ -16,6 +16,7 @@ jobs:
         - /repo-cache/zephyrproject:/github/cache/zephyrproject
     env:
       BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory # Directory where build-wrapper output will be placed
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       ZEPHYR_SDK_INSTALL_DIR: /opt/toolchains/zephyr-sdk-0.15.2
       TWISTER_COMMON: ' --force-color --inline-logs -v -N -M --retry-failed 3 '
       DAILY_OPTIONS: ' -M --build-only --all --show-footprint'
@@ -86,4 +87,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          sonar-scanner --define sonar.cfamily.build-wrapper-output="${{ env.BUILD_WRAPPER_OUT_DIR }}"
+          sonar-scanner \
+          -Dsonar.organization=zephyrproject-rtos \
+          -Dsonar.projectKey=zephyrproject-rtos_zephyr-testing \
+          -Dsonar.sources=. \
+          -Dsonar.host.url=https://sonarcloud.io \
+          --define sonar.cfamily.build-wrapper-output="${{ env.BUILD_WRAPPER_OUT_DIR }}"
