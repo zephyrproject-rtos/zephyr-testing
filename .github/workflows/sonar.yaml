@@ -89,6 +89,7 @@ jobs:
         run: |
           export SONAR_TOKEN=${{ secrets.SONAR_TOKEN }}
           sonar-scanner \
+          -X \
           -Dsonar.organization=zephyrproject-rtos \
           -Dsonar.projectKey=zephyrproject-rtos_zephyr-testing \
           -Dsonar.sources=. \
