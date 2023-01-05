@@ -15,7 +15,7 @@ jobs:
       volumes:
         - /repo-cache/zephyrproject:/github/cache/zephyrproject
     env:
-      BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory # Directory where build-wrapper output will be placed
+      BUILD_WRAPPER_OUT_DIR: bw_output # Directory where build-wrapper output will be placed
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       ZEPHYR_SDK_INSTALL_DIR: /opt/toolchains/zephyr-sdk-0.15.2
       TWISTER_COMMON: ' --force-color --inline-logs -v -N -M --retry-failed 3 '
@@ -87,6 +87,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
+          export SONAR_TOKEN=${{ secrets.SONAR_TOKEN }}
           sonar-scanner \
           -Dsonar.organization=zephyrproject-rtos \
           -Dsonar.projectKey=zephyrproject-rtos_zephyr-testing \
