@@ -6,12 +6,32 @@ on:
 
 jobs:
   do-not-merge:
-    if: ${{ contains(github.event.*.labels.*.name, 'DNM') }}
-    name: Prevent Merging
+    name: Test
     runs-on: ubuntu-20.04
     steps:
-      - name: Check for label
-        run: |
-          echo "Pull request is labeled as 'DNM'"
-          echo "This workflow fails so that the pull request cannot be merged"
-          exit 1
+    - name: Test
+      uses: actions/github-script@v6
+      with:
+        script: |
+          // Get rate limit information
+          const rateLimit = await github.rest.rateLimit.get();
+          console.log(`Remaining API requests: ${rateLimit.data.rate.remaining}`);
+
+          // Get pull request information
+          const pr = await github.rest.pulls.get({
+            pull_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo
+          });
+          console.log(pr);
+
+  # do-not-merge:
+  #   if: ${{ contains(github.event.*.labels.*.name, 'DNM') }}
+  #   name: Prevent Merging
+  #   runs-on: ubuntu-20.04
+  #   steps:
+  #     - name: Check for label
+  #       run: |
+  #         echo "Pull request is labeled as 'DNM'"
+  #         echo "This workflow fails so that the pull request cannot be merged"
+  #         exit 1
