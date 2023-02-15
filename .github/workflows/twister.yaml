@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - v*-branch
+  merge_group:
   pull_request_target:
     branches:
       - main
@@ -108,7 +109,7 @@ jobs:
               subset="[$(seq -s',' 1 ${MATRIX_SIZE})]"
             fi
             size=${TWISTER_NODES}
-          elif [ "${{github.event_name}}" = "push" ]; then
+          elif [ "${{github.event_name}}" = "push" -o "${{github.event_name}}" = "merge_group" ]; then
             subset="[$(seq -s',' 1 ${PUSH_MATRIX_SIZE})]"
             size=${MATRIX_SIZE}
           elif [ "${{github.event_name}}" = "schedule" -a "${{github.repository}}" = "zephyrproject-rtos/zephyr" ]; then
@@ -215,7 +216,7 @@ jobs:
           test -d github/home/.ccache && rm -rf /github/home/.ccache && mv github/home/.ccache /github/home/.ccache
           ccache -M 10G -s
 
-      - if: github.event_name == 'push'
+      - if: github.event_name == 'push' || github.event_name == 'merge_group'
         name: Run Tests with Twister (Push)
         run: |
           export ZEPHYR_BASE=${PWD}
