@@ -272,6 +272,23 @@ jobs:
             module_tests/twister.xml
             testplan.json
 
+  # 'twister-validation' is a dummy job that always runs and only succeeds if
+  # the 'twister-build' job succeeds. This is necessary because GitHub branch
+  # protection rule does not allow specifying a matrix job as a required
+  # status check.
+  twister-validation:
+    if: always()
+    needs: twister-build
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Validation
+        run: |
+          if [ "${{ needs.twister-build.result }}" != "success" ]; then
+            echo "twister-build job did not succeed."
+            exit 1
+          fi
+
   twister-test-results:
     name: "Publish Unit Tests Results"
     env:
