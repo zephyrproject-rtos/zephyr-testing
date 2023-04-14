@@ -930,3 +930,5 @@ DSP_FUNC_SCOPE void zdsp_clip_q7(const DSP_DATA q7_t *src, DSP_DATA q7_t *dst, q
 #endif /* CONFIG_FP16 */
 
 #endif /* INCLUDE_ZEPHYR_DSP_BASICMATH_H_ */
+
+rubbish
