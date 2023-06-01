@@ -20,7 +20,7 @@ concurrency:
 jobs:
   twister-build-prep:
     if: github.repository_owner == 'zephyrproject-rtos'
-    runs-on: zephyr-runner-linux-x64-4xlarge
+    runs-on: test-runner-linux-x64-4xlarge
     container:
       image: ghcr.io/zephyrproject-rtos/ci:v0.26.4
       options: '--entrypoint /bin/bash'
@@ -48,6 +48,14 @@ jobs:
           #        Actions runner is implemented. Remove this workaround when
           #        GitHub comes up with a fundamental fix for this problem.
           git config --global --add safe.directory ${GITHUB_WORKSPACE}
+
+      - name: Print runner information
+        run: |
+          set -x
+          lscpu
+          lsmem
+          lsblk
+          df -h
 
       - name: Clone cached Zephyr repository
         if: github.event_name == 'pull_request_target'
@@ -116,7 +124,7 @@ jobs:
           echo "fullrun=${TWISTER_FULL}" >> $GITHUB_OUTPUT
 
   twister-build:
-    runs-on: zephyr-runner-linux-x64-4xlarge
+    runs-on: test-runner-linux-x64-4xlarge
     needs: twister-build-prep
     if: needs.twister-build-prep.outputs.size != 0
     container:
