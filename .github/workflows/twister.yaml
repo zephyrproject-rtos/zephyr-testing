@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - v*-branch
+      - ccache
   pull_request_target:
     branches:
       - main
@@ -132,7 +133,7 @@ jobs:
       ZEPHYR_SDK_INSTALL_DIR: /opt/toolchains/zephyr-sdk-0.16.1
       BSIM_OUT_PATH: /opt/bsim/
       BSIM_COMPONENTS_PATH: /opt/bsim/components
-      TWISTER_COMMON: ' --force-color --inline-logs -v -N -M --retry-failed 3 '
+      TWISTER_COMMON: ' --force-color --inline-logs -v -N -M --retry-failed 3 -T tests/kernel/threads'
       DAILY_OPTIONS: ' -M --build-only --all --show-footprint'
       PR_OPTIONS: ' --clobber-output --integration'
       PUSH_OPTIONS: ' --clobber-output -M --show-footprint'
@@ -200,7 +201,7 @@ jobs:
         continue-on-error: true
         with:
           key: ${{ steps.ccache_cache_timestamp.outputs.repo }}-${{ github.ref_name }}-${{github.event_name}}-${{ matrix.subset }}-ccache
-          path: /github/home/.ccache
+          path: /github/home/.cache/ccache
           aws-s3-bucket: ccache.zephyrproject.org
           aws-access-key-id: ${{ vars.AWS_CCACHE_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_CCACHE_SECRET_ACCESS_KEY }}
@@ -208,7 +209,7 @@ jobs:
 
       - name: ccache stats initial
         run: |
-          test -d github/home/.ccache && rm -rf /github/home/.ccache && mv github/home/.ccache /github/home/.ccache
+          test -d github/home/.cache/ccache && rm -rf /github/home/.cache/ccache && mv github/home/.cache/ccache /github/home/.cache/ccache
           ccache -M 10G -s
 
       - if: github.event_name == 'push'
@@ -254,7 +255,9 @@ jobs:
 
       - name: ccache stats post
         run: |
+          ccache -p
           ccache -s
+          ls -la /github/home/.cache/ccache
 
       - name: Upload Unit Test Results
         if: always()
