@@ -166,7 +166,7 @@ jobs:
           DOC_TAG="development"
         fi
 
-        DOC_TAG=${DOC_TAG} SPHINXOPTS="-q -j auto" LATEXMKOPTS="-quiet -halt-on-error" make -C doc pdf
+        DOC_TAG=${DOC_TAG} SPHINXOPTS="-q -j auto" LATEXMKOPTS=" -halt-on-error" make -C doc pdf
 
     - name: upload-build
       if: always()
