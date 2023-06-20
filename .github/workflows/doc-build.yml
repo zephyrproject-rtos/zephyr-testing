@@ -4,6 +4,8 @@
 name: Documentation Build
 
 on:
+  workflow_dispatch:
+    branches: [main]
   schedule:
   - cron: '0 */3 * * *'
   push:
