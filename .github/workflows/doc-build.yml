@@ -5,7 +5,7 @@ name: Documentation Build
 
 on:
   workflow_dispatch:
-    branches: [main]
+    branches: [pdf_build]
   schedule:
   - cron: '0 */3 * * *'
   push:
