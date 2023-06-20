@@ -166,7 +166,11 @@ jobs:
         DOC_TAG=${DOC_TAG} SPHINXOPTS="-q -j auto" LATEXMKOPTS="-quiet -halt-on-error" make -C doc pdf
 
     - name: upload-build
+      if: always()
       uses: actions/upload-artifact@v3
       with:
         name: pdf-output
-        path: doc/_build/latex/zephyr.pdf
+        if-no-files-found: ignore
+        path: |
+          doc/_build/latex/zephyr.pdf
+          doc/_build/latex/zephyr.log
