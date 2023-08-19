@@ -9,6 +9,7 @@ on:
   pull_request_target:
     branches:
       - main
+      - main-testing
       - v*-branch
   schedule:
     # Run at 03:00 UTC on every Sunday
