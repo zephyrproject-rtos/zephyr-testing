@@ -108,7 +108,8 @@ jobs:
   clang-build:
     if: github.repository_owner == 'zephyrproject-rtos'
     runs-on: gh-runner-8-32
-    needs: check_compliance
+    needs: [check_compliance,twister-build-prep]
+    if: needs.twister-build-prep.outputs.size != 0
     container:
       image: ghcr.io/zephyrproject-rtos/ci:v0.26.4
       options: '--entrypoint /bin/bash'
