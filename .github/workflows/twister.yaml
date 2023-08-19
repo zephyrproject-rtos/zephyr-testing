@@ -106,10 +106,9 @@ jobs:
           exit 1;
         fi
   clang-build:
-    if: github.repository_owner == 'zephyrproject-rtos'
+    if: github.repository_owner == 'zephyrproject-rtos' && needs.twister-build-prep.outputs.size != 0
     runs-on: gh-runner-8-32
     needs: [check_compliance,twister-build-prep]
-    if: needs.twister-build-prep.outputs.size != 0
     container:
       image: ghcr.io/zephyrproject-rtos/ci:v0.26.4
       options: '--entrypoint /bin/bash'
@@ -230,7 +229,7 @@ jobs:
           path: twister-out/twister.xml
 
   clang-build-results:
-    name: "Publish Unit Tests Results"
+    name: "Publish Clang Results"
     needs: clang-build
     runs-on: ubuntu-22.04
     if: (success() || failure() ) && needs.clang-build.outputs.report_needed != 0
@@ -515,7 +514,7 @@ jobs:
             testplan.json
 
   twister-test-results:
-    name: "Publish Unit Tests Results"
+    name: "Publish Twister Results"
     env:
       ELASTICSEARCH_KEY: ${{ secrets.ELASTICSEARCH_KEY }}
       ELASTICSEARCH_SERVER: "https://elasticsearch.zephyrproject.io:443"
