@@ -171,6 +171,7 @@ html_context = {
         "API": f"{reference_prefix}/doxygen/html/index.html",
         "Kconfig Options": f"{reference_prefix}/kconfig.html",
         "Devicetree Bindings": f"{reference_prefix}/build/dts/api/bindings.html",
+        "West Projects": f"{reference_prefix}/projects/projects.html",
     }
 }
 
@@ -291,6 +292,8 @@ external_content_contents = [
 ]
 external_content_keep = [
     "reference/kconfig/*",
+    "projects/projects.rst",
+    "projects/*",
     "build/dts/api/bindings.rst",
     "build/dts/api/bindings/**/*",
     "build/dts/api/compatibles/**/*",

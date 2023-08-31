@@ -104,6 +104,24 @@ set_target_properties(
     ADDITIONAL_CLEAN_FILES "${DOXY_OUT}"
 )
 
+#projects
+set(GEN_PROJECTS_REST_SCRIPT ${CMAKE_CURRENT_LIST_DIR}/_scripts/gen_west_projects_rest.py)
+
+#list(APPEND PROJECTS_ARGS --turbo-mode)
+
+add_custom_target(
+  projects
+  COMMAND ${CMAKE_COMMAND} -E env
+  ZEPHYR_BASE=${ZEPHYR_BASE}
+  ${PYTHON_EXECUTABLE} ${GEN_PROJECTS_REST_SCRIPT}
+    ${PROJECTS_ARGS}
+    ${DOCS_SRC_DIR}/projects
+  VERBATIM
+  USES_TERMINAL
+  COMMENT "Generating West Projects documentation..."
+)
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${GEN_PROJECTS_REST_SCRIPT})
+
 #-------------------------------------------------------------------------------
 # devicetree
 
@@ -161,6 +179,7 @@ set_target_properties(
 )
 
 add_dependencies(html devicetree)
+add_dependencies(html projects)
 
 #-------------------------------------------------------------------------------
 # pdf
