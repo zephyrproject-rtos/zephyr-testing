@@ -114,7 +114,7 @@ The integration of modules in this group is validated by the Zephyr project CI,
 and verified to be working with each Zephyr release.
 
 Integration as optional modules
-+++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++
 
 Standalone or loose integration of modules/projects without any incoming
 dependencies shall be made optional and shall be kept standalone. Optional
@@ -128,12 +128,12 @@ There shall not be any direct dependency added in the Zephyr code tree and all
 sample or test code shall be maintained within the module tree.
 
 Integration as external modules
-+++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++
 
-Similar to optional modules, but added to the zephyr project in a seperate and
-inactive manifest file. Such modules can reside outside the Zephyr project and
-the information provided in the inactive manifest will only be used to list
-such modules in the docs for more exposure and awareness.
+Similar to optional modules, but added to the zephyr project as an entry in the
+documentation using a pre-defined template. Such modules can reside outside the
+Zephyr project and the information provided in the documentation will be used
+to instruct developers and users how to integrate the functionality.
 
 Ongoing maintenance
 ===================

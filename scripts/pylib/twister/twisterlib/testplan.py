@@ -60,6 +60,8 @@ class Filters:
     QUARENTINE = 'Quarantine filter'
     # in case a test suite is skipped intentionally .
     SKIP = 'Skip filter'
+    # in case an optional module is not available
+    MODULE = 'Module filter'
 
 
 class TestLevel:
@@ -731,7 +733,7 @@ class TestPlan:
 
                 if ts.modules and self.modules:
                     if not set(ts.modules).issubset(set(self.modules)):
-                        instance.add_filter(f"one or more required modules not available: {','.join(ts.modules)}", Filters.TESTSUITE)
+                        instance.add_filter(f"one or more required modules not available: {','.join(ts.modules)}", Filters.MODULE)
 
                 if self.options.level:
                     tl = self.get_level(self.options.level)
@@ -1021,7 +1023,7 @@ def change_skip_to_error_if_integration(options, instance):
         and "quarantine" not in instance.reason.lower():
         # Do not treat this as error if filter type is command line
         filters = {t['type'] for t in instance.filters}
-        if Filters.CMD_LINE in filters or Filters.SKIP in filters:
+        if Filters.CMD_LINE in filters or Filters.SKIP in filters or Filters.MODULE in filters:
             return
         instance.status = "error"
         instance.reason += " but is one of the integration platforms"
