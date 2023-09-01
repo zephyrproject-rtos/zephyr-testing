@@ -103,6 +103,38 @@ With this approach the code is considered as being developed externally, and
 thus it is not automatically subject to the requirements of the previous
 section.
 
+Integration in main manifest file (west.yaml)
+++++++++++++++++++++++++++++++++++++++++++++++
+
+Integrating external code into the main :file:`west.yml` manifest file is
+limited to code that is used by a Zephyr subsystem (libraries), by a platform,
+drivers (HAL) or tooling needed to test or build Zephyr components.
+
+The integration of modules in this group is validated by the Zephyr project CI,
+and verified to be working with each Zephyr release.
+
+Integration as optional modules
++++++++++++++++++++++++++++++++++++++++++
+
+Standalone or loose integration of modules/projects without any incoming
+dependencies shall be made optional and shall be kept standalone. Optional
+projects that provide value to users directly and through a Zephyr subsystem or
+platform shall be added to an optional manifest file that is filtered by
+default. (:file:`submanifests/optional.yml`).
+
+Such optional projects might include samples and tests in their own repositories.
+
+There shall not be any direct dependency added in the Zephyr code tree and all
+sample or test code shall be maintained within the module tree.
+
+Integration as external modules
++++++++++++++++++++++++++++++++++++++++++
+
+Similar to optional modules, but added to the zephyr project in a seperate and
+inactive manifest file. Such modules can reside outside the Zephyr project and
+the information provided in the inactive manifest will only be used to list
+such modules in the docs for more exposure and awareness.
+
 Ongoing maintenance
 ===================
 
