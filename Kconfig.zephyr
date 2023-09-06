@@ -787,6 +787,15 @@ config CHECK_INIT_PRIORITIES
 	  Fails the build on priority errors (dependent devices, inverted
 	  priority).
 
+config NO_DT_DEVICE_PRIORITIES
+	bool "Do not use device priorities for devicetree devices (experimental)"
+	default y
+	help
+	  Ignore initialization priority for devices that have a corresponding
+	  devicetree entry. If this is enabled, the initialization sequence for
+	  those devices is controlled only by the level and sub-priority
+	  (ordinal).
+
 config EMIT_ALL_SYSCALLS
 	bool "Emit all possible syscalls in the tree"
 	help
