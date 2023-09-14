@@ -5,7 +5,9 @@ simulation: qemu
 arch: xtensa
 toolchain:
   - xtools
+  - zephyr
 testing:
+  default: true
   ignore_tags:
     - net
     - bluetooth
