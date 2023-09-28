@@ -18,7 +18,7 @@ Zephyr Project Documentation
    **Welcome to the Zephyr Project's documentation
    for the main tree under development** (version |version|).
 
-Use the version selection menu on the left to view
+Do Use the version selection menu on the left to view
 documentation for a specific version of Zephyr.
 
 For information about the changes and additions for releases, please
