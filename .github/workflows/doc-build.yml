@@ -62,7 +62,7 @@ jobs:
     - name: install-pkgs
       run: |
         sudo apt-get update
-        sudo apt-get install -y ninja-build graphviz
+        sudo apt-get install -y ninja-build graphviz lcov
         wget --no-verbose "https://github.com/doxygen/doxygen/releases/download/Release_${DOXYGEN_VERSION//./_}/doxygen-${DOXYGEN_VERSION}.linux.bin.tar.gz"
         tar xf doxygen-${DOXYGEN_VERSION}.linux.bin.tar.gz
         echo "${PWD}/doxygen-${DOXYGEN_VERSION}/bin" >> $GITHUB_PATH
@@ -79,6 +79,7 @@ jobs:
         pip3 install -r doc/requirements.txt
         pip3 install west==${WEST_VERSION}
         pip3 install cmake==${CMAKE_VERSION}
+        pip3 install coverxygen
 
     - name: west setup
       run: |
@@ -98,18 +99,35 @@ jobs:
         else
           DOC_TARGET="html"
         fi
+        python3 -m coverxygen --xml-dir  doc/_build/doxygen/xml/ --src-dir include/ --output doc-coverage.info
+        lcov --summary doc-coverage.info
+        genhtml --no-function-coverage --no-branch-coverage doc-coverage.info -o coverage-report
 
         DOC_TAG=${DOC_TAG} SPHINXOPTS_EXTRA="-q -t publish" make -C doc ${DOC_TARGET}
 
     - name: compress-docs
       run: |
         tar cfJ html-output.tar.xz --directory=doc/_build html
+        tar cfJ api-output.tar.xz --directory=doc/_build doxygen/html
+        tar cfJ api-coverage.tar.xz coverage-report
 
     - name: upload-build
       uses: actions/upload-artifact@v3
       with:
         name: html-output
         path: html-output.tar.xz
+
+    - name: upload-api
+      uses: actions/upload-artifact@v3
+      with:
+        name: api-output
+        path: api-output.tar.xz
+
+    - name: upload-api-coverage
+      uses: actions/upload-artifact@v3
+      with:
+        name: api-coverage
+        path: api-coverage.tar.xz
 
     - name: process-pr
       if: github.event_name == 'pull_request'
