@@ -46,6 +46,8 @@ jobs:
     - name: Uncompress HTML docs
       run: |
         tar xf html-output/html-output.tar.xz -C html-output
+        tar xf api-output/api-output.tar.xz -C api-output
+        tar xf api-coverage/api-coverage.tar.xz -C api-coverage
 
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v2
@@ -60,4 +62,10 @@ jobs:
       run: |
         aws s3 sync --quiet html-output/html \
           s3://builds.zephyrproject.org/${{ github.event.repository.name }}/pr/${PR_NUM}/docs \
+          --delete
+        aws s3 sync --quiet api-output/html/doxygen/html/ \
+          s3://builds.zephyrproject.org/${{ github.event.repository.name }}/pr/${PR_NUM}/api-docs \
+          --delete
+        aws s3 sync --quiet api-coverage/coverage-report/ \
+          s3://builds.zephyrproject.org/${{ github.event.repository.name }}/pr/${PR_NUM}/api-coverage \
           --delete
