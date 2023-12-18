@@ -196,32 +196,32 @@ jobs:
           echo "github.base_ref: ${{ github.base_ref }}"
           echo "github.ref_name: ${{ github.ref_name }}"
 
-      - name: Prepare ccache timestamp/data
-        id: ccache_cache_timestamp
-        shell: cmake -P {0}
-        run: |
-          string(TIMESTAMP current_date "%Y-%m-%d-%H;%M;%S" UTC)
-          string(REPLACE "/" "_" repo ${{github.repository}})
-          string(REPLACE "-" "_" repo2 ${repo})
-          file(APPEND $ENV{GITHUB_OUTPUT} "repo=${repo2}\n")
+      # - name: Prepare ccache timestamp/data
+      #   id: ccache_cache_timestamp
+      #   shell: cmake -P {0}
+      #   run: |
+      #     string(TIMESTAMP current_date "%Y-%m-%d-%H;%M;%S" UTC)
+      #     string(REPLACE "/" "_" repo ${{github.repository}})
+      #     string(REPLACE "-" "_" repo2 ${repo})
+      #     file(APPEND $ENV{GITHUB_OUTPUT} "repo=${repo2}\n")
 
-      - name: use cache
-        id: cache-ccache
-        uses: zephyrproject-rtos/action-s3-cache@v1.2.0
-        continue-on-error: true
-        with:
-          key: ${{ steps.ccache_cache_timestamp.outputs.repo }}-${{ github.ref_name }}-${{github.event_name}}-${{ matrix.subset }}-ccache
-          path: /github/home/.cache/ccache
-          aws-s3-bucket: ccache.zephyrproject.org
-          aws-access-key-id: ${{ vars.AWS_CCACHE_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_CCACHE_SECRET_ACCESS_KEY }}
-          aws-region: us-east-2
+      # - name: use cache
+      #   id: cache-ccache
+      #   uses: zephyrproject-rtos/action-s3-cache@v1.2.0
+      #   continue-on-error: true
+      #   with:
+      #     key: ${{ steps.ccache_cache_timestamp.outputs.repo }}-${{ github.ref_name }}-${{github.event_name}}-${{ matrix.subset }}-ccache
+      #     path: /github/home/.cache/ccache
+      #     aws-s3-bucket: ccache.zephyrproject.org
+      #     aws-access-key-id: ${{ vars.AWS_CCACHE_ACCESS_KEY_ID }}
+      #     aws-secret-access-key: ${{ secrets.AWS_CCACHE_SECRET_ACCESS_KEY }}
+      #     aws-region: us-east-2
 
-      - name: ccache stats initial
-        run: |
-          mkdir -p /github/home/.cache
-          test -d github/home/.cache/ccache && rm -rf /github/home/.cache/ccache && mv github/home/.cache/ccache /github/home/.cache/ccache
-          ccache -M 10G -s
+      # - name: ccache stats initial
+      #   run: |
+      #     mkdir -p /github/home/.cache
+      #     test -d github/home/.cache/ccache && rm -rf /github/home/.cache/ccache && mv github/home/.cache/ccache /github/home/.cache/ccache
+      #     ccache -M 10G -s
 
       - if: github.event_name == 'push'
         name: Run Tests with Twister (Push)
@@ -264,10 +264,10 @@ jobs:
             fi
           fi
 
-      - name: ccache stats post
-        run: |
-          ccache -p
-          ccache -s
+      # - name: ccache stats post
+      #   run: |
+      #     ccache -p
+      #     ccache -s
 
       - name: Upload Unit Test Results
         if: always()
