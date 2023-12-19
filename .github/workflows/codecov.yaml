@@ -1,6 +1,8 @@
 name: Code Coverage with codecov
 
 on:
+  workflow_dispatch:
+    branches: [codecov]
   schedule:
     - cron: '25 */3 * * 1-5'
 
@@ -170,7 +172,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: Merged Coverage Data
-          path: merged.info
+          path: coverage/reports/merged.info
 
       - name: Upload coverage to Codecov
         if: always()
