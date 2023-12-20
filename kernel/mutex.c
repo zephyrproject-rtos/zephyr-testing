@@ -47,6 +47,8 @@ LOG_MODULE_DECLARE(os, CONFIG_KERNEL_LOG_LEVEL);
  */
 static struct k_spinlock lock;
 
+/* Dummy change */
+
 #ifdef CONFIG_OBJ_CORE_MUTEX
 static struct k_obj_type obj_type_mutex;
 #endif
