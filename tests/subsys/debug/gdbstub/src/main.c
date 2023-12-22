@@ -7,7 +7,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/sys/printk.h>
 
-#define STACKSIZE 512
+#define STACKSIZE (512 + CONFIG_TEST_EXTRA_STACK_SIZE)
 
 static int test(void)
 {

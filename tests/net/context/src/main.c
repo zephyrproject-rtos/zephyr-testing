@@ -768,7 +768,7 @@ ZTEST(net_context, test_net_ctx_recv_v4_reconfig)
 	net_ctx_put();
 }
 
-#define STACKSIZE 1024
+#define STACKSIZE (1024 + CONFIG_TEST_EXTRA_STACK_SIZE)
 K_THREAD_STACK_DEFINE(thread_stack, STACKSIZE);
 static struct k_thread thread_data;
 
