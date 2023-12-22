@@ -1,6 +1,7 @@
 common:
   tags:
-    - clib c11 threads
+    - clib
+    - c11-threads
   filter: not CONFIG_NATIVE_APPLICATION
   integration_platforms:
     - qemu_x86
@@ -46,7 +47,9 @@ tests:
     filter: CONFIG_NEWLIB_LIBC_SUPPORTED and CONFIG_HAS_NEWLIB_LIBC_NANO
     arch_exclude:
       - posix
-    tags: newlib
+    tags:
+      - newlib
+      - nano
     extra_configs:
       - CONFIG_NEWLIB_LIBC=y
       - CONFIG_NEWLIB_LIBC_NANO=y
