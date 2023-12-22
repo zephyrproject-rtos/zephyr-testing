@@ -7,7 +7,7 @@
 #include <zephyr/ztest.h>
 #include <zephyr/sys/barrier.h>
 
-#define STACKSIZE 1024
+#define STACKSIZE (1024 + CONFIG_TEST_EXTRA_STACK_SIZE)
 
 /* Priority level of the threads used in this test.
  * The priority level, itself, is arbitrary; we only
