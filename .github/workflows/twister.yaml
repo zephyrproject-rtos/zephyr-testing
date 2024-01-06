@@ -22,10 +22,9 @@ concurrency:
 jobs:
   twister-build-prep:
     if: github.repository_owner == 'zephyrproject-rtos'
-    runs-on:
-      group: test-runner-v2-linux-x64-4xlarge
+    runs-on: zephyr-runner-linux-x64-4xlarge
     container:
-      image: ghcr.io/zephyrproject-rtos/ci-repo-cache:v0.26.6.20231213
+      image: ghcr.io/zephyrproject-rtos/ci:v0.26.6
       options: '--entrypoint /bin/bash'
     outputs:
       subset: ${{ steps.output-services.outputs.subset }}
