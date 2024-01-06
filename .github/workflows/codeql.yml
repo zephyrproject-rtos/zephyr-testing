@@ -78,7 +78,7 @@ jobs:
         run: |
           export ZEPHYR_BASE=${PWD}
           export ZEPHYR_TOOLCHAIN_VARIANT=zephyr
-          ./scripts/twister -p native_sim -T tests/kernel/  --inline-logs -v -N -M
+          ./scripts/twister -p qemu_x86 -T tests/kernel/  --inline-logs -v -N -M
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
