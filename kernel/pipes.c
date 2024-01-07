@@ -384,8 +384,7 @@ int z_impl_k_pipe_put(struct k_pipe *pipe, const void *data,
 	struct _pipe_desc  pipe_desc[2];
 	struct _pipe_desc  isr_desc;
 	struct _pipe_desc *src_desc;
-	sys_dlist_t        dest_list;
-	sys_dlist_t        src_list;
+	sys_dlist_t        dest_list, src_list;
 	size_t             bytes_can_write;
 	bool               reschedule_needed = false;
 
