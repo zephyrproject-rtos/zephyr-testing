@@ -1,7 +1,7 @@
 name: Merged PR stats
 
 on:
-  pull_request:
+  pull_request_target:
     branches:
       - main
       - v*-branch
@@ -21,4 +21,4 @@ jobs:
           PR_STAT_INDEX: "pr-zephyr-testing-1"
         run: |
           pip3 install pygithub elasticsearch
-          python3 ./scripts/ci/stats/merged_prs.py --pull-request ${{ github.event.pull_request.number }} --repo ${{ github.repository }}
+          python3 ./scripts/ci/stats/merged_prs.py --pull-request ${{ github.event.pull_request_target.number }} --repo ${{ github.repository }}
