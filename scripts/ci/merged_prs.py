@@ -30,6 +30,7 @@ def main():
                  'GITHUB_TOKEN environment variable and retry.')
 
     gh = Github(token)
+    prs = []
     if args.repo:
         gh_repo = gh.get_repo(args.repo)
 
@@ -37,18 +38,7 @@ def main():
         prs = [gh_repo.get_pull(args.pull_request)]
 
     json_list = []
-    with open("es.json", "r") as previous:
-        archive = json.load(previous)
-
-    def check_in_archive(archive, nr):
-        for p in archive:
-            if p['nr'] == nr:
-                return True
-
     for pr in prs:
-        if check_in_archive(archive, pr.number):
-            print(f"{pr.number} already fetched")
-            continue
         _pr = gh_repo.get_pull(pr.number)
         reviews = _pr.get_reviews()
         print(f'#{pr.number}: {pr.title} - {pr.comments} Comments, reviews: {reviews.totalCount}, {len(pr.assignees)} Assignees (Updated {pr.updated_at})')
