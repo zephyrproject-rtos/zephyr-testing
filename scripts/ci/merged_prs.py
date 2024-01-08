@@ -104,7 +104,6 @@ def main():
 
         json_list.append(prj)
 
-
     json_object = json.dumps(json_list, indent=4)
 
     es = Elasticsearch(
