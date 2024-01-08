@@ -10,4 +10,5 @@ jobs:
     steps:
       - name: PR event
         run: |
-          echo ${{ github.event.pull_request }}
+          pip3 install pygithub
+          python3 ./scripts/ci/merged_pr.py --pull-request ${{ github.event.pull_request.number }} --repo zephyrproject-rtos/zephyr-testing
