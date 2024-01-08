@@ -107,12 +107,12 @@ def main():
     json_object = json.dumps(json_list, indent=4)
 
     es = Elasticsearch(
-        [os.environ['ELASTICSEARCH_SERVER']],
-        api_key=os.environ['ELASTICSEARCH_KEY'],
-        verify_certs=False
-        )
+            [os.environ['ELASTICSEARCH_SERVER']],
+            api_key=os.environ['ELASTICSEARCH_KEY'],
+            verify_certs=False
+            )
 
-	bulk(es, gendata(json_object, "pr-zephyr-testing-1"))
+    bulk(es, gendata(json_object, "pr-zephyr-testing-1"))
 
 if __name__ == "__main__":
     main()

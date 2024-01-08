@@ -18,5 +18,5 @@ jobs:
           ELASTICSEARCH_KEY: ${{ secrets.ELASTICSEARCH_KEY }}
           ELASTICSEARCH_SERVER: "https://elasticsearch.zephyrproject.io:443"
         run: |
-          pip3 install pygithub
+          pip3 install pygithub elasticsearch
           python3 ./scripts/ci/merged_prs.py --pull-request ${{ github.event.pull_request.number }} --repo zephyrproject-rtos/zephyr-testing
