@@ -13,6 +13,8 @@ jobs:
         with:
           fetch-depth: 0
       - name: PR event
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           pip3 install pygithub
           python3 ./scripts/ci/merged_prs.py --pull-request ${{ github.event.pull_request.number }} --repo zephyrproject-rtos/zephyr-testing
