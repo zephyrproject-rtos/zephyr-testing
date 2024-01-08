@@ -9,6 +9,8 @@ from github import Github, GithubException
 import datetime
 from datetime import date, datetime
 import argparse
+from elasticsearch import Elasticsearch
+from elasticsearch.helpers import bulk
 
 
 date_format = '%Y-%m-%d %H:%M:%S'
@@ -21,6 +23,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--repo', required=True, help='github repo')
 
     return parser.parse_args()
+
+def gendata(data, index):
+    for t in data:
+        yield {
+                "_index": index,
+                "_source": t
+                }
 
 def main():
     args = parse_args()
@@ -97,9 +106,14 @@ def main():
 
 
     json_object = json.dumps(json_list, indent=4)
-    today = date.today()
-    with open(f"single_pr_list.json", "w") as outfile:
-        outfile.write(json_object)
+
+    es = Elasticsearch(
+        [os.environ['ELASTICSEARCH_SERVER']],
+        api_key=os.environ['ELASTICSEARCH_KEY'],
+        verify_certs=False
+        )
+
+	bulk(es, gendata(json_object, "pr-zephyr-testing-1"))
 
 if __name__ == "__main__":
     main()
