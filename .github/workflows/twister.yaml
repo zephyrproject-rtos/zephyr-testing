@@ -186,11 +186,10 @@ jobs:
           west forall -c 'git reset --hard HEAD'
 
            wget -c    https://github.com/Kitware/ninja/releases/download/v1.11.1.g95dee.kitware.jobserver-1/ninja-1.11.1.g95dee.kitware.jobserver-1_x86_64-linux-gnu.tar.gz -O - | tar xz --strip-components=1
-          mkdir ~/bin && cp ninja ~/bin
+          sudo cp ninja /usr/local/bin
 
       - name: Check Environment
         run: |
-          export PATH=$PATH:$HOME/bin
           cmake --version
           gcc --version
           ninja --version
@@ -243,7 +242,6 @@ jobs:
         name: Run Tests with Twister (Pull Request)
         run: |
           rm -f testplan.json
-          export PATH=$PATH:$HOME/bin
           export ZEPHYR_BASE=${PWD}
           export ZEPHYR_TOOLCHAIN_VARIANT=zephyr
           python3 ./scripts/ci/test_plan.py -c origin/${BASE_REF}.. --pull-request
