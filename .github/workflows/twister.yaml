@@ -190,6 +190,7 @@ jobs:
 
       - name: Check Environment
         run: |
+          export PATH=$PATH:$HOME/bin
           cmake --version
           gcc --version
           ninja --version
@@ -242,6 +243,7 @@ jobs:
         name: Run Tests with Twister (Pull Request)
         run: |
           rm -f testplan.json
+          export PATH=$PATH:$HOME/bin
           export ZEPHYR_BASE=${PWD}
           export ZEPHYR_TOOLCHAIN_VARIANT=zephyr
           python3 ./scripts/ci/test_plan.py -c origin/${BASE_REF}.. --pull-request
