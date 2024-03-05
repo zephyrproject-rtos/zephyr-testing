@@ -104,7 +104,9 @@ jobs:
       - name: Rename coverage files
         if: always()
         run: |
-          cp twister-out/coverage.json coverage/reports/${{ matrix.platform }}.json
+          platform=${{ matrix.platform }}
+          normalized=${platform//\//_}
+          cp twister-out/coverage.json coverage/reports/${normalized}.json
 
       - name: Upload Coverage Results
         if: always()
