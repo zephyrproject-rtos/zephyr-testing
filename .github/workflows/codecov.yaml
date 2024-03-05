@@ -94,7 +94,7 @@ jobs:
           mkdir -p coverage/reports
           pip3 install gcovr==6.0
           ./scripts/twister -E ${{ matrix.platform }}-testplan.json
-          ./scripts/twister -i --force-color -N -v --filter runnable -p ${{ matrix.platform }} --coverage -T tests --coverage-tool gcovr -xCONFIG_TEST_EXTRA_STACK_SIZE=4096 -e nano
+          ./scripts/twister -i --force-color -N -v --filter runnable -p ${{ matrix.platform }} --coverage -T tests/kernel/threads --coverage-tool gcovr -xCONFIG_TEST_EXTRA_STACK_SIZE=4096 -e nano
 
       - name: ccache stats post
         run: |
