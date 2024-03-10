@@ -24,3 +24,5 @@ run_in_background ${ZEPHYR_BASE}/tests/bsim/bluetooth/compile.sh
 run_in_background ${ZEPHYR_BASE}/tests/bsim/net/compile.sh
 
 wait_for_background_jobs
+
+# dummy change
