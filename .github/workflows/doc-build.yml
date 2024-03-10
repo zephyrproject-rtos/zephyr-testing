@@ -57,13 +57,20 @@ jobs:
     if: >
       github.repository_owner == 'zephyrproject-rtos' &&
         ( needs.doc-file-check.outputs.file_check == 'true' || github.event_name != 'pull_request' )
-    runs-on: zephyr-runner-linux-x64-4xlarge
+    runs-on:
+      group: zephyr-runner-v2-linux-x64-4xlarge
     timeout-minutes: 45
     concurrency:
       group: doc-build-html-${{ github.ref }}
       cancel-in-progress: true
 
     steps:
+    - name: Print cloud service information
+      run: |
+        echo "ZEPHYR_RUNNER_CLOUD_PROVIDER = ${ZEPHYR_RUNNER_CLOUD_PROVIDER}"
+        echo "ZEPHYR_RUNNER_CLOUD_NODE = ${ZEPHYR_RUNNER_CLOUD_NODE}"
+        echo "ZEPHYR_RUNNER_CLOUD_POD = ${ZEPHYR_RUNNER_CLOUD_POD}"
+
     - name: checkout
       uses: actions/checkout@v4
       with:
@@ -175,7 +182,8 @@ jobs:
     if: |
       github.event_name != 'pull_request' &&
       github.repository_owner == 'zephyrproject-rtos'
-    runs-on: zephyr-runner-linux-x64-4xlarge
+    runs-on:
+      group: zephyr-runner-v2-linux-x64-4xlarge
     container: texlive/texlive:latest
     timeout-minutes: 60
     concurrency:
@@ -186,6 +194,12 @@ jobs:
     - name: Apply container owner mismatch workaround
       run: |
         git config --global --add safe.directory ${GITHUB_WORKSPACE}
+
+    - name: Print cloud service information
+      run: |
+        echo "ZEPHYR_RUNNER_CLOUD_PROVIDER = ${ZEPHYR_RUNNER_CLOUD_PROVIDER}"
+        echo "ZEPHYR_RUNNER_CLOUD_NODE = ${ZEPHYR_RUNNER_CLOUD_NODE}"
+        echo "ZEPHYR_RUNNER_CLOUD_POD = ${ZEPHYR_RUNNER_CLOUD_POD}"
 
     - name: checkout
       uses: actions/checkout@v4
