@@ -75,7 +75,7 @@ echo -n "" > $tmp_res_file
 if [ `command -v parallel` ]; then
   parallel '
   echo "<testcase name=\"{}\" time=\"0\">"
-  {} $@ &> {#}.log
+  time {} $@ &> {#}.log
   if [ $? -ne 0 ]; then
     (>&2 echo -e "\e[91m{} FAILED\e[39m")
     (>&2 cat {#}.log)
