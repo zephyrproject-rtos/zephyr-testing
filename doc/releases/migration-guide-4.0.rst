@@ -35,6 +35,13 @@ Boards
 * STM32WBA: The command used for fetching blobs required to build ble applications is now
   ``west blobs fetch hal_stm32`` instead of ``west blobs fetch stm32``.
 
+Devicetree
+**********
+
+* The :c:macro:`DT_REG_ADDR` macro and its variants are now expanding into an
+  unsigned literals (i.e. with w ``U`` suffix). To use addresses as devicetree
+  indexes use the :c:macro:`DT_REG_ADDR_RAW` variants.
+
 STM32
 =====
 
