@@ -174,9 +174,9 @@ static int flash_range_is_valid(const struct device *dev, off_t offset,
 				size_t len)
 {
 	ARG_UNUSED(dev);
-	if ((offset + len > FLASH_SIMULATOR_FLASH_SIZE +
+	if (((int64_t)offset + (int64_t)len > FLASH_SIMULATOR_FLASH_SIZE +
 			    FLASH_SIMULATOR_BASE_OFFSET) ||
-	    (offset < FLASH_SIMULATOR_BASE_OFFSET)) {
+	    ((int64_t)offset < FLASH_SIMULATOR_BASE_OFFSET)) {
 		return 0;
 	}
 
