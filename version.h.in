@@ -4,6 +4,8 @@
 /* The template values come from cmake/version.cmake
  * BUILD_VERSION related template values will be 'git describe',
  * alternatively user defined BUILD_VERSION.
+ * Change.
+ * 
  */
 
 #cmakedefine ZEPHYR_VERSION_CODE @ZEPHYR_VERSION_CODE@
