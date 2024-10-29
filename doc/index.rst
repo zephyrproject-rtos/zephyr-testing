@@ -13,6 +13,8 @@ Zephyr Project Documentation
    Documentation for the latest (main) development branch of Zephyr
    can be found at https://docs.zephyrproject.org/
 
+   b
+
 .. only:: (development or daily)
 
    **Welcome to the Zephyr Project's documentation
