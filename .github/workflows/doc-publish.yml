@@ -20,7 +20,7 @@ jobs:
     if: |
       github.event.workflow_run.event != 'pull_request' &&
       github.event.workflow_run.conclusion == 'success' &&
-      github.repository == 'zephyrproject-rtos/zephyr'
+      github.repository_owner == 'zephyrproject-rtos'
 
     steps:
     - name: Download artifacts
