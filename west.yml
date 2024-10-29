@@ -27,7 +27,13 @@ manifest:
       url-base: https://github.com/nrfconnect
     - name: carles
       url-base: https://github.com/carlescufi
-
+    - name: fail
+      url-base: https://github.com/fail_this_request_abcdef
+    - name: memfault
+      url-base: https://github.com/memfault
+    - name: throwtheswitch
+      url-base: https://github.com/ThrowTheSwitch
+  
   group-filter: [-babblesim, -optional]
 
   #
@@ -38,26 +44,19 @@ manifest:
       repo-path: sdk-connectedhomeip
       path: modules/lib/matter
       revision: 81eb1e99a9fd48bbf3bca2a56e7ac888c7f24a16
-      submodules:
-        - name: nlio
-          path: third_party/nlio/repo
-        - name: nlassert
-          path: third_party/nlassert/repo
-        - name: nlunit-test
-          path: third_party/nlunit-test/repo
-        - name: pigweed
-          path: third_party/pigweed/repo
-        - name: jsoncpp
-          path: third_party/jsoncpp/repo
+      submodules: true
+      west-commands: scripts/foo/wcmds.yml
     - name: acpica
       revision: 8d24867bc9c9d81c81eeac59391cda59333affd4
       path: modules/lib/acpica
-      submodules: true
+      submodules:
+        - name: asub
+          path: subs/asub
     - name: bsim
       repo-path: babblesim-manifest
-      revision: 9ee22c707970f6621adba0375841c0a609e24628
+      remote: fail
+      revision: 1f242f4ed7fc141fdfcfeca8d21c6d9e801179d7
       path: tools/bsim
-      submodules: true
       groups:
         - babblesim
     - name: babblesim_base
@@ -70,6 +69,8 @@ manifest:
           path: third_party/nlio/repo
         - name: nlassert
           path: third_party/nlassert/repo
+        - name: zzzlassert
+          path: third_party/this/repo
       groups:
         - babblesim
     - name: babblesim_ext_2G4_libPhyComv1
@@ -145,7 +146,6 @@ manifest:
     - name: cmsis
       revision: 4b96cbb174678dcd3ca86e11e1f24bc5f8726da0
       path: modules/hal/cmsis
-      west-commands: scripts/west/west-commands.yml
       groups:
         - hal
     - name: cmsis-dsp
@@ -162,7 +162,7 @@ manifest:
     - name: fatfs
       revision: 427159bf95ea49b7680facffaa29ad506b42709b
       path: modules/fs/fatfs
-      west-commands: commands/west-cmds.yml
+      west-commands: scripts/west/west-commands.yml
       groups:
         - fs
     - name: hal_adi
@@ -186,19 +186,14 @@ manifest:
       groups:
         - hal
     - name: hal_espressif
-      revision: 0f1874284f5dee0d49cb23f44f756e7be404e7b7
+      revision: pull/354/head
       path: modules/hal/espressif
       west-commands: west/west-commands.yml
       groups:
         - hal
     - name: hal_ethos_u
-      revision: 8e2cf756b474eff9a32a9bdf1775d9620f1eadcf
+      revision: v3.3.3
       path: modules/hal/ethos_u
-      groups:
-        - hal
-    - name: hal_gigadevice
-      revision: 2994b7dde8b0b0fa9b9c0ccb13474b6a486cddc3
-      path: modules/hal/gigadevice
       groups:
         - hal
     - name: hal_infineon
@@ -217,7 +212,7 @@ manifest:
       groups:
         - hal
     - name: hal_nordic
-      revision: cb7600a1be4c8b177867e6d463729c07dd3f6d73
+      revision: 5c8d109371ebb740fbef1f440a3b59e488a36717
       path: modules/hal/nordic
       groups:
         - hal
@@ -336,8 +331,9 @@ manifest:
       path: modules/lib/open-amp
     - name: openthread
       remote: carles
-      revision: 2aeb8b833ba760ec29d5f340dd1ce7bcb61c5d56
+      revision: 8f7c8ecd7ec0c9b0f9345a7bd5c46cd82a2135f6
       path: modules/lib/openthread
+      west-commands: scripts/foo/wcmds.yml
     - name: percepio
       path: modules/debug/percepio
       revision: b68d17993109b9bee6b45dc8c9794e7b7bce236d
@@ -346,6 +342,9 @@ manifest:
     - name: picolibc
       path: modules/lib/picolibc
       revision: d492d5fa7c96918e37653f303028346bb0dd51a2
+      submodules:
+        - name: hisub
+          path: path/to/hisub
     - name: segger
       revision: b011c45b585e097d95d9cf93edf4f2e01588d3cd
       path: modules/debug/segger
@@ -372,8 +371,20 @@ manifest:
       revision: 84ef879a46d7bfd9a423fbfb502b04289861f9ea
       path: modules/lib/uoscore-uedhoc
     - name: zcbor
+      remote: carles
       revision: 47f34dd7f5284e8750b5a715dee7f77c6c5bdc3f
       path: modules/lib/zcbor
+    - name: memfault-firmware-sdk
+      path: modules/lib/memfault-firmware-sdk
+      revision: 1.12.0
+      remote: memfault
+    - name: cmock
+      path: test/cmock
+      submodules: true
+      revision: f65066f15d8248e6dcb778efb8739904a4512087
+      remote: throwtheswitch
+ 
+
 
   self:
     path: zephyr
