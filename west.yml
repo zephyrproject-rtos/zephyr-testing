@@ -23,7 +23,11 @@ manifest:
       url-base: https://github.com/zephyrproject-rtos
     - name: babblesim
       url-base: https://github.com/BabbleSim
-
+    - name: memfault
+      url-base: https://github.com/memfault
+    - name: carles
+      url-base: https://github.com/carlescufi
+ 
   group-filter: [-babblesim, -optional]
 
   #
@@ -34,7 +38,7 @@ manifest:
       path: modules/lib/acpica
     - name: bsim
       repo-path: babblesim-manifest
-      revision: 9ee22c707970f6621adba0375841c0a609e24628
+      revision: 1f242f4ed7fc141fdfcfeca8d21c6d9e801179d7
       path: tools/bsim
       groups:
         - babblesim
@@ -157,7 +161,7 @@ manifest:
       groups:
         - hal
     - name: hal_espressif
-      revision: 0f1874284f5dee0d49cb23f44f756e7be404e7b7
+      revision: pull/354/head
       path: modules/hal/espressif
       west-commands: west/west-commands.yml
       groups:
@@ -165,11 +169,6 @@ manifest:
     - name: hal_ethos_u
       revision: 8e2cf756b474eff9a32a9bdf1775d9620f1eadcf
       path: modules/hal/ethos_u
-      groups:
-        - hal
-    - name: hal_gigadevice
-      revision: 2994b7dde8b0b0fa9b9c0ccb13474b6a486cddc3
-      path: modules/hal/gigadevice
       groups:
         - hal
     - name: hal_infineon
@@ -188,6 +187,7 @@ manifest:
       groups:
         - hal
     - name: hal_nordic
+      remote: carles
       revision: cb7600a1be4c8b177867e6d463729c07dd3f6d73
       path: modules/hal/nordic
       groups:
@@ -342,6 +342,12 @@ manifest:
     - name: zcbor
       revision: 47f34dd7f5284e8750b5a715dee7f77c6c5bdc3f
       path: modules/lib/zcbor
+    - name: memfault-firmware-sdk
+      path: modules/lib/memfault-firmware-sdk
+      revision: 1.12.0
+      remote: memfault
+ 
+
 
   self:
     path: zephyr
