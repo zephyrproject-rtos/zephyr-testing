@@ -7,6 +7,7 @@ import os
 import sys
 import re
 import subprocess
+import pickle
 import glob
 import json
 import collections
@@ -35,6 +36,7 @@ from twisterlib.config_parser import TwisterConfigParser
 from twisterlib.statuses import TwisterStatus
 from twisterlib.testinstance import TestInstance
 from twisterlib.quarantine import Quarantine
+from twisterlib.cmakecache import CMakeCache
 
 import list_boards
 from zephyr_module import parse_modules
@@ -51,6 +53,8 @@ from devicetree import edtlib  # pylint: disable=unused-import
 sys.path.insert(0, os.path.join(ZEPHYR_BASE, "scripts/"))
 
 import scl
+import expr_parser
+
 class Filters:
     # platform keys
     PLATFORM_KEY = 'platform key filter'
@@ -99,6 +103,7 @@ class TestPlan:
 
         self.options = env.options
         self.env = env
+        self.filter_cache = {}
 
         # Keep track of which test cases we've filtered out and why
         self.testsuites = {}
@@ -266,6 +271,9 @@ class TestPlan:
                 raise TwisterRuntimeError(f"You have provided a wrong subset value: {self.options.subset}.")
 
             self.generate_subset(subset, int(sets))
+
+        if self.options.filter_cache:
+            logger.info(f"Using filter cache: {self.options.filter_cache}")
 
     def generate_subset(self, subset, sets):
         # Test instances are sorted depending on the context. For CI runs
@@ -721,6 +729,80 @@ class TestPlan:
                 return True
         return False
 
+    def parse_generated(self, instance):
+        config_re = re.compile('(CONFIG_[A-Za-z0-9_]+)[=]\"?([^\"]*)\"?$')
+        dt_re = re.compile('([A-Za-z0-9_]+)[=]\"?([^\"]*)\"?$')
+
+        if instance.platform.name == "unit_testing":
+            return {}
+
+        if not self.filter_cache.get(instance.platform.name):
+            cache_dir = os.path.join(self.options.filter_cache, instance.platform.normalized_name)
+            cmake_cache_path = os.path.join(cache_dir, "CMakeCache.txt")
+            defconfig_path = os.path.join(cache_dir, ".config")
+            edt_pickle = os.path.join(cache_dir, "edt.pickle")
+            defconfig = {}
+
+            if not os.path.exists(defconfig_path) and not os.path.exists(edt_pickle):
+                return None
+
+            if os.path.exists(defconfig_path):
+                with open(defconfig_path, "r") as fp:
+                    for line in fp.readlines():
+                        m = config_re.match(line)
+                        if not m:
+                            if line.strip() and not line.startswith("#"):
+                                sys.stderr.write("Unrecognized line %s\n" % line)
+                            continue
+                        defconfig[m.group(1)] = m.group(2).strip()
+
+            cmake_conf = {}
+            if os.path.exists(cmake_cache_path):
+
+                try:
+                    cache = CMakeCache.from_file(cmake_cache_path)
+                except FileNotFoundError:
+                    cache = {}
+
+                for k in iter(cache):
+                    cmake_conf[k.name] = k.value
+
+            filter_data = {
+                "ARCH": instance.platform.arch,
+                "PLATFORM": instance.platform.name
+            }
+            filter_data.update(os.environ)
+            filter_data.update(defconfig)
+            filter_data.update(cmake_conf)
+
+            if os.path.exists(edt_pickle):
+                with open(edt_pickle, 'rb') as f:
+                    edt = pickle.load(f)
+            else:
+                edt = None
+
+            self.filter_cache[instance.platform.name] = {'filter': filter_data, 'edt': edt}
+
+        if instance.testsuite and instance.testsuite.filter:
+            try:
+                edt = self.filter_cache[instance.platform.name]['edt']
+                filter_data = self.filter_cache[instance.platform.name]['filter']
+
+                ret = expr_parser.parse(instance.testsuite.filter, filter_data, edt)
+
+            except (ValueError, SyntaxError) as se:
+                sys.stderr.write(
+                    "Failed processing %s\n" % instance.testsuite.yamlfile)
+                raise se
+
+            if not ret:
+                return {os.path.join(instance.platform.name, instance.testsuite.name): True}
+            else:
+                return {os.path.join(instance.platform.name, instance.testsuite.name): False}
+        else:
+            instance.platform.filter_data = filter_data
+            return None
+
     def apply_filters(self, **kwargs):
 
         toolchain = self.env.toolchain
@@ -867,6 +949,11 @@ class TestPlan:
 
                 if self.options.integration and ts.integration_platforms and plat.name not in ts.integration_platforms:
                     instance.add_filter("Not part of integration platforms", Filters.TESTSUITE)
+
+                if ts.filter and self.options.filter_cache and not instance.sysbuild:
+                    filter_data = self.parse_generated(instance)
+                    if filter_data and filter_data.get(instance.name, False):
+                        instance.add_filter("Generated filter", Filters.TESTSUITE)
 
                 if ts.skip:
                     instance.add_filter("Skip filter", Filters.SKIP)

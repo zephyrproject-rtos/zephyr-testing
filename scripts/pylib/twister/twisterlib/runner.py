@@ -690,7 +690,6 @@ class CMake:
             with open(os.path.join(self.build_dir, self.log), "a", encoding=self.default_encoding) as log:
                 log_msg = out.decode(self.default_encoding)
                 log.write(log_msg)
-
         return ret
 
 
@@ -1731,10 +1730,11 @@ class TwisterRunner:
                 if self.results.iteration > 1:
                     ProjectBuilder._add_instance_testcases_to_status_counts(instance, self.results, decrement=True)
 
-                # Check if cmake package_helper script can be run in advance.
                 instance.filter_stages = []
-                if instance.testsuite.filter:
-                    instance.filter_stages = self.get_cmake_filter_stages(instance.testsuite.filter, expr_parser.reserved.keys())
+                if not self.env.options.filter_cache:
+                    # Check if cmake package_helper script can be run in advance.
+                    if instance.testsuite.filter:
+                        instance.filter_stages = self.get_cmake_filter_stages(instance.testsuite.filter, expr_parser.reserved.keys())
 
                 if test_only and instance.run:
                     pipeline.put({"op": "run", "test": instance})

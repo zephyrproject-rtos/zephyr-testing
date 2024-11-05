@@ -292,6 +292,11 @@ files in the directory will be processed. The directory should have the same
 structure in the main Zephyr tree: boards/<vendor>/<board_name>/""")
 
     parser.add_argument(
+        "--filter-cache",
+        help="Use existing filter cache to speed up test selection."
+    )
+
+    parser.add_argument(
         "--allow-installed-plugin", action="store_true", default=None,
         help="Allow to use pytest plugin installed by pip for pytest tests."
     )
