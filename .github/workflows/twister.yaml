@@ -6,6 +6,7 @@ on:
       - main
       - v*-branch
       - collab-*
+      - topic/twister/filter_cache
   pull_request_target:
     branches:
       - main
@@ -56,14 +57,14 @@ jobs:
           echo "ZEPHYR_RUNNER_CLOUD_POD = ${ZEPHYR_RUNNER_CLOUD_POD}"
 
       - name: Clone cached Zephyr repository
-        if: github.event_name == 'pull_request_target'
+        #if: github.event_name == 'pull_request_target'
         continue-on-error: true
         run: |
           git clone --shared /repo-cache/zephyrproject/zephyr .
           git remote set-url origin ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}
 
       - name: Checkout
-        if: github.event_name == 'pull_request_target'
+        #if: github.event_name == 'pull_request_target'
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
@@ -71,13 +72,13 @@ jobs:
           persist-credentials: false
 
       - name: Environment Setup
-        if: github.event_name == 'pull_request_target'
+        #if: github.event_name == 'pull_request_target'
         run: |
           git config --global user.email "bot@zephyrproject.org"
           git config --global user.name "Zephyr Bot"
-          rm -fr ".git/rebase-apply"
-          git rebase origin/${BASE_REF}
-          git clean -f -d
+          #rm -fr ".git/rebase-apply"
+          #git rebase origin/${BASE_REF}
+          #git clean -f -d
           git log  --pretty=oneline | head -n 10
           west init -l . || true
           west config manifest.group-filter -- +ci,+optional
@@ -123,6 +124,29 @@ jobs:
           echo "subset=${subset}" >> $GITHUB_OUTPUT
           echo "size=${size}" >> $GITHUB_OUTPUT
           echo "fullrun=${TWISTER_FULL}" >> $GITHUB_OUTPUT
+      - name: generate filter cache
+        if:  github.event_name == 'push'
+        run: |
+          export ZEPHYR_BASE=${PWD}
+          export ZEPHYR_TOOLCHAIN_VARIANT=zephyr
+          python3 ./scripts/twister --cmake-only -T samples/synchronization/ --outdir filter_cache --force-color --inline-logs -v
+          cd filter_cache
+          for d in `ls -1`; do
+             mkdir -p cache/${d};
+             test -f $d/samples/synchronization/sample.kernel.synchronization/zephyr/.config && \
+             cp $d/samples/synchronization/sample.kernel.synchronization/zephyr/.config  cache/${d} && \
+             cp $d/samples/synchronization/sample.kernel.synchronization/zephyr/edt.pickle  cache/${d} && \
+             cp $d/samples/synchronization/sample.kernel.synchronization/CMakeCache.txt  cache/${d};
+          done
+          mv cache ../twister_cache
+      - name: Upload Filter Cache
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: filter_cache
+          if-no-files-found: ignore
+          path: |
+            twister_cache
 
   twister-build:
     runs-on:
@@ -229,11 +253,17 @@ jobs:
           make everything -s -j 8
 
       - if: github.event_name == 'push'
+        name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: filter_cache
+
+      - if: github.event_name == 'push'
         name: Run Tests with Twister (Push)
         run: |
           export ZEPHYR_BASE=${PWD}
           export ZEPHYR_TOOLCHAIN_VARIANT=zephyr
-          ./scripts/twister --subset ${{matrix.subset}}/${{ strategy.job-total }} ${TWISTER_COMMON} ${PUSH_OPTIONS}
+          ./scripts/twister --subset ${{matrix.subset}}/${{ strategy.job-total }} ${TWISTER_COMMON} ${PUSH_OPTIONS} --filter-cache filter_cache/filter_cache
           if [ "${{matrix.subset}}" = "1" ]; then
             ./scripts/zephyr_module.py --twister-out module_tests.args
             if [ -s module_tests.args ]; then
