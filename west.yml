@@ -65,7 +65,7 @@ manifest:
       path: tools/bsim/components
       revision: a3dff9a57f334fb25daa9625841cd64cbfe56681
       submodules:
-         - name: nlio
+        - name: nlio
           path: third_party/nlio/repo
         - name: nlassert
           path: third_party/nlassert/repo
