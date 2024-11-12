@@ -23,15 +23,35 @@ manifest:
       url-base: https://github.com/zephyrproject-rtos
     - name: babblesim
       url-base: https://github.com/BabbleSim
+    - name: nrfconnect
+      url-base: https://github.com/nrfconnect
+
 
   group-filter: [-babblesim, -optional]
 
   #
   # Please add items below based on alphabetical order
   projects:
+    - name: matter
+      remote: nrfconnect
+      repo-path: sdk-connectedhomeip
+      path: modules/lib/matter
+      revision: 81eb1e99a9fd48bbf3bca2a56e7ac888c7f24a16
+      submodules:
+        - name: nlio
+          path: third_party/nlio/repo
+        - name: nlassert
+          path: third_party/nlassert/repo
+        - name: nlunit-test
+          path: third_party/nlunit-test/repo
+        - name: pigweed
+          path: third_party/pigweed/repo
+        - name: jsoncpp
+          path: third_party/jsoncpp/repo
     - name: acpica
       revision: 8d24867bc9c9d81c81eeac59391cda59333affd4
       path: modules/lib/acpica
+      submodules: true
     - name: bsim
       repo-path: babblesim-manifest
       revision: 9ee22c707970f6621adba0375841c0a609e24628
@@ -118,6 +138,7 @@ manifest:
     - name: cmsis
       revision: 4b96cbb174678dcd3ca86e11e1f24bc5f8726da0
       path: modules/hal/cmsis
+      west-commands: scripts/west/west-commands.yml
       groups:
         - hal
     - name: cmsis-dsp
@@ -134,6 +155,7 @@ manifest:
     - name: fatfs
       revision: 427159bf95ea49b7680facffaa29ad506b42709b
       path: modules/fs/fatfs
+      west-commands: commands/west-cmds.yml
       groups:
         - fs
     - name: hal_adi
@@ -319,6 +341,7 @@ manifest:
     - name: segger
       revision: b011c45b585e097d95d9cf93edf4f2e01588d3cd
       path: modules/debug/segger
+      submodules: true
       groups:
         - debug
     - name: tinycrypt
