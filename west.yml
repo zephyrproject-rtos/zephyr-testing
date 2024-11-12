@@ -56,6 +56,7 @@ manifest:
       repo-path: babblesim-manifest
       revision: 9ee22c707970f6621adba0375841c0a609e24628
       path: tools/bsim
+      submodules: true
       groups:
         - babblesim
     - name: babblesim_base
@@ -63,6 +64,11 @@ manifest:
       repo-path: base
       path: tools/bsim/components
       revision: a3dff9a57f334fb25daa9625841cd64cbfe56681
+      submodules:
+         - name: nlio
+          path: third_party/nlio/repo
+        - name: nlassert
+          path: third_party/nlassert/repo
       groups:
         - babblesim
     - name: babblesim_ext_2G4_libPhyComv1
