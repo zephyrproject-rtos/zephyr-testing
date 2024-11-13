@@ -25,7 +25,8 @@ manifest:
       url-base: https://github.com/BabbleSim
     - name: nrfconnect
       url-base: https://github.com/nrfconnect
-
+    - name: carles
+      url-base: https://github.com/carles
 
   group-filter: [-babblesim, -optional]
 
@@ -351,6 +352,7 @@ manifest:
       groups:
         - debug
     - name: tinycrypt
+      remote: carles
       revision: 1012a3ebee18c15ede5efc8332ee2fc37817670f
       path: modules/crypto/tinycrypt
       groups:
