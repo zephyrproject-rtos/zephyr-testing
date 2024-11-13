@@ -26,7 +26,7 @@ manifest:
     - name: nrfconnect
       url-base: https://github.com/nrfconnect
     - name: carles
-      url-base: https://github.com/carles
+      url-base: https://github.com/carlescufi
 
   group-filter: [-babblesim, -optional]
 
@@ -335,6 +335,7 @@ manifest:
       revision: b735edbc739ad59156eb55bb8ce2583d74537719
       path: modules/lib/open-amp
     - name: openthread
+      remote: carles
       revision: 2aeb8b833ba760ec29d5f340dd1ce7bcb61c5d56
       path: modules/lib/openthread
     - name: percepio
