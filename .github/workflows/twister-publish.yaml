@@ -5,6 +5,7 @@ on:
     workflows: ["Run tests with twister"]
     branches:
     - main
+    - topic/ci/upload_results
     - v*
     types:
     - completed
