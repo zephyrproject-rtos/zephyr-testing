@@ -1,0 +1,82 @@
+name: Twister Test Results
+
+on:
+  workflow_run:
+    workflows: ["Run tests with twister"]
+    branches:
+    - main
+    - v*
+    types:
+    - completed
+
+jobs:
+  twister-test-results:
+    name: "Publish Unit Tests Results"
+    env:
+      ELASTICSEARCH_KEY: ${{ secrets.ELASTICSEARCH_KEY }}
+      ELASTICSEARCH_SERVER: "https://elasticsearch.zephyrproject.io:443"
+    needs:
+      - twister-build
+    runs-on: ubuntu-22.04
+    # the build-and-test job might be skipped, we don't need to run this job then
+    if: success() || failure()
+
+    steps:
+      # Needed for elasticearch and upload script
+      - if: github.event_name == 'push' || github.event_name == 'schedule'
+        name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - if: github.event_name == 'push' || github.event_name == 'schedule'
+        name: Upload to elasticsearch
+        run: |
+          pip3 install elasticsearch
+          # set run date on upload to get consistent and unified data across the matrix.
+          if [ "${{github.event_name}}" = "push" ]; then
+            python3 ./scripts/ci/upload_test_results_es.py -r ${{needs.twister-build.outputs.rundate}} \
+              --run-attempt ${{github.run_attempt}} \
+              --index zephyr-main-ci-push-1 artifacts/*/*/twister.json
+          elif [ "${{github.event_name}}" = "schedule" ]; then
+            python3 ./scripts/ci/upload_test_results_es.py -r ${{needs.twister-build.outputs.rundate}} \
+              --run-attempt ${{github.run_attempt}} \
+              --index zephyr-main-ci-weekly-1 artifacts/*/*/twister.json
+          fi
+
+      - name: Merge Test Results
+        run: |
+          pip3 install junitparser junit2html
+          junitparser merge artifacts/*/*/twister.xml junit.xml
+          junit2html junit.xml junit.html
+
+      - name: Upload Unit Test Results in HTML
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: HTML Unit Test Results
+          if-no-files-found: ignore
+          path: |
+            junit.html
+
+      - name: Publish Unit Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          check_name: Unit Test Results
+          files: "**/twister.xml"
+          comment_mode: off
+  twister-status-check:
+    if: always()
+    name: "Check Twister Status"
+    needs:
+      - twister-build-prep
+      - twister-build
+    uses: ./.github/workflows/ready-to-merge.yml
+    with:
+      needs_context: ${{ toJson(needs) }}
