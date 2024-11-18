@@ -66,7 +66,7 @@ jobs:
           git log  --pretty=oneline | head -n 10
           west init -l . || true
           west config --global update.narrow true
-          west config manifest.group-filter -- +ci,+optional
+          west config manifest.group-filter -- +ci,+optional,-hal,-babblesim
           # In some cases modules are left in a state where they can't be
           # updated (i.e. when we cancel a job and the builder is killed),
           # So first retry to update, if that does not work, remove all modules
@@ -89,16 +89,6 @@ jobs:
           ccache -M 10G
           ccache -p
           ccache -z -s -vv
-
-      - name: Update BabbleSim to manifest revision
-        run: |
-          export BSIM_VERSION=$( west list bsim -f {revision} )
-          echo "Manifest points to bsim sha $BSIM_VERSION"
-          cd /opt/bsim_west/bsim
-          git fetch -n origin ${BSIM_VERSION}
-          git -c advice.detachedHead=false checkout ${BSIM_VERSION}
-          west update
-          make everything -s -j 8
 
       - name: Run Tests with Twister
         id: twister
