@@ -105,6 +105,8 @@ jobs:
           fi
           size=${TWISTER_NODES}
 
+          echo ${subset}
+          echo ${size}
           echo "subset=${subset}" >> $GITHUB_OUTPUT
           echo "size=${size}" >> $GITHUB_OUTPUT
           echo "fullrun=${TWISTER_FULL}" >> $GITHUB_OUTPUT
