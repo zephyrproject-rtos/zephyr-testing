@@ -1,12 +1,11 @@
 name: Run tests with twister
 
 on:
+  workflow_run:
+    workflows: ["Compliance Checks"]
+    types:
+      - completed
   push:
-    branches:
-      - main
-      - v*-branch
-      - collab-*
-  pull_request:
     branches:
       - main
       - v*-branch
