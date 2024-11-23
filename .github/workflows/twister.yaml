@@ -20,7 +20,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  compliance-check:
+    uses: ./.github/workflows/compliance.yml
+
   twister-build-prep:
+    needs: compliance-check
     uses: ./.github/workflows/twister-prep.yaml
 
   twister-build:

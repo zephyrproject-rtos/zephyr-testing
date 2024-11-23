@@ -1,12 +1,7 @@
 name: Compliance Checks
 
 on:
-  pull_request:
-    types:
-    - edited
-    - opened
-    - reopened
-    - synchronize
+  workflow_call:
 
 jobs:
   check_compliance:
