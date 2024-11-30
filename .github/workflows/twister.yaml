@@ -25,7 +25,6 @@ jobs:
 
   twister-build-prep:
     needs: compliance-check
-    if: always()
     uses: ./.github/workflows/twister-prep.yaml
 
   twister-build:
