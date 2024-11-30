@@ -4,6 +4,15 @@ on:
   workflow_call:
 
 jobs:
+  check_compliance_push:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-22.04
+    name: Run compliance checks on patch series (PR)
+    steps:
+    - name: Do nothing
+      run: |
+        echo "Doing nothing"
+
   check_compliance:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-22.04
