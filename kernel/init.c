@@ -10,7 +10,7 @@
  *
  * This module contains routines that are used to initialize the kernel.
  */
-
+/* blah */
 #include <ctype.h>
 #include <stdbool.h>
 #include <string.h>
