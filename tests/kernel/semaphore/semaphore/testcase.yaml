@@ -3,4 +3,5 @@ tests:
     tags:
       - kernel
       - userspace
+      - blah
     ignore_faults: true
