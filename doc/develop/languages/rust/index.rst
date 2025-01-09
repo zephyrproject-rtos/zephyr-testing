@@ -57,7 +57,7 @@ challenging to determine the right target to install.  Sometimes, it is easiest 
 building a Rust sample with your desired target, and the toolchain will emit an error message giving
 the appropriate command to run.  The target needed will depend both on the board/soc selected, as
 well as certain configuration choices (such as whether floating point is enabled).  Please see the
-function ``_rust_map_target`` in :file:`zephyr-lang-rust:CMakeLists.txt` for details on how
+function ``_rust_map_target`` in :module_file:`zephyr-lang-rust:CMakeLists.txt` for details on how
 this is computed.  As an example, a particular Cortex-M target may need the following command:
 
 .. code-block:: console
@@ -75,7 +75,7 @@ Building a sample
 
 The directory :file:`zephyr-lang-rust:samples` contains some samples that can be useful for
 testing.  Hello world is a good basic test, although blinky may also be useful if your target has an
-LED defined.  Please make sure that :zephyr_file:`samples/basic/blink` works with your board,
+LED defined.  Please make sure that :file:`samples/basic/blink` works with your board,
 however, before trying it with Rust.
 
 Following from the getting-started guide, you can build the hello world sample in rust with:
