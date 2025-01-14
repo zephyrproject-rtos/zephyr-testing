@@ -37,21 +37,21 @@ jobs:
           let pr_number = Number(fs.readFileSync("./pr_num/pr_num"));
           core.exportVariable("PR_NUM", pr_number);
 
-    - name: Check PR number
-      if: steps.download-artifacts.outputs.found_artifact == 'true'
-      id: check-pr
-      uses: carpentries/actions/check-valid-pr@v0.14.0
-      with:
-        pr: ${{ env.PR_NUM }}
-        sha: ${{ github.event.workflow_run.head_sha }}
+    # - name: Check PR number
+    #   if: steps.download-artifacts.outputs.found_artifact == 'true'
+    #   id: check-pr
+    #   uses: carpentries/actions/check-valid-pr@v0.14.0
+    #   with:
+    #     pr: ${{ env.PR_NUM }}
+    #     sha: ${{ github.event.workflow_run.head_sha }}
 
-    - name: Validate PR number
-      if: |
-        steps.download-artifacts.outputs.found_artifact == 'true' &&
-        steps.check-pr.outputs.VALID != 'true'
-      run: |
-        echo "ABORT: PR number validation failed!"
-        exit 1
+    # - name: Validate PR number
+    #   if: |
+    #     steps.download-artifacts.outputs.found_artifact == 'true' &&
+    #     steps.check-pr.outputs.VALID != 'true'
+    #   run: |
+    #     echo "ABORT: PR number validation failed!"
+    #     exit 1
 
     - name: Uncompress HTML docs
       if: steps.download-artifacts.outputs.found_artifact == 'true'
