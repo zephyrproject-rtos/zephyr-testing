@@ -3,6 +3,8 @@
 Rust Language Support
 #####################
 
+Small change to trigger doc build.
+
 Rust is a modern systems programming language focused on safety, speed, and concurrency. Unlike
 traditional systems programming languages such as C and C++, Rust ensures memory safety without
 relying on garbage colleciton, thanks to its ownership model and borrow checker. Rust also offers a
