@@ -153,7 +153,7 @@ ZTEST_USER(thread_init, test_kinit_preempt_thread)
 
 	/*record time stamp of thread creation*/
 	t_create = k_uptime_get();
-	zassert_not_null(pthread, "thread creation failed");
+	zassert_is_null(pthread, "thread creation failed");
 
 	expected.init_p1 = INIT_PREEMPT_P1;
 	expected.init_p2 = INIT_PREEMPT_P2;
