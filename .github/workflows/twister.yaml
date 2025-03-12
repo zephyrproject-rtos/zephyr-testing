@@ -25,7 +25,7 @@ jobs:
 
   twister-build:
     runs-on:
-      group: zephyr-runner-v2-linux-x64-4xlarge
+      group: test-runner-v2-linux-x64-4xlarge
     needs: twister-build-prep
     if: needs.twister-build-prep.outputs.size != 0
     container:
