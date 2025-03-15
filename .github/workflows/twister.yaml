@@ -47,7 +47,7 @@ jobs:
       TWISTER_COMMON: '--no-detailed-test-id --force-color --inline-logs -v -N -M --retry-failed 3 --timeout-multiplier 2 '
       WEEKLY_OPTIONS: ' -M --build-only --all --show-footprint --report-filtered'
       PR_OPTIONS: ' --clobber-output --integration -T tests/kernel/threads'
-      PUSH_OPTIONS: ' --clobber-output -M --show-footprint --report-filtered'
+      PUSH_OPTIONS: ' --clobber-output -M --show-footprint --report-filtered -T tests/kernel/threads'
       COMMIT_RANGE: ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}
       BASE_REF: ${{ github.base_ref }}
       LLVM_TOOLCHAIN_PATH: /usr/lib/llvm-16
