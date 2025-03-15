@@ -27,12 +27,10 @@ jobs:
 
       - name: Download Artifacts
         id: download-artifacts
-        uses: dawidd6/action-download-artifact@v8
+        uses: actions/download-artifact@v4
         with:
           path: artifacts
-          workflow: twister.yml
           run_id: ${{ github.event.workflow_run.id }}
-          if_no_artifact_found: ignore
 
       - name: Upload to elasticsearch
         if: steps.download-artifacts.outputs.found_artifact == 'true'
