@@ -235,6 +235,7 @@ jobs:
           path: artifacts
 
       - name: Merge Test Results
+        if: needs.twister-build.result != 'skipped'
         run: |
           pip install junitparser junit2html
           junitparser merge artifacts/*/*/twister.xml junit.xml
@@ -251,6 +252,7 @@ jobs:
             junit.xml
 
       - name: Publish Unit Test Results
+        if: needs.twister-build.result != 'skipped'
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           check_name: Unit Test Results
