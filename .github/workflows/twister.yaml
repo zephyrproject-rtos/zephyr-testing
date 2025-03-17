@@ -218,7 +218,7 @@ jobs:
       - twister-build
     runs-on: ubuntu-22.04
     # the build-and-test job might be skipped, we don't need to run this job then
-    if: success() || failure()
+    if: (success() || failure()) &&  needs.twister-build.result != 'skipped'
 
     steps:
       - name: Check out source code
@@ -252,7 +252,6 @@ jobs:
             junit.xml
 
       - name: Publish Unit Test Results
-        if: needs.twister-build.result != 'skipped'
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           check_name: Unit Test Results
