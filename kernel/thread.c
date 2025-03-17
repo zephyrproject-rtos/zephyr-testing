@@ -1,3 +1,5 @@
+
+
 /*
  * Copyright (c) 2010-2014 Wind River Systems, Inc.
  *
@@ -6,7 +8,7 @@
 
 /**
  * @file
- * @brief Kernel thread support
+ * @brief Kernel thread support.
  *
  * This module provides general purpose thread support.
  */
