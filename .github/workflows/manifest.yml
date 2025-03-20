@@ -25,6 +25,7 @@ jobs:
           BASE_REF: ${{ github.base_ref }}
         working-directory: zephyrproject/zephyr
         run: |
+          git checkout ${{ github.event.pull_request.head.sha }}
           pip install west
           git config --global user.email "you@example.com"
           git config --global user.name "Your Name"
