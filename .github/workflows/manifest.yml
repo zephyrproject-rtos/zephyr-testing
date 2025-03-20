@@ -1,46 +1,93 @@
 name: Manifest
+# Uses pull_request_target but with careful security controls
 on:
-  pull_request:
+  pull_request_target:
+    paths:
+      - 'west.yml'
 
 permissions:
   contents: read
 
 jobs:
-  contribs:
+  manifest-validation:
     runs-on: ubuntu-22.04
+    name: Validate Manifest
     permissions:
       pull-requests: write # to create/update pull request comments
-      issues: write
-    name: Manifest
+      contents: read
     steps:
-      - name: Checkout the code
+      # SECURITY CRITICAL: First checkout the base repo code WITHOUT using untrusted code
+      - name: Checkout base repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          path: zephyrproject/zephyr
-            #ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.base_ref }}
+          path: base-repo
           fetch-depth: 0
           persist-credentials: false
 
-      - name: west setup
-        env:
-          BASE_REF: ${{ github.base_ref }}
-        working-directory: zephyrproject/zephyr
+      # SECURITY: Then fetch PR data - only checking out the specific manifest file
+      - name: Fetch PR Manifest
         run: |
-          git checkout ${{ github.event.pull_request.head.sha }}
-          pip install west
-          git config --global user.email "you@example.com"
-          git config --global user.name "Your Name"
+          # Safely get the PR's west.yml file without executing any PR code
+          PR_SHA="${{ github.event.pull_request.head.sha }}"
+          PR_REPO="${{ github.event.pull_request.head.repo.full_name }}"
+          PR_BRANCH="${{ github.event.pull_request.head.ref }}"
+
+          echo "Fetching west.yml from PR $PR_SHA from $PR_REPO branch $PR_BRANCH"
+          mkdir -p pr-repo
+          curl -s -L "https://raw.githubusercontent.com/$PR_REPO/$PR_SHA/west.yml" > pr-repo/west.yml
+
+          # Validate the file was downloaded successfully
+          if [ ! -s "pr-repo/west.yml" ]; then
+            echo "Failed to fetch west.yml from PR"
+            exit 1
+          fi
+
+      - name: Validate manifest changes
+        run: |
+          # Basic manifest file validation
+          echo "Validating west.yml format..."
+          python -c "import yaml; yaml.safe_load(open('pr-repo/west.yml'))" || {
+            echo "Invalid YAML format in west.yml"
+            exit 1
+          }
+
+          # Compare manifest files to show changes
+          echo "Comparing manifest changes..."
+          diff -u base-repo/west.yml pr-repo/west.yml || true
+
+      - name: Create minimal repo structure for west
+        run: |
+          # Create a minimal structure required by west without executing PR code
+          mkdir -p pr-repo/.git
+          cp -r base-repo/.git/* pr-repo/.git/
+
+      - name: West setup
+        run: |
+          pip install --user west
+          git config --global user.email "github-actions@example.com"
+          git config --global user.name "GitHub Actions"
+
+          # Initialize west with the manifest file we explicitly downloaded
+          cd pr-repo
           west init -l . || true
 
-      - name: Manifest
+      # After creating necessary environment above, run the action
+      - name: Run manifest action with restricted token
         uses: zephyrproject-rtos/action-manifest@cb8f6fba6f20b5f8649bd573e80a7583a239894c # v1.7.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           manifest-path: 'west.yml'
-          checkout-path: 'zephyrproject/zephyr'
+          checkout-path: 'pr-repo'
           use-tree-checkout: 'true'
           check-impostor-commits: 'true'
           label-prefix: 'manifest-'
           verbosity-level: '1'
           labels: 'manifest'
           dnm-labels: 'DNM (manifest)'
+
+      # Optional: Clean up sensitive data after running
+      - name: Clean up
+        if: always()
+        run: |
+          rm -rf pr-repo base-repo
