@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-22.04
     permissions:
       pull-requests: write # to create/update pull request comments
+      issues: write
     name: Manifest
     steps:
       - name: Checkout the code
