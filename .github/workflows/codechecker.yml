@@ -96,8 +96,9 @@ jobs:
           pip install codechecker==v6.25.1 cppcheck sarif-tools jq
           export PATH=/usr/lib/llvm-16/bin/:$PATH
 
-          west build -b native_sim samples/synchronization -- -DZEPHYR_SCA_VARIANT=codechecker -DCODECHECKER_EXPORT=sarif
-          sarif copy --output results.sarif $(find build -name "codechecker.sarif")
+          ./scripts/twister -i --force-color -N -v --build-only --timeout-multiplier 2 -p qemu_x86 -T tests/kernel/threads/
+
+          sarif copy --output results.sarif $(find twister-out -name "codechecker.sarif")
 
       - name: Upload SARIF as artifact
         if: always()
@@ -113,4 +114,4 @@ jobs:
         if: always()
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: build/sca/codechecker/codechecker.sarif
+          sarif_file: results.sarif
