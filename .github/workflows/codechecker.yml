@@ -98,6 +98,13 @@ jobs:
 
           west build -b native_sim samples/synchronization -- -DZEPHYR_SCA_VARIANT=codechecker -DCODECHECKER_EXPORT=sarif
 
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          # Path to SARIF file relative to the root of the repository
+          sarif_file: build/sca/codechecker/codechecker.sarif
+          category: codechecker
+
       - name: Print ccache stats
         if: always()
         run: |
