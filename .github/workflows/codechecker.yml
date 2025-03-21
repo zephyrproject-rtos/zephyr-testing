@@ -90,7 +90,7 @@ jobs:
           export ZEPHYR_BASE=${PWD}
           export ZEPHYR_TOOLCHAIN_VARIANT=llvm
           export ZEPHYR_SCA_VARIANT=codechecker
-          export CODECHECKER_CONFIG_FILE=$ZEPHYR_BASE/.codechecker.yml
+          #export CODECHECKER_CONFIG_FILE=$ZEPHYR_BASE/.codechecker.yml
           export CODECHECKER_CLEANUP=y
           export CODECHECKER_EXPORT=sarif
           pip install codechecker==v6.25.1
