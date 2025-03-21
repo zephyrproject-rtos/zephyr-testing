@@ -17,5 +17,13 @@ analyzer:
   - --disable=clang-diagnostic-reserved-identifier
   - --disable=clang-diagnostic-reserved-macro-identifier
 
+  # userspace includes c files
+  - --disable=bugprone-suspicious-include
+
+  # LOG_ macros
+  - --disable=alpha.core.SizeofPtr
+  - --disable=bugprone-sizeof-expression
+  - --disable=performance-no-int-to-ptr
+
   # Cleanup
   - --clean
