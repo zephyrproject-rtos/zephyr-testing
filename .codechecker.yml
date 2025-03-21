@@ -17,5 +17,11 @@ analyzer:
   - --disable=clang-diagnostic-reserved-identifier
   - --disable=clang-diagnostic-reserved-macro-identifier
 
+  # userspace includes c files
+  - --disable=bugprone-suspicious-include
+
+  - --disable=clang-diagnostic-unused-parameter
+  - --disable=bugprone-narrowing-conversions
+
   # Cleanup
   - --clean
