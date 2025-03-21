@@ -94,11 +94,14 @@ jobs:
           export CODECHECKER_CLEANUP=y
           export CODECHECKER_EXPORT=sarif
           pip install codechecker==v6.25.1 cppcheck sarif-tools jq
+          sudo apt-get update
+          sudo apt-get install -y jq
           export PATH=/usr/lib/llvm-16/bin/:$PATH
 
-          ./scripts/twister -i --force-color -N -v --build-only --timeout-multiplier 2 -p qemu_x86 -T tests/kernel/threads/
+          ./scripts/twister -i --force-color -N -v --build-only --timeout-multiplier 2 -p qemu_x86 -T samples/hello_world
 
           sarif copy --output results.sarif $(find twister-out -name "codechecker.sarif")
+          jq -s '{ "$schema": "https://json.schemastore.org/sarif-2.1.0", "version": "2.1.0", "runs": map(.runs) | add }'  $(find twister-out -name "codechecker.sarif")  > results.sarif
 
       - name: Upload SARIF as artifact
         if: always()
