@@ -15,8 +15,8 @@ concurrency:
 jobs:
   Codechecker:
     if: github.repository_owner == 'zephyrproject-rtos'
-    runs-on: ubuntu-24.04
-      #group: test-runner-v2-linux-x64-4xlarge
+    runs-on:
+      group: test-runner-v2-linux-x64-4xlarge
     container:
       image: ghcr.io/zephyrproject-rtos/ci-repo-cache:v0.27.4.20241026
       options: '--entrypoint /bin/bash'
@@ -98,7 +98,7 @@ jobs:
           sudo apt-get install -y jq
           export PATH=/usr/lib/llvm-16/bin/:$PATH
 
-          ./scripts/twister -i --force-color -N -v --build-only --timeout-multiplier 2 -p qemu_x86 -T samples/hello_world
+          ./scripts/twister -i --force-color -N -v --build-only --timeout-multiplier 2 -p qemu_x86 -T tests/kernel/threads
 
           sarif copy --output results.sarif $(find twister-out -name "codechecker.sarif")
           jq -s '{ "$schema": "https://json.schemastore.org/sarif-2.1.0", "version": "2.1.0", "runs": map(.runs) | add }'  $(find twister-out -name "codechecker.sarif")  > results.sarif
