@@ -27,6 +27,8 @@ jobs:
       CCACHE_IGNOREOPTIONS: '-specs=* --specs=*'
       LLVM_TOOLCHAIN_PATH: /usr/lib/llvm-16
       BASE_REF: ${{ github.base_ref }}
+    permissions:
+      security-events: write
     steps:
       - name: Apply container owner mismatch workaround
         run: |
@@ -71,7 +73,7 @@ jobs:
           # So first retry to update, if that does not work, remove all modules
           # and start over. (Workaround until we implement more robust module
           # west caching).
-          west update --path-cache /repo-cache/zephyrproject 2>&1 1> west.log || west update --path-cache /repo-cache/zephyrproject 2>&1 1> west2.log || ( rm -rf ../modules ../bootloader ../tools && west update --path-cache /repo-cache/zephyrproject)
+          # west update --path-cache /repo-cache/zephyrproject 2>&1 1> west.log || west update --path-cache /repo-cache/zephyrproject 2>&1 1> west2.log || ( rm -rf ../modules ../bootloader ../tools && west update --path-cache /repo-cache/zephyrproject)
 
           echo "ZEPHYR_SDK_INSTALL_DIR=/opt/toolchains/zephyr-sdk-$( cat SDK_VERSION )" >> $GITHUB_ENV
 
