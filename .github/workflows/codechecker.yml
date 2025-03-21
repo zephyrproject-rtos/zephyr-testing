@@ -100,7 +100,7 @@ jobs:
 
           ./scripts/twister -i --force-color -N -v --build-only --timeout-multiplier 2 -p qemu_x86 -T tests/kernel/threads
 
-          sarif copy --output results.sarif $(find twister-out -name "codechecker.sarif")
+          #sarif copy --output results.sarif $(find twister-out -name "codechecker.sarif")
           jq -s '{ "$schema": "https://json.schemastore.org/sarif-2.1.0", "version": "2.1.0", "runs": map(.runs) | add }'  $(find twister-out -name "codechecker.sarif")  > results.sarif
 
       - name: Upload SARIF as artifact
