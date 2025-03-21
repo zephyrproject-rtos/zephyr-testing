@@ -89,11 +89,12 @@ jobs:
         run: |
           export ZEPHYR_BASE=${PWD}
           export ZEPHYR_TOOLCHAIN_VARIANT=zephyr
-          #export ZEPHYR_SCA_VARIANT=codechecker
-          #export CODECHECKER_CONFIG_FILE=$ZEPHYR_BASE/.codechecker.yml
-          #export CODECHECKER_CLEANUP=y
-          #export CODECHECKER_EXPORT=sarif
+          export ZEPHYR_SCA_VARIANT=codechecker
+          export CODECHECKER_CONFIG_FILE=$ZEPHYR_BASE/.codechecker.yml
+          export CODECHECKER_CLEANUP=y
+          export CODECHECKER_EXPORT=sarif
           pip install codechecker==v6.25.1 cppcheck sarif-tools jq
+          export PATH=/usr/lib/llvm-16/bin/:$PATH
 
           west build -b native_sim samples/synchronization -- -DZEPHYR_SCA_VARIANT=codechecker -DCODECHECKER_EXPORT=sarif
           sarif copy --output results.sarif $(find build -name "codechecker.sarif")
