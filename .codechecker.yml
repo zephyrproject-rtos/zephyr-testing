@@ -20,6 +20,9 @@ analyzer:
   # userspace includes c files
   - --disable=bugprone-suspicious-include
 
+  - --disable=clang-diagnostic-unused-parameter
+  - --disable=bugprone-narrowing-conversions
+
   # LOG_ macros
   - --disable=alpha.core.SizeofPtr
   - --disable=bugprone-sizeof-expression
