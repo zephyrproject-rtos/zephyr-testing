@@ -15,6 +15,8 @@ import shutil
 import subprocess
 import sys
 import time
+import json
+import hashlib
 import traceback
 from math import log10
 from multiprocessing import Lock, Process, Value
@@ -1013,6 +1015,33 @@ class ProjectBuilder(FilterBuilder):
         elif op == "cmake":
             try:
                 ret = self.cmake()
+                compile_commands_path = os.path.join(self.instance.build_dir,
+                                                     'compile_commands.json')
+                if os.path.exists(compile_commands_path):
+                    with open(compile_commands_path, 'r') as f:
+                        compile_commands = json.load(f)
+
+                    # Extract only the file names from the compile commands
+                    file_names = [entry['file'] for entry in compile_commands]
+
+                    # Create a unique filename using a SHA hash based on the testsuite identifier and platform
+                    unique_id = f"{self.instance.testsuite.id}_{self.instance.platform.name}"
+                    sha_hash = hashlib.sha256(unique_id.encode()).hexdigest()
+                    instance_file = os.path.join(self.options.outdir, f'compile_commands_{sha_hash}.json')
+
+                    # Add testsuite id and platform to the data
+                    file_names_relative = list(set([
+                        os.path.relpath(file, start=ZEPHYR_BASE) for file in file_names
+                        if not file.startswith(self.options.outdir)
+                    ]))
+                    data = {
+                        "testsuite_id": self.instance.testsuite.id,
+                        "platform": self.instance.platform.name,
+                        "files": file_names_relative
+                    }
+
+                    with open(instance_file, 'w') as f:
+                        json.dump(data, f, indent=4)
                 if self.instance.status in [TwisterStatus.FAIL, TwisterStatus.ERROR]:
                     next_op = 'report'
                 elif self.options.cmake_only:
