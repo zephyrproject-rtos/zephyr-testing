@@ -93,6 +93,8 @@ jobs:
           export CODECHECKER_CONFIG_FILE=$ZEPHYR_BASE/.codechecker.yml
           export CODECHECKER_CLEANUP=y
           export CODECHECKER_EXPORT=sarif
+          export CODECHECKER_SKIP_FILE=$ZEPHYR_BASE/.github/codechecker/skipfile
+
           pip install codechecker==v6.25.1 cppcheck sarif-tools jq
           sudo apt-get update
           sudo apt-get install -y jq
