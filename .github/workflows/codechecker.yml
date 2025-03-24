@@ -95,7 +95,7 @@ jobs:
           export CODECHECKER_EXPORT=sarif
           export CODECHECKER_SKIP_FILE=$ZEPHYR_BASE/.github/codechecker/skipfile
 
-          pip install codechecker==v6.25.1 cppcheck sarif-tools jq
+          pip install codechecker==v6.25.1 cppcheck sarif-tools
           sudo apt-get update
           sudo apt-get install -y jq
           export PATH=/usr/lib/llvm-16/bin/:$PATH
