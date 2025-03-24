@@ -37,37 +37,16 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
-      - name: Rebase
-        continue-on-error: true
-        env:
-          BASE_REF: ${{ github.base_ref }}
-          PR_HEAD: ${{ github.event.pull_request.head.sha }}
-        run: |
-          git config --global user.email "actions@zephyrproject.org"
-          git config --global user.name "Github Actions"
-          rm -fr ".git/rebase-apply"
-          rm -fr ".git/rebase-merge"
-          git rebase origin/${BASE_REF}
-          git clean -f -d
-          git log --graph --oneline HEAD...${PR_HEAD}
-
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
         with:
           python-version: ${{ matrix.python-version }}
-
-      - name: cache-pip-linux
-        if: startsWith(runner.os, 'Linux')
-        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ matrix.python-version }}
-          restore-keys: |
-            ${{ runner.os }}-pip-${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: scripts/requirements-actions.txt
 
       - name: install-packages
         run: |
-          pip install -r scripts/requirements-base.txt -r scripts/requirements-build-test.txt
+          pip install -r scripts/requirements-actions.txt --require-hashes
 
       - name: Run pytest
         env:
