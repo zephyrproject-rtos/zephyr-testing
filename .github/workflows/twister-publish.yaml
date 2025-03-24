@@ -28,6 +28,23 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Set up Python
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
+        with:
+          python-version: 3.12
+
+      - name: cache-pip
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
+        with:
+          path: ~/.cache/pip
+          key: ${{ hashFiles('scripts/requirements-actions.txt') }}
+          restore-keys: |
+            ${{ hashFiles('scripts/requirements-actions.txt') }}
+
+      - name: install-packages
+        run: |
+          pip install -r scripts/requirements-actions.txt --require-hashes
+
       - name: Download Artifacts
         id: download-artifacts
         uses: dawidd6/action-download-artifact@20319c5641d495c8a52e688b7dc5fada6c3a9fbc # v8
@@ -40,7 +57,6 @@ jobs:
       - name: Upload to elasticsearch
         if: steps.download-artifacts.outputs.found_artifact == 'true'
         run: |
-          pip install elasticsearch
           # set run date on upload to get consistent and unified data across the matrix.
           run_date=`date --iso-8601=minutes`
           if [ "${{github.event.workflow_run.event}}" = "push" ]; then
