@@ -57,7 +57,7 @@ jobs:
           FLAGS+=" -o ${{ github.event.repository.owner.login }}"
           FLAGS+=" -r ${{ github.event.repository.name }}"
           FLAGS+=" -M MAINTAINERS.yml"
-          if [ "${{ github.event_name }}" = "pull_request_target" ]; then
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
               FLAGS+=" -P ${{ github.event.pull_request.number }}"
           elif [ "${{ github.event_name }}" = "issues" ]; then
               FLAGS+=" -I ${{ github.event.issue.number }}"
