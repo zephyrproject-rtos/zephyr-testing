@@ -3,6 +3,7 @@
 # Copyright (c) 2023 Bjarki Arge Andreasen
 #
 # SPDX-License-Identifier: Apache-2.0
+
 """
 Script to generate iterable sections from JSON encoded dictionary containing lists of items.
 """
