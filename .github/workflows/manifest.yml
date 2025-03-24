@@ -26,7 +26,7 @@ jobs:
           python-version: 3.12
 
       - name: cache-pip
-        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
           path: ~/.cache/pip
           key: ${{ hashFiles('scripts/requirements-actions.txt') }}
@@ -47,7 +47,7 @@ jobs:
           west init -l . || true
 
       - name: Manifest
-        uses: zephyrproject-rtos/action-manifest@cb8f6fba6f20b5f8649bd573e80a7583a239894c # v1.7.0
+        uses: zephyrproject-rtos/action-manifest@1dab8ef694b44470d09c9f16adb6a0d82c60b2c6 # v1.8.0
         with:
           github-token: ${{ secrets.ZB_GITHUB_TOKEN }}
           manifest-path: 'west.yml'
