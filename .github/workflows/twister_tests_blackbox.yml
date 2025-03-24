@@ -21,11 +21,11 @@ permissions:
 jobs:
   twister-tests:
     name: Twister Black Box Tests
-    runs-on: ${{ matrix.os }}
+    runs-on:
+      group: zephyr-runner-v2-linux-x64-4xlarge
     strategy:
       matrix:
         python-version: ['3.10', '3.11', '3.12', '3.13']
-        os: [ubuntu-22.04]
     container:
       image: ghcr.io/zephyrproject-rtos/ci:v0.27.4
 
@@ -59,18 +59,12 @@ jobs:
       uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
       with:
         python-version: ${{ matrix.python-version }}
+        cache: pip
+        cache-dependency-path: scripts/requirements-actions.txt
 
-    - name: Go Into Venv
-      shell: bash
+    - name: install-packages
       run: |
-        python3 -m pip install --user virtualenv
-        python3 -m venv env
-        source env/bin/activate
-        echo "$(which python)"
-
-    - name: Install Packages
-      run: |
-        python3 -m pip install -U -r scripts/requirements-base.txt -r scripts/requirements-build-test.txt -r scripts/requirements-run-test.txt
+        pip install -r scripts/requirements-actions.txt --require-hashes
 
     - name: Run Pytest For Twister Black Box Tests
       shell: bash
