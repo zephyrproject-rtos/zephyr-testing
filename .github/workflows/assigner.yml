@@ -53,19 +53,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          FLAGS="-v"
-          FLAGS+=" -o ${{ github.event.repository.owner.login }}"
-          FLAGS+=" -r ${{ github.event.repository.name }}"
-          FLAGS+=" -M MAINTAINERS.yml"
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-              FLAGS+=" -P ${{ github.event.pull_request.number }}"
-          elif [ "${{ github.event_name }}" = "issues" ]; then
-              FLAGS+=" -I ${{ github.event.issue.number }}"
-          elif [ "${{ github.event_name }}" = "schedule" ]; then
-              FLAGS+=" --modules"
-          else
-            echo "Unknown event: ${{ github.event_name }}"
-            exit 1
-          fi
-
-          python3 scripts/set_assignees.py $FLAGS
+          python --version
