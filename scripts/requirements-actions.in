@@ -23,3 +23,6 @@ python-magic; sys_platform != "win32"
 ruff==0.8.1
 sphinx-lint
 yamllint
+mock
+tomli>=1.1.0
+exceptiongroup>=1.0.0rc8
