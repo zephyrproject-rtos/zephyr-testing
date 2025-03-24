@@ -26,3 +26,5 @@ yamllint
 mock
 tomli>=1.1.0
 exceptiongroup>=1.0.0rc8
+pyelftools>=0.29
+psutil>=5.6.6
