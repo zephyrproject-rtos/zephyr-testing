@@ -18,6 +18,11 @@ jobs:
     name: Prevent Merging
     runs-on: ubuntu-22.04
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
       - name: Check for label
         if: ${{ contains(github.event.*.labels.*.name, 'DNM') ||
                 contains(github.event.*.labels.*.name, 'DNM (manifest)') ||
@@ -34,6 +39,11 @@ jobs:
     name: PR Description
     runs-on: ubuntu-22.04
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
       - name: Check for PR description
         run: |
           echo "Pull request description cannot be empty."

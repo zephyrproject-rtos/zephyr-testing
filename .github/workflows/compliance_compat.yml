@@ -8,11 +8,19 @@ on:
     - reopened
     - synchronize
 
+permissions:
+  contents: read
+
 jobs:
   check_compliance:
     runs-on: ubuntu-22.04
     name: Run compliance checks on patch series (PR)
     steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@v2
+      with:
+        egress-policy: audit
+
     - name: do nothing
       run: |
         echo "do nothing"

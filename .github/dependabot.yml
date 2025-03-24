@@ -23,3 +23,18 @@ updates:
       doc-deps:
         patterns:
           - "*"
+
+  - package-ecosystem: pip
+    directory: /scripts/dts/python-devicetree
+    schedule:
+      interval: daily
+
+  - package-ecosystem: pip
+    directory: /scripts
+    schedule:
+      interval: daily
+
+  - package-ecosystem: pip
+    directory: /tests/net/lib/lwm2m/interop
+    schedule:
+      interval: daily

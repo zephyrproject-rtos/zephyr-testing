@@ -22,6 +22,11 @@ jobs:
       actions: write # to delete stale workflow runs
 
     steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
+      with:
+        egress-policy: audit
+
     - name: Delete stale queued workflow runs
       uses: MajorScruffy/delete-old-workflow-runs@78b5af714fefaefdf74862181c467b061782719e # v0.3.0
       with:

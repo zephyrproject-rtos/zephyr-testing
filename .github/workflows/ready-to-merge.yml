@@ -15,6 +15,11 @@ jobs:
     name: all jobs passed
     runs-on: ubuntu-latest
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
       - name: "Check status of all required jobs"
         run: |-
           NEEDS_CONTEXT='${{ inputs.needs_context }}'
