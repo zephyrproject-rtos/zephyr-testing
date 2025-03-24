@@ -1,0 +1,15 @@
+pygithub
+junitparser
+junit2html
+gcovr
+xlsxwriter
+ijson
+unidiff
+sh
+pytest
+pyyaml
+tox
+awscli
+elasticsearch
+west>=0.14.0
+setuptools>=70.2.0
