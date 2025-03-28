@@ -57,9 +57,9 @@ jobs:
         ZEPHYR_BASE: ./
         ZEPHYR_TOOLCHAIN_VARIANT: zephyr
       run: |
+        sudo apt-get update -y
+        sudo apt-get install -y lcov
         echo "Run twister tests"
-        ls -la
-        ls -la ..
         export ZEPHYR_SDK_INSTALL_DIR=../zephyr-sdk
         source zephyr-env.sh
         PYTHONPATH="./scripts/tests" pytest ./scripts/tests/twister_blackbox/test_coverage.py
