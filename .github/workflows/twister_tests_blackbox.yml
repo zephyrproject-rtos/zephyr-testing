@@ -58,5 +58,8 @@ jobs:
         ZEPHYR_TOOLCHAIN_VARIANT: zephyr
       run: |
         echo "Run twister tests"
+        ls -la
+        ls -la ..
+        export ZEPHYR_SDK_INSTALL_DIR=../zephyr-sdk
         source zephyr-env.sh
-        PYTHONPATH="./scripts/tests" pytest ./scripts/tests/twister_blackbox
+        PYTHONPATH="./scripts/tests" pytest ./scripts/tests/twister_blackbox/test_coverage.py
