@@ -1,0 +1,117 @@
+name: Create Test and Source DB
+
+on:
+  push:
+    branches:
+      - main
+      - v*-branch
+      - collab-*
+  pull_request:
+    branches:
+      - main
+      - v*-branch
+      - collab-*
+  schedule:
+    # Run at 17:00 UTC on every Saturday
+    - cron: '0 17 * * 6'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-source-db:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        subset: [1,2,3,4,5,6,7,8,9,10 ,11,12,13,14,15,16,17,18,19,20]
+    timeout-minutes: 1440
+    env:
+      TWISTER_COMMON: ' --test-config tests/test_config_ci.yaml --no-detailed-test-id --force-color --inline-logs -v -N -M --cmake-only -j 8'
+      COMMIT_RANGE: ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}
+      BASE_REF: ${{ github.base_ref }}
+      LLVM_TOOLCHAIN_PATH: /usr/lib/llvm-16
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: zephyr
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set Up Python 3.12
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
+        with:
+          python-version: 3.12
+          cache: pip
+          cache-dependency-path: scripts/requirements-actions.txt
+
+      - name: install-packages
+        working-directory: zephyr
+        run: |
+          pip install -r scripts/requirements-actions.txt --require-hashes
+          sudo apt-get update -y
+          sudo apt-get install -y lcov gperf
+
+      - name: Setup Zephyr project
+        uses: zephyrproject-rtos/action-zephyr-setup@f7b70269a8eb01f70c8e710891e4c94972a2f6b4 # v1.0.6
+        with:
+          app-path: zephyr
+          toolchains: all
+
+      - name: Run Tests with Twister
+        working-directory: zephyr
+        id: run_twister
+        run: |
+          export ZEPHYR_BASE=${PWD}
+          export ZEPHYR_TOOLCHAIN_VARIANT=zephyr
+          ./scripts/twister --subset ${{matrix.subset}}/${{ strategy.job-total }} ${TWISTER_COMMON} ${PUSH_OPTIONS}
+          python ./scripts/ci/db/gen_test_database.py --directory twister-out/ --output db_${{matrix.subset}}.json
+
+      - name: Upload Database
+        if: always()
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+        with:
+          name: Test and Source DB (Subset ${{ matrix.subset }})
+          if-no-files-found: ignore
+          path: |
+            zephyr/db_${{matrix.subset}}.json
+
+  test-db-results:
+    name: "Publish Merged DB"
+    needs:
+      - test-source-db
+    runs-on: ubuntu-22.04
+    permissions:
+      checks: write # to create the check run entry with Twister test results
+    # the build-and-test job might be skipped, we don't need to run this job then
+    if: success() || failure()
+
+    steps:
+      - name: Install packages
+        run: |
+          sudo apt-get update -y
+          sudo apt install -y jq
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806 # v4.1.9
+        with:
+          path: artifacts
+
+      - name: Merge DB files
+        run: |
+          jq -s '.' artifacts/*/*.json > db.json
+
+      - name: Upload Merged DB
+        if: always()
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+        with:
+          name: Merged DB
+          if-no-files-found: ignore
+          path: |
+            db.json
