@@ -25,12 +25,8 @@ concurrency:
 
 jobs:
   footprint-tracking:
-    runs-on:
-      group: zephyr-runner-v2-linux-x64-4xlarge
+    runs-on: ubuntu-24.04
     if: github.repository_owner == 'zephyrproject-rtos'
-    container:
-      image: ghcr.io/zephyrproject-rtos/ci-repo-cache:v0.27.4.20241026
-      options: '--entrypoint /bin/bash'
     defaults:
       run:
         shell: bash
@@ -39,32 +35,10 @@ jobs:
     env:
       ZEPHYR_TOOLCHAIN_VARIANT: zephyr
     steps:
-      - name: Apply container owner mismatch workaround
-        run: |
-          # FIXME: The owner UID of the GITHUB_WORKSPACE directory may not
-          #        match the container user UID because of the way GitHub
-          #        Actions runner is implemented. Remove this workaround when
-          #        GitHub comes up with a fundamental fix for this problem.
-          git config --global --add safe.directory ${GITHUB_WORKSPACE}
-
-      - name: Print cloud service information
-        run: |
-          echo "ZEPHYR_RUNNER_CLOUD_PROVIDER = ${ZEPHYR_RUNNER_CLOUD_PROVIDER}"
-          echo "ZEPHYR_RUNNER_CLOUD_NODE = ${ZEPHYR_RUNNER_CLOUD_NODE}"
-          echo "ZEPHYR_RUNNER_CLOUD_POD = ${ZEPHYR_RUNNER_CLOUD_POD}"
-
-      - name: Update PATH for west
-        run: |
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-
-      - name: Install packages
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y python3-venv
-
       - name: checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
+          path: zephyr
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
@@ -76,18 +50,9 @@ jobs:
           cache-dependency-path: scripts/requirements-actions.txt
 
       - name: Install Python packages
+        working-directory: zephyr
         run: |
             pip install -r scripts/requirements-actions.txt --require-hashes
-
-      - name: Environment Setup
-        run: |
-          echo "ZEPHYR_SDK_INSTALL_DIR=/opt/toolchains/zephyr-sdk-$( cat SDK_VERSION )" >> $GITHUB_ENV
-
-      - name: west setup
-        run: |
-          west init -l . || true
-          west config --global update.narrow true
-          west update 2>&1 1> west.update.log || west update 2>&1 1> west.update2.log
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722 # v4.1.0
@@ -96,7 +61,19 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_TESTING_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
+      - name: Setup Zephyr project
+        uses: zephyrproject-rtos/action-zephyr-setup@f7b70269a8eb01f70c8e710891e4c94972a2f6b4 # v1.0.6
+        with:
+          app-path: zephyr
+          toolchains: all
+
+      - name: Install additional packages
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y gperf
+
       - name: Record Footprint
+        working-directory: zephyr
         env:
           BASE_REF: ${{ github.base_ref }}
         run: |
@@ -104,12 +81,12 @@ jobs:
           ./scripts/footprint/track.py  -p scripts/footprint/plan.txt
 
       - name: Upload footprint data
+        working-directory: zephyr
         run: |
-          python3 -m venv .venv
-          . .venv/bin/activate
           aws s3 sync  --quiet footprint_data/ s3://testing.zephyrproject.org/footprint_data/
 
       - name: Transform Footprint data to Twister JSON reports
+        working-directory: zephyr
         run: |
           shopt -s globstar
           export ZEPHYR_BASE=${PWD}
@@ -119,6 +96,7 @@ jobs:
             ./footprint_data/**/
 
       - name: Upload to ElasticSearch
+        working-directory: zephyr
         env:
           ELASTICSEARCH_KEY: ${{ secrets.ELASTICSEARCH_KEY }}
           ELASTICSEARCH_SERVER: "https://elasticsearch.zephyrproject.io:443"
