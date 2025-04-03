@@ -100,21 +100,22 @@ jobs:
       - name: Determine matrix size
         id: output-services
         run: |
-          if [ "${{github.event_name}}" = "push" ]; then
-            subset="[$(seq -s',' 1 ${PUSH_MATRIX_SIZE})]"
-            size=${MATRIX_SIZE}
-          elif [ "${{github.event_name}}" = "pull_request" ]; then
+          # if [ "${{github.event_name}}" = "push" ]; then
+          #   subset="[$(seq -s',' 1 ${PUSH_MATRIX_SIZE})]"
+          #   size=${MATRIX_SIZE}
+          if [ "${{github.event_name}}" = "pull_request" ]; then
             if [ -n "${TWISTER_NODES}" ]; then
               subset="[$(seq -s',' 1 ${TWISTER_NODES})]"
             else
               subset="[$(seq -s',' 1 ${MATRIX_SIZE})]"
             fi
             size=${TWISTER_NODES}
-          elif [ "${{github.event_name}}" = "schedule" -a "${{github.repository}}" = "zephyrproject-rtos/zephyr" ]; then
+          # elif [ "${{github.event_name}}" = "schedule" -a "${{github.repository}}" = "zephyrproject-rtos/zephyr" ]; then
+          else
             subset="[$(seq -s',' 1 ${WEEKLY_MATRIX_SIZE})]"
             size=${WEEKLY_MATRIX_SIZE}
-          else
-            size=0
+          # else
+          #   size=0
           fi
 
           echo "subset=${subset}" >> $GITHUB_OUTPUT
@@ -227,19 +228,19 @@ jobs:
           west update
           make everything -s -j 8
 
-      - if: github.event_name == 'push'
-        name: Run Tests with Twister (Push)
-        id: run_twister
-        run: |
-          export ZEPHYR_BASE=${PWD}
-          export ZEPHYR_TOOLCHAIN_VARIANT=zephyr
-          ./scripts/twister --subset ${{matrix.subset}}/${{ strategy.job-total }} ${TWISTER_COMMON} ${PUSH_OPTIONS}
-          if [ "${{matrix.subset}}" = "1" ]; then
-            ./scripts/zephyr_module.py --twister-out module_tests.args
-            if [ -s module_tests.args ]; then
-              ./scripts/twister +module_tests.args --outdir module_tests ${TWISTER_COMMON} ${PUSH_OPTIONS}
-            fi
-          fi
+      # - if: github.event_name == 'push'
+      #   name: Run Tests with Twister (Push)
+      #   id: run_twister
+      #   run: |
+      #     export ZEPHYR_BASE=${PWD}
+      #     export ZEPHYR_TOOLCHAIN_VARIANT=zephyr
+      #     ./scripts/twister --subset ${{matrix.subset}}/${{ strategy.job-total }} ${TWISTER_COMMON} ${PUSH_OPTIONS}
+      #     if [ "${{matrix.subset}}" = "1" ]; then
+      #       ./scripts/zephyr_module.py --twister-out module_tests.args
+      #       if [ -s module_tests.args ]; then
+      #         ./scripts/twister +module_tests.args --outdir module_tests ${TWISTER_COMMON} ${PUSH_OPTIONS}
+      #       fi
+      #     fi
 
       - if: github.event_name == 'pull_request'
         name: Run Tests with Twister (Pull Request)
@@ -257,7 +258,7 @@ jobs:
             fi
           fi
 
-      - if: github.event_name == 'schedule'
+      - if: github.event_name == 'push'
         name: Run Tests with Twister (Weekly)
         id: run_twister_sched
         run: |
