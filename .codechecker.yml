@@ -23,10 +23,5 @@ analyzer:
   - --disable=clang-diagnostic-unused-parameter
   - --disable=bugprone-narrowing-conversions
 
-  # LOG_ macros
-  - --disable=alpha.core.SizeofPtr
-  - --disable=bugprone-sizeof-expression
-  - --disable=performance-no-int-to-ptr
-
   # Cleanup
   - --clean
