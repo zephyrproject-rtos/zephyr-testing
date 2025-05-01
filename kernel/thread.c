@@ -453,7 +453,7 @@ static char *setup_thread_stack(struct k_thread *new_thread,
 
 #endif /* CONFIG_THREAD_STACK_MEM_MAPPED */
 
-	LOG_DBG("stack %p for thread %p: obj_size=%zu buf_start=%p "
+	LOG_DBG(" stack %p for thread %p: obj_size=%zu buf_start=%p "
 		" buf_size %zu stack_ptr=%p",
 		stack, new_thread, stack_obj_size, (void *)stack_buf_start,
 		stack_buf_size, (void *)stack_ptr);
