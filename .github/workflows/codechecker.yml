@@ -1,5 +1,8 @@
 name: Codechecker
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - main
@@ -15,6 +18,9 @@ concurrency:
 jobs:
   Codechecker:
     if: github.repository_owner == 'zephyrproject-rtos'
+    permissions:
+      pull-requests: write # to create/update pull request comments
+      security-events: write
     runs-on:
       group: zephyr-runner-v2-linux-x64-4xlarge
     container:
@@ -27,8 +33,6 @@ jobs:
       CCACHE_IGNOREOPTIONS: '-specs=* --specs=*'
       LLVM_TOOLCHAIN_PATH: /usr/lib/llvm-16
       BASE_REF: ${{ github.base_ref }}
-    permissions:
-      security-events: write
     steps:
       - name: Apply container owner mismatch workaround
         run: |
@@ -100,13 +104,13 @@ jobs:
           sudo apt-get install -y jq
           export PATH=/usr/lib/llvm-16/bin/:$PATH
 
-          ./scripts/twister -i --force-color -N -v --build-only --timeout-multiplier 2 -p qemu_x86 -T tests/kernel/threads  -T tests/lib/heap
+          ./scripts/twister --jobs 16 -i --force-color -N -v --build-only --timeout-multiplier 2 -p qemu_x86 -T tests/kernel/threads/thread_apis/
 
           #sarif copy --output results.sarif $(find twister-out -name "codechecker.sarif")
           jq -s '{ "$schema": "https://json.schemastore.org/sarif-2.1.0", "version": "2.1.0", "runs": map(.runs) | add }'  $(find twister-out -name "codechecker.sarif")  > results.sarif
 
       - name: Upload SARIF as artifact
-        if: always()
+        if: always() && github.event_name == 'push'
         uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
         with:
           name: sarif
