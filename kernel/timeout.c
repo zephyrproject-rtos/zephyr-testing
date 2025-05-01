@@ -151,7 +151,7 @@ k_ticks_t z_add_timeout(struct _timeout *to, _timeout_func_t fn, k_timeout_t tim
 				 */
 				ticks_elapsed = elapsed();
 			}
-			sys_clock_set_timeout(next_timeout(ticks_elapsed), false);
+			sys_clock_set_timeout(next_timeout(ticks_elapsed), false );
 		}
 	}
 

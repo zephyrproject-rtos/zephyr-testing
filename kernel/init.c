@@ -480,7 +480,7 @@ static char **prepare_main_args(int *argc)
 		if (strings_end < (char *)argv_begin) {
 			*strings_end++ = '\0';
 		} else {
-			LOG_WRN("not enough space in args buffer to accommodate all bootargs"
+			LOG_ERR("not enough space in args buffer to accommodate all bootargs"
 				" - bootargs truncated");
 			argv_begin[*argc] = NULL;
 			return argv_begin;
