@@ -28,6 +28,8 @@ jobs:
         include:
           - language: python
             build-mode: none
+          - language: c-cpp
+            build-mode: manual
           - language: actions
             build-mode: none
             config: ./.github/codeql/codeql-actions-config.yml
@@ -37,6 +39,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@1b549b9259bda1cb5ddde3b41741a82a2d15a841 # v3.28.13
@@ -46,11 +50,40 @@ jobs:
           queries: security-extended
           config-file: ${{ matrix.config }}
 
-      - if: matrix.build-mode == 'manual'
+      - name: Set Up Python ${{ matrix.python-version }}
+        if: matrix.build-mode == 'manual'
+        uses: actions/setup-python@8d9ed9ac5c53483de85588cdf95a591a75ab9f55 # v5.5.0
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: scripts/requirements-actions.txt
+
+      - name: install-packages
+        if: matrix.build-mode == 'manual'
+        run: |
+          pip install -r scripts/requirements-actions.txt --require-hashes
+          sudo apt-get update -y
+          sudo apt-get install -y lcov
+
+      - name: Setup Zephyr project
+        if: matrix.build-mode == 'manual'
+        uses: nashif/action-zephyr-setup@main
+        with:
+          app-path: .
+          sdk-version: 0.17.0
+          toolchains: all
+          west-group-filter: -hal,-tools,-bootloader,-babblesim
+          west-project-filter: -nrf_hw_models
+
+      - name: Build
+        if: matrix.build-mode == 'manual'
         shell: bash
         run: |
-          echo "nothing yet"
-          exit 0
+          export ZEPHYE_BASE=${PWD}
+          export ZEPHYR_SDK_INSTALL_DIR=${PWD}/zephyr-sdk
+          export ZEPHYR_TOOLCHAIN_VARIANT=zephyr
+          west zephyr-export
+          west build -p -b qemu_x86 samples/bluetooth/central
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@1b549b9259bda1cb5ddde3b41741a82a2d15a841 # v3.28.13
