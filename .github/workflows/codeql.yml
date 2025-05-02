@@ -67,11 +67,13 @@ jobs:
 
       - name: Setup Zephyr project
         if: matrix.build-mode == 'manual'
-        uses: zephyrproject-rtos/action-zephyr-setup@5922adc19f631e5ac4bf43c872f1483e6422b845
+        uses: nashif/action-zephyr-setup@main
         with:
           app-path: .
           sdk-version: 0.17.0
           toolchains: all
+          west-group-filter: -hal,-tools,-bootloader,-babblesim
+          west-project-filter: -nrf_hw_models
 
       - if: matrix.build-mode == 'manual'
         shell: bash
