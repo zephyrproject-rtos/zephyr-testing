@@ -77,7 +77,11 @@ jobs:
         shell: bash
         run: |
           ls -la
+          export ZEPHYE_BASE=${PWD}
           export ZEPHYR_SDK_INSTALL_DIR=${PWD}/zephyr-sdk
+          export ZEPHYR_TOOLCHAIN_VARIANT=zephyr
+
+          env
           west build -b qemu_x86 samples/hello_world
 
       - name: Perform CodeQL Analysis
