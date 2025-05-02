@@ -82,6 +82,7 @@ jobs:
           export ZEPHYE_BASE=${PWD}
           export ZEPHYR_SDK_INSTALL_DIR=${PWD}/zephyr-sdk
           export ZEPHYR_TOOLCHAIN_VARIANT=zephyr
+          ls -la zephyr-sdk/
 
           env
           west build -b qemu_x86 samples/hello_world
