@@ -50,15 +50,17 @@ jobs:
         # debug
         ls -la
         git log  --pretty=oneline | head -n 10
-        ./scripts/ci/guideline_check.py --output output.txt -c origin/${BASE_REF}..
+        pip3 install simple-sarif
+        ./scripts/ci/guideline_check.py --sarif results.sarif -c origin/${BASE_REF}..
 
-    - name: check-warns
-      run: |
-        if [[ -s "output.txt" ]]; then
-            errors=$(cat output.txt)
-            errors="${errors//'%'/'%25'}"
-            errors="${errors//$'\n'/'%0A'}"
-            errors="${errors//$'\r'/'%0D'}"
-            echo "::error file=output.txt::$errors"
-            exit 1;
-        fi
+    - name: Post SARIF findings in the pull request
+      if: github.event_name == 'pull_request'
+      uses: sett-and-hive/sarif-to-comment-action@v2.0.1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        repository: ${{ github.repository }}
+        branch: ${{ github.head_ref }}
+        pr-number: ${{ github.event.number }}
+        sarif-file: results.sarif
+        title: My security issue
+        dry-run: false

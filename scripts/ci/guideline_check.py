@@ -7,6 +7,7 @@ import sh
 import argparse
 import re
 from unidiff import PatchSet
+import simple_sarif
 
 if "ZEPHYR_BASE" not in os.environ:
     exit("$ZEPHYR_BASE environment variable undefined.")
@@ -45,11 +46,31 @@ def parse_args():
                         help="Commit range in the form: a..b")
     parser.add_argument("-o", "--output", required=False,
                         help="Print violation into a file")
+    parser.add_argument("-s", "--sarif", required=False,
+                        help="Genrate sarif file")
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
+
+    if args.sarif:
+        var = simple_sarif.Sarif(file=f"{args.sarif}", validate=True, recreate=True)
+        var.add_rule(
+            "MISRA 21.2",
+            "zephyr.rule_21.1",
+            "Should not used a reserved identifier",
+            "Should not used a reserved identifier.",
+            {
+                "note": {
+                    "text": "Rule passed."
+                },
+                "error": {
+                    "text": "Rule failed."
+                }
+            }
+        )
+
     if not args.commits:
         exit("missing commit range")
 
@@ -104,10 +125,32 @@ def main():
         for hunk in f:
             for line in hunk:
                 if line.is_added:
-                    violation = "{}:{}".format(f.path, line.target_line_no)
+                    violation = f"{f.path}:{line.target_line_no}"
                     if violation in violations:
                         numViolations += 1
-                        if args.output:
+
+                        if args.sarif:
+                            print(
+                                "{}:{}".format(
+                                    violation, "\t\n".join(
+                                        violations[violation])))
+                            var.add_result(
+                                ruleId="zephyr.rule_21.1",
+                                message_id="Should not used a reserved identifier",
+                                arguments=[],
+                                locations=[{
+                                    "physicalLocation": {
+                                        "artifactLocation": {
+                                            "uri": f.path
+                                        },
+                                        "region": {
+                                            "startLine": line.target_line_no
+                                        }
+                                    }
+                                }],
+                                level="error"
+                            )
+                        elif args.output:
                             with open(args.output, "a+") as fp:
                                 fp.write("{}:{}\n".format(
                                     violation, "\t\n".join(
@@ -118,6 +161,9 @@ def main():
                                     violation, "\t\n".join(
                                         violations[violation])))
 
+    if args.sarif:
+        var.save()
+        print("sarif file generated")
     return numViolations
 
 
