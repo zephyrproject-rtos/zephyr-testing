@@ -7,6 +7,9 @@ import sh
 import argparse
 import re
 from unidiff import PatchSet
+import json
+import sys
+
 
 if "ZEPHYR_BASE" not in os.environ:
     exit("$ZEPHYR_BASE environment variable undefined.")
@@ -45,11 +48,89 @@ def parse_args():
                         help="Commit range in the form: a..b")
     parser.add_argument("-o", "--output", required=False,
                         help="Print violation into a file")
+    parser.add_argument("-s", "--sarif", required=False,
+                        help="Genrate sarif file")
     return parser.parse_args()
+
+class CocciToSarif:
+
+    def __init__(self, tags=[]):
+        self.tags = tags
+        self.results = []
+        self.rules = {}
+
+
+    def add_rule(self, rule_id, short_description, full_description,
+                 help_text, level, tags=[]):
+        self.rules[rule_id] = {
+                    "id": rule_id,
+                    # This appears as the title on the list and individual issue view
+                    "shortDescription": {"text": short_description},
+                    # This appears as a sub heading on the individual issue view
+                    "fullDescription": {"text": full_description},
+                    # This appears on the individual issue view in an expandable box
+                    "help": {
+                        "markdown": full_description,
+                        # This property is not used if markdown is provided, but is required
+                        "text": "",
+                    },
+                    "defaultConfiguration": {"level": level},
+                    "properties": {"tags": tags},
+                }
+
+    def add_result(self, rule_id, target_file, line, message):
+            result = {
+                "ruleId": rule_id,
+                # This appears in the line by line highlight on the individual issue view
+                "message": {"text": message},
+                "locations": [
+                    {
+                        "physicalLocation": {
+                            "artifactLocation": {
+                                    "uri": target_file
+                                },
+                            "region": {
+                                "startLine": line
+                                },
+                        }
+                    }
+                ],
+            }
+            self.results.append(result)
+
+    def get_sarif(self):
+        output = {
+            "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+            "version": "2.1.0",
+            "runs": [
+                {
+                    "tool": {
+                        "driver": {
+                                "name": "Cocci",
+                                "rules": self.rules
+                            }
+                        },
+                    "results": self.results,
+                }
+            ],
+        }
+        return output
 
 
 def main():
     args = parse_args()
+
+    if args.sarif:
+        csarif = CocciToSarif()
+        csarif.add_rule(
+            rule_id="zephyr.rule_21.1",
+            short_description="Should not used a reserved identifier",
+            full_description="Should not used a reserved identifier",
+            help_text="Should not used a reserved identifier",
+            level="error",
+            tags=["cocci", "zephyr"]
+        )
+
     if not args.commits:
         exit("missing commit range")
 
@@ -104,10 +185,17 @@ def main():
         for hunk in f:
             for line in hunk:
                 if line.is_added:
-                    violation = "{}:{}".format(f.path, line.target_line_no)
+                    violation = f"{f.path}:{line.target_line_no}"
                     if violation in violations:
                         numViolations += 1
-                        if args.output:
+
+                        if args.sarif:
+                            csarif.add_result(
+                                rule_id="zephyr.rule_21.1",
+                                target_file=f.path,
+                                line=line.target_line_no,
+                                message="\t\n".join(violations[violation]))
+                        elif args.output:
                             with open(args.output, "a+") as fp:
                                 fp.write("{}:{}\n".format(
                                     violation, "\t\n".join(
@@ -118,6 +206,11 @@ def main():
                                     violation, "\t\n".join(
                                         violations[violation])))
 
+    if args.sarif:
+        csarif_output = csarif.get_sarif()
+        with open(args.sarif, "w") as fp:
+            json.dump(csarif_output, fp, indent=4)
+        print("sarif file generated")
     return numViolations
 
 
