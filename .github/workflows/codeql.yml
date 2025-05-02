@@ -40,7 +40,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          path: zephyr
           fetch-depth: 0
 
       - name: Initialize CodeQL
@@ -50,7 +49,6 @@ jobs:
           build-mode: ${{ matrix.build-mode }}
           queries: security-extended
           config-file: ${{ matrix.config }}
-          source-root: zephyr
 
       - name: Set Up Python ${{ matrix.python-version }}
         if: matrix.build-mode == 'manual'
@@ -62,7 +60,6 @@ jobs:
 
       - name: install-packages
         if: matrix.build-mode == 'manual'
-        working-directory: zephyr
         run: |
           pip install -r scripts/requirements-actions.txt --require-hashes
           sudo apt-get update -y
@@ -72,11 +69,10 @@ jobs:
         if: matrix.build-mode == 'manual'
         uses: zephyrproject-rtos/action-zephyr-setup@f7b70269a8eb01f70c8e710891e4c94972a2f6b4 # v1.0.6
         with:
-          app-path: zephyr
+          app-path: .
           toolchains: all
 
       - if: matrix.build-mode == 'manual'
-        working-directory: zephyr
         shell: bash
         run: |
           west build -b qemu_x86 samples/hello_world
@@ -85,4 +81,3 @@ jobs:
         uses: github/codeql-action/analyze@1b549b9259bda1cb5ddde3b41741a82a2d15a841 # v3.28.13
         with:
           category: "/language:${{matrix.language}}"
-          checkout_path: zephyr
