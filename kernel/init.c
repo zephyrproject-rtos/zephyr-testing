@@ -61,12 +61,6 @@ static K_KERNEL_PINNED_STACK_ARRAY_DEFINE(z_idle_stacks,
 					  CONFIG_MP_MAX_NUM_CPUS,
 					  CONFIG_IDLE_STACK_SIZE);
 
-struct fopen fopen;
-int fopen(int fopen)
-{
-	return 0;
-}
-
 static void z_init_static_threads(void)
 {
 	STRUCT_SECTION_FOREACH(_static_thread_data, thread_data) {
