@@ -53,14 +53,8 @@ jobs:
         pip3 install simple-sarif
         ./scripts/ci/guideline_check.py --sarif results.sarif -c origin/${BASE_REF}..
 
-    - name: Post SARIF findings in the pull request
-      if: github.event_name == 'pull_request'
-      uses: sett-and-hive/sarif-to-comment-action@v2.0.1
+    - name: Upload Analysis Results
+      if: always()
+      uses: github/codeql-action/upload-sarif@v3
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        repository: ${{ github.repository }}
-        branch: ${{ github.head_ref }}
-        pr-number: ${{ github.event.number }}
-        sarif-file: results.sarif
-        title: My security issue
-        dry-run: false
+        sarif_file: results.sarif
