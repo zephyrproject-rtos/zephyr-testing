@@ -67,7 +67,7 @@ jobs:
 
       - name: Setup Zephyr project
         if: matrix.build-mode == 'manual'
-        uses: zephyrproject-rtos/action-zephyr-setup@f7b70269a8eb01f70c8e710891e4c94972a2f6b4 # v1.0.6
+        uses: zephyrproject-rtos/action-zephyr-setup@5922adc19f631e5ac4bf43c872f1483e6422b845
         with:
           app-path: .
           sdk-version: 0.17.0
@@ -77,7 +77,7 @@ jobs:
         shell: bash
         run: |
           ls -la
-          export ZEPHYR_SDK_INSTALL_DIR=$(PWD)/zephyr-sdk
+          export ZEPHYR_SDK_INSTALL_DIR=${PWD}/zephyr-sdk
           west build -b qemu_x86 samples/hello_world
 
       - name: Perform CodeQL Analysis
