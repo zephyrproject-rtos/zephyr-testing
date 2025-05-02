@@ -75,7 +75,8 @@ jobs:
           west-group-filter: -hal,-tools,-bootloader,-babblesim
           west-project-filter: -nrf_hw_models
 
-      - if: matrix.build-mode == 'manual'
+      - name: Build
+        if: matrix.build-mode == 'manual'
         shell: bash
         run: |
           ls -la
@@ -83,7 +84,7 @@ jobs:
           export ZEPHYR_SDK_INSTALL_DIR=${PWD}/zephyr-sdk
           export ZEPHYR_TOOLCHAIN_VARIANT=zephyr
           ls -la zephyr-sdk/
-
+          west zephyr-export
           env
           west build -b qemu_x86 samples/hello_world
 
