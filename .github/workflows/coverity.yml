@@ -1,0 +1,75 @@
+name: Code Scanning
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+      - v*-branch
+      - collab-*
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ScanCode:
+    if: github.repository_owner == 'zephyrproject-rtos'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Set Up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@8d9ed9ac5c53483de85588cdf95a591a75ab9f55 # v5.5.0
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: scripts/requirements-actions.txt
+
+      - name: install-packages
+        run: |
+          pip install -r scripts/requirements-actions.txt --require-hashes
+
+      - name: Setup Zephyr project
+        uses: nashif/action-zephyr-setup@main
+        with:
+          app-path: .
+          sdk-version: 0.17.1
+          toolchains: all
+          west-group-filter: -hal,-tools,-bootloader,-babblesim
+          west-project-filter: -nrf_hw_models
+
+      - name: SCA Setup
+        uses: zephyrproject-rtos/action-sca-setup@main
+        with:
+          tool-name: coverity
+          install-dir: coverity
+          s3-access-key-id: ${{ secrets.TOOLDIST_ACCESS_KEY }}
+          s3-secret-access-key: ${{ secrets.TOOLDIST_SECRET_ACCESS_KEY }}
+
+      - name: Check Env
+        run: |
+          export COVERITY_OUTPUT_DIR=${PWD}/cov-int
+          ./scripts/twister -p qemu_x86  -T samples/hello_world/ --build-only -v  -xZEPHYR_SCA_VARIANT=coverity
+
+          tar -cJvf coverity-results.tar.xz cov-int
+
+          ver=`git describe`
+          echo "PAYLOAD_VERSION=${ver}" >> $GITHUB_ENV
+          echo "PAYLOAD_DESC=${ver}" >> $GITHUB_ENV
+
+      - name: Analyze
+        uses: zephyrproject-rtos/action-sca-setup/analyze@main
+        with:
+          tool-name: coverity
+          payload: coverity-results.tar.xz
+          service: https://scan.coverity.com/builds?project=Zephyr+Testing
+          user: ${{ secrets.COVERITY_USER }}
+          token: ${{ secrets.COVERITY_TOKEN }}
+          version: ${{ env.PAYLOAD_VERSION }}
+          description: ${{ env.PAYLOAD_DESC }}
