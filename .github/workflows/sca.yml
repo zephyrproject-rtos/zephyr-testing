@@ -1,0 +1,39 @@
+name: Code Scanning
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+      - v*-branch
+      - collab-*
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  Codechecker:
+    if: github.repository_owner == 'zephyrproject-rtos'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: SCA Setup
+        uses: zephyrproject-rtos/action-sca-setup@main
+        with:
+          tool-name: coverity
+          install-dir: coverity
+          s3-access_key_id: ${{ secrets.TOOLDIST_ACCESS_KEY }}
+          s3-secret-access_key: ${{ secrets.TOOLDIST_SECRET_ACCESS_KEY }}
+
+      - name: Check Env
+        run: |
+          ls -la
+          ls -la coverity/
+
