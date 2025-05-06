@@ -30,8 +30,8 @@ jobs:
         with:
           tool-name: coverity
           install-dir: coverity
-          s3-access_key_id: ${{ secrets.TOOLDIST_ACCESS_KEY }}
-          s3-secret-access_key: ${{ secrets.TOOLDIST_SECRET_ACCESS_KEY }}
+          s3-access-key-id: ${{ secrets.TOOLDIST_ACCESS_KEY }}
+          s3-secret-access-key: ${{ secrets.TOOLDIST_SECRET_ACCESS_KEY }}
 
       - name: Check Env
         run: |
