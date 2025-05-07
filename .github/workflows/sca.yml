@@ -55,5 +55,21 @@ jobs:
       - name: Check Env
         run: |
           export COVERITY_OUTPUT_DIR=${PWD}/cov-int
-          ./scripts/twister -p qemu_x86  -T tests/kernel/threads/ -xZEPHYR_SCA_VARIANT=coverity
+          ./scripts/twister -p qemu_x86  -T samples/hello_world/ --build-only -v  -xZEPHYR_SCA_VARIANT=coverity
 
+          tar -cJvf coverity-results.tar.xz cov-int
+
+          ver=`git describe`
+          echo "PAYLOAD_VERSION=${ver}" >> $GITHUB_ENV
+          echo "PAYLOAD_DESC=${ver}" >> $GITHUB_ENV
+
+      - name: Analyze
+        uses: zephyrproject-rtos/action-sca-setup/analyze@main
+        with:
+          tool-name: coverity
+          payload: coverity-results.tar.xz
+          service: https://scan.coverity.com/builds?project=Zephyr+Testing
+          user: ${{ secrets.COVERITY_USER }}
+          token: ${{ secrets.COVERITY_TOKEN }}
+          version: 0.1
+          description: "dummy"
