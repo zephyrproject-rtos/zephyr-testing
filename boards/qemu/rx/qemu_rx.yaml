@@ -9,7 +9,12 @@ simulation:
 arch: rx
 toolchain:
   - cross-compile
+  - zephyr
 supported:
   - serial
 ram: 96
 flash: 512
+testing:
+  default: true
+  only_tags:
+    - kernel
