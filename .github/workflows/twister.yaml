@@ -62,6 +62,7 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           pip install -r scripts/requirements-actions.txt --require-hashes
+          pip install grpcio-tools protobuf
 
       - name: Setup Zephyr project
         if: github.event_name == 'pull_request'
