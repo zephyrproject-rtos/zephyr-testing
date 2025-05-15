@@ -39,19 +39,19 @@ manifest:
   #
   # Please add items below based on alphabetical order
   projects:
-    - name: matter
-      remote: nrfconnect
-      repo-path: sdk-connectedhomeip
-      path: modules/lib/matter
-      revision: 81eb1e99a9fd48bbf3bca2a56e7ac888c7f24a16
-      submodules: true
-      west-commands: scripts/foo/wcmds.yml
-    - name: acpica
-      revision: 8d24867bc9c9d81c81eeac59391cda59333affd4
-      path: modules/lib/acpica
-      submodules:
-        - name: asub
-          path: subs/asub
+#    - name: matter
+#      remote: nrfconnect
+#      repo-path: sdk-connectedhomeip
+#      path: modules/lib/matter
+#      revision: 81eb1e99a9fd48bbf3bca2a56e7ac888c7f24a16
+#      submodules: true
+#      west-commands: scripts/foo/wcmds.yml
+#    - name: acpica
+#      revision: 8d24867bc9c9d81c81eeac59391cda59333affd4
+#      path: modules/lib/acpica
+#      submodules:
+#        - name: asub
+#          path: subs/asub
     - name: bsim
       repo-path: babblesim-manifest
       remote: fail
@@ -191,11 +191,11 @@ manifest:
       west-commands: west/west-commands.yml
       groups:
         - hal
-    - name: hal_ethos_u
-      revision: v3.3.3
-      path: modules/hal/ethos_u
-      groups:
-        - hal
+#    - name: hal_ethos_u
+#      revision: v3.3.3
+#      path: modules/hal/ethos_u
+#      groups:
+#        - hal
     - name: hal_infineon
       revision: 88d2529a3c5aee2e81947553bf6cbacb4671088c
       path: modules/hal/infineon
@@ -342,9 +342,6 @@ manifest:
     - name: picolibc
       path: modules/lib/picolibc
       revision: d492d5fa7c96918e37653f303028346bb0dd51a2
-      submodules:
-        - name: hisub
-          path: path/to/hisub
     - name: segger
       revision: b011c45b585e097d95d9cf93edf4f2e01588d3cd
       path: modules/debug/segger
