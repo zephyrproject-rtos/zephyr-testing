@@ -76,6 +76,9 @@ jobs:
           asset_name: zephyr-${{ steps.get_version.outputs.VERSION }}.spdx
           asset_content_type: text/plain
 
+      - name: Rename
+        run: |
+          mv zephyr-${{ steps.get_version.outputs.VERSION }}.spdx.sigstore.json zephyr-${{ steps.get_version.outputs.VERSION }}.spdx.intoto.jsonl
       - name: Upload Release Assets (Sig)
         id: upload-release-asset_2
         uses: actions/upload-release-asset@e8f9f06c4b078e705bd2ea027f0926603fc9b4d5 # v1.0.2
@@ -83,6 +86,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: zephyr-${{ steps.get_version.outputs.VERSION }}.spdx.sigstore.json
-          asset_name: zephyr-${{ steps.get_version.outputs.VERSION }}.spdx.sigstore.json
+          asset_path: zephyr-${{ steps.get_version.outputs.VERSION }}.spdx.intoto.jsonl
+          asset_name: zephyr-${{ steps.get_version.outputs.VERSION }}.spdx.intoto.jsonl
           asset_content_type: application/json
