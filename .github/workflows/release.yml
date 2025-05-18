@@ -30,6 +30,10 @@ jobs:
         with:
           args: spdx -o zephyr-${{ steps.get_version.outputs.VERSION }}.spdx
 
+      - uses: anchore/sbom-action@v0
+        with:
+          artifact-name: zephyr-sbom-${{ steps.get_version.outputs.VERSION }}.spdx
+
       - name: upload-results
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         continue-on-error: true
@@ -53,7 +57,7 @@ jobs:
           draft: true
           prerelease: true
 
-      - name: Upload Release Assets
+      - name: Upload Release Assets (SPDX)
         id: upload-release-asset
         uses: actions/upload-release-asset@e8f9f06c4b078e705bd2ea027f0926603fc9b4d5 # v1.0.2
         env:
@@ -62,4 +66,15 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: zephyr-${{ steps.get_version.outputs.VERSION }}.spdx
           asset_name: zephyr-${{ steps.get_version.outputs.VERSION }}.spdx
+          asset_content_type: text/plain
+
+      - name: Upload Release Assets (SBOM)
+        id: upload-release-asset-sbom
+        uses: actions/upload-release-asset@e8f9f06c4b078e705bd2ea027f0926603fc9b4d5 # v1.0.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: zephyr-sbom-${{ steps.get_version.outputs.VERSION }}.spdx
+          asset_name: zephyr-sbom-${{ steps.get_version.outputs.VERSION }}.spdx
           asset_content_type: text/plain
