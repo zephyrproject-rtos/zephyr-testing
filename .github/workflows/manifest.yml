@@ -38,3 +38,5 @@ jobs:
           verbosity-level: '1'
           labels: 'manifest'
           dnm-labels: 'DNM'
+          blobs-added-labels: 'Binary Blobs Added'
+          blobs-modified-labels: 'Binary Blobs Modified'
