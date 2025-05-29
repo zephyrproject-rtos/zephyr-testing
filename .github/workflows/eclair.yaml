@@ -1,4 +1,4 @@
-name: Coverity Code Scanning
+name: Eclair Code Scanning
 on:
   pull_request:
     branches:
@@ -15,7 +15,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  CoverityScanCode:
+  EclairScanCode:
     if: github.repository_owner == 'zephyrproject-rtos'
     runs-on:
       group: zephyr-runner-v2-linux-x64-4xlarge
@@ -86,8 +86,8 @@ jobs:
       - name: SCA Setup
         uses: zephyrproject-rtos/action-sca-setup@main
         with:
-          tool-name: coverity
-          install-dir: coverity
+          tool-name: eclair
+          install-dir: eclair
           s3-access-key-id: ${{ secrets.TOOLDIST_ACCESS_KEY }}
           s3-secret-access-key: ${{ secrets.TOOLDIST_SECRET_ACCESS_KEY }}
 
@@ -105,21 +105,9 @@ jobs:
       - name: Check Env
         run: |
           export COVERITY_OUTPUT_DIR=${PWD}/cov-int
-          ./scripts/twister -j 16 -p qemu_x86  -T tests/subsys/logging/ -T tests/kernel/threads --build-only -v  -xZEPHYR_SCA_VARIANT=coverity -x=USE_CCACHE=0
-
-          tar -cJvf coverity-results.tar.xz cov-int
+          ./scripts/twister -j 16 -p qemu_x86  -T tests/subsys/logging/ -T tests/kernel/threads --build-only -v  -xZEPHYR_SCA_VARIANT=eclair -x=USE_CCACHE=0
 
           ver=`git describe`
           echo "PAYLOAD_VERSION=${ver}" >> $GITHUB_ENV
           echo "PAYLOAD_DESC=${ver}" >> $GITHUB_ENV
 
-      - name: Analyze
-        uses: zephyrproject-rtos/action-sca-setup/analyze@main
-        with:
-          tool-name: coverity
-          payload: coverity-results.tar.xz
-          service: https://scan.coverity.com/builds?project=Zephyr+Testing
-          user: ${{ secrets.COVERITY_USER }}
-          token: ${{ secrets.COVERITY_TOKEN }}
-          version: ${{ env.PAYLOAD_VERSION }}
-          description: ${{ env.PAYLOAD_DESC }}
