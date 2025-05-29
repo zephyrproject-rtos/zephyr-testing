@@ -105,7 +105,7 @@ jobs:
       - name: Check Env
         run: |
           export COVERITY_OUTPUT_DIR=${PWD}/cov-int
-          ./scripts/twister -j 16 -p qemu_x86  -T tests/kernel/threads --build-only -v  -xZEPHYR_SCA_VARIANT=coverity -x=USE_CCACHE=0
+          ./scripts/twister -j 16 -p qemu_x86  -T tests/subsys/logging/ -T tests/kernel/threads --build-only -v  -xZEPHYR_SCA_VARIANT=coverity -x=USE_CCACHE=0
 
           tar -cJvf coverity-results.tar.xz cov-int
 
