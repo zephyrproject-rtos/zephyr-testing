@@ -1,0 +1,18 @@
+# .github/workflows/notify-repo-a.yml
+name: Notify Repo External Modules
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Repository with External modules
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          repository: zephyrproject-rtos/external-modules
+          event-type: zephyr-repo-updated
