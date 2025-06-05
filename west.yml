@@ -235,7 +235,7 @@ manifest:
       groups:
         - hal
     - name: hal_silabs
-      revision: a0095a7ac356a04e12188bb563e6207594f8e6b2
+      revision: pull/107/head
       path: modules/hal/silabs
       groups:
         - hal
@@ -360,7 +360,7 @@ manifest:
       groups:
         - tee
     - name: trusted-firmware-m
-      revision: c150f48855f04d77451a39bfaa80d14eb61d918b
+      revision: pull/134/head
       path: modules/tee/tf-m/trusted-firmware-m
       groups:
         - tee
