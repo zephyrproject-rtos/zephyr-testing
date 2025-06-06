@@ -105,6 +105,7 @@ jobs:
 
       - name: Scan code with Eclair
         run: |
+          eclair_licman -S P
           ./scripts/twister -j 16 -p qemu_x86  -T tests/subsys/logging/ -T samples/hello_world -i --build-only -v  -xZEPHYR_SCA_VARIANT=eclair -x=USE_CCACHE=0
 
           ver=`git describe`
