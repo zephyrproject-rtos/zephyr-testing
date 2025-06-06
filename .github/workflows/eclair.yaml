@@ -103,9 +103,8 @@ jobs:
         run: |
           pip install -r scripts/requirements-actions.txt --require-hashes
 
-      - name: Check Env
+      - name: Scan code with Eclair
         run: |
-          export COVERITY_OUTPUT_DIR=${PWD}/cov-int
           ./scripts/twister -j 16 -p qemu_x86  -T tests/subsys/logging/ -T samples/hello_world -i --build-only -v  -xZEPHYR_SCA_VARIANT=eclair -x=USE_CCACHE=0
 
           ver=`git describe`
