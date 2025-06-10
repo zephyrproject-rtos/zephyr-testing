@@ -83,6 +83,13 @@ jobs:
           echo "github.base_ref: ${{ github.base_ref }}"
           echo "github.ref_name: ${{ github.ref_name }}"
 
+      - name: Network debug
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dnsutils curl
+          dig sentinel-server.eclair-sentinel.svc.cluster.local
+          curl -L sentinel-server.eclair-sentinel.svc.cluster.local:1947
+
       - name: SCA Setup
         uses: zephyrproject-rtos/action-sca-setup@main
         with:
