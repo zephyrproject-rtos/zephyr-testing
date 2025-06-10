@@ -1523,8 +1523,8 @@ class ProjectBuilder(FilterBuilder):
                 # but having those statuses in this part of processing is an error.
                 case TwisterStatus.NONE:
                     results.none_cases_increment(increment_value)
-                    logger.warning(f'A None status detected in instance {instance.name},'
-                                 f' test case {tc.name}.')
+#                    logger.warning(f'A None status detected in instance {instance.name},'
+#                                 f' test case {tc.name}.')
                     results.warnings_increment(1)
                 case TwisterStatus.STARTED:
                     results.started_cases_increment(increment_value)
