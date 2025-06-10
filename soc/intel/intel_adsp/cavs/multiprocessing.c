@@ -199,6 +199,8 @@ __imr void soc_mp_init(void)
 	soc_cpus_active[0] = true;
 }
 
+#if CONFIG_MP_MAX_NUM_CPUS > 1
+
 int soc_adsp_halt_cpu(int id)
 {
 	unsigned int irq_mask;
@@ -238,3 +240,5 @@ int soc_adsp_halt_cpu(int id)
 	}
 	return 0;
 }
+
+#endif
