@@ -3,13 +3,12 @@
 ECLAIR support
 ##############
 
-Bugseng `ECLAIR <https://www.bugseng.com/eclair/>`__ is a certified
-static analysis tool and platform for software verification.
-Applications range from coding rule validation, with a
-particular emphasis on the MISRA and BARR-C coding standards, to the
-computation of software metrics, to the checking of independence and
-freedom from interference among software components, to the automatic
-detection of important classes of software errors.
+Bugseng `ECLAIR <https://www.bugseng.com/eclair/>`__ is a certified static
+analysis tool and platform for software verification.  Applications range from
+coding rule validation, with a particular emphasis on the MISRA and BARR-C
+coding standards, to the computation of software metrics, to the checking of
+independence and freedom from interference among software components, to the
+automatic detection of important classes of software errors.
 
 Prerequisites
 *************
@@ -29,8 +28,8 @@ license, visit `this page <https://www.bugseng.com/eclair/free-trial>`__.
 Running ECLAIR
 **************
 
-To run ECLAIR, :ref:`west build <west-building>` should be
-called with a ``-DZEPHYR_SCA_VARIANT=eclair`` parameter.
+To run ECLAIR, :ref:`west build <west-building>` should be called with a
+``-DZEPHYR_SCA_VARIANT=eclair`` parameter.
 
 .. code-block:: shell
 

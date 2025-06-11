@@ -8,6 +8,9 @@ body:
     attributes:
       value: |
         Thanks for taking the time to fill out this bug report!
+        This form is intended for issues related to Zephyr project and only for bugs in the upstream Zephyr codebase.
+        This is not the place to report issues with your own application code or third-party libraries or report issue from other projects using Zephyr.
+
   - type: textarea
     id: what-happened
     attributes:
