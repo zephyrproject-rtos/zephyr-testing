@@ -293,6 +293,8 @@ static void eth_nxp_enet_qos_mac_isr(const struct device *dev)
 	uint32_t dma_interrupts = base->DMA_INTERRUPT_STATUS;
 	uint32_t dma_ch0_interrupts = base->DMA_CH[0].DMA_CHX_STAT;
 
+	(void) mac_interrupts;
+	(void) mac_rx_tx_status;
 	/* clear pending bits except RBU
 	 * handle the receive underrun in the worker
 	 */
