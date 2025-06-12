@@ -114,6 +114,9 @@ jobs:
           jq -s '{ "$schema": "https://json.schemastore.org/sarif-2.1.0", "version": "2.1.0", "runs": map(.runs) | add }'  $(find twister-out -name "reports.sarif")  > results.sarif
           jq --arg basepath "file://${GITHUB_WORKSPACE}/" '
             .runs[].results[] |= (
+             # Remove partialFingerprints if it exists
+             del(.partialFingerprints)
+             |
             .locations[]? |= (
             .physicalLocation.artifactLocation.uri
             |= if type == "string" then ($basepath + .) else . end
