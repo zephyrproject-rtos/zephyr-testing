@@ -111,8 +111,9 @@ jobs:
 
       - name: Scan code with Eclair
         run: |
-          ./scripts/twister -j 16 -p qemu_x86  -T samples/synchronization -i --build-only -v  -xZEPHYR_SCA_VARIANT=eclair -x=USE_CCACHE=0 -xECLAIR_REPORTS_SARIF=1
-          jq -s '{ "$schema": "https://json.schemastore.org/sarif-2.1.0", "version": "2.1.0", "runs": map(.runs) | add }'  $(find twister-out -name "reports.sarif")  > results.sarif
+          #./scripts/twister -j 16 -p qemu_x86  -T samples/synchronization -i --build-only -v  -xZEPHYR_SCA_VARIANT=eclair -x=USE_CCACHE=0 -xECLAIR_REPORTS_SARIF=1
+          west build -b qemu_x86 -p samples/synchronization -- -D ZEPHYR_SCA_VARIANT=eclair -D ECLAIR_REPORTS_SARIF=1
+          jq -s '{ "$schema": "https://json.schemastore.org/sarif-2.1.0", "version": "2.1.0", "runs": map(.runs) | add }'  $(find build -name "reports.sarif")  > results.sarif
           jq --arg basepath "file://${GITHUB_WORKSPACE}/" '
             .runs[].results[] |= (
              # Remove partialFingerprints if it exists
@@ -142,6 +143,7 @@ jobs:
           if-no-files-found: ignore
           path: |
             results.sarif
+            build/sca/eclair/DIAGNOSTIC.txt
 
       - name: Upload Analysis Results
         if: always()
