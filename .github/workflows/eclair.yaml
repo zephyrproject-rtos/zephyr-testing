@@ -112,6 +112,19 @@ jobs:
         run: |
           ./scripts/twister -j 16 -p qemu_x86  -T samples/synchronization -i --build-only -v  -xZEPHYR_SCA_VARIANT=eclair -x=USE_CCACHE=0 -xECLAIR_REPORTS_SARIF=1
           jq -s '{ "$schema": "https://json.schemastore.org/sarif-2.1.0", "version": "2.1.0", "runs": map(.runs) | add }'  $(find twister-out -name "reports.sarif")  > results.sarif
+          jq --arg basepath "file://${GITHUB_WORKSPACE}/" '
+            .runs[].results[] |= (
+            .locations[]? |= (
+            .physicalLocation.artifactLocation.uri
+            |= if type == "string" then ($basepath + .) else . end
+            )
+            | .relatedLocations[]? |= (
+            .physicalLocation.artifactLocation.uri
+            |= if type == "string" then ($basepath + .) else . end
+            )
+            )
+            ' results.sarif > results_tmp.sarif
+          mv results_tmp.sarif results.sarif
 
           ver=`git describe`
           echo "PAYLOAD_VERSION=${ver}" >> $GITHUB_ENV
