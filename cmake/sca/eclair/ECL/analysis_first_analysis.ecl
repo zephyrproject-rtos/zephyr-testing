@@ -12,6 +12,7 @@
 https://docs.zephyrproject.org/latest/contribute/coding_guidelines/index.html"
 -enable=MC3R1.R8.2
 -enable=MC3R1.R10.2
+-enable=MC3R1.R10.4
 -enable=MC3R1.R10.5
 -enable=MC3R1.R10.6
 -enable=MC3R1.R11.2
