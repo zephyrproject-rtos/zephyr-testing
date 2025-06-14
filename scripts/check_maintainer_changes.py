@@ -1,18 +1,24 @@
 #!/usr/bin/env python3
 
-import sys
-import os
-import yaml
 import argparse
+import os
+import sys
+
+import yaml
 from github import Github
 
+
 def load_areas(filename: str):
-    with open(filename, "r") as f:
+    with open(filename) as f:
         doc = yaml.safe_load(f)
-    return {k: v for k, v in doc.items() if isinstance(v, dict) and ("files" in v or "files-regex" in v)}
+    return {
+        k: v for k, v in doc.items() if isinstance(v, dict) and ("files" in v or "files-regex" in v)
+    }
+
 
 def set_or_empty(d, key):
     return set(d.get(key, []) or [])
+
 
 def check_github_access(usernames, repo_fullname, token):
     """Check if each username has at least Triage access to the repo."""
@@ -28,6 +34,7 @@ def check_github_access(usernames, repo_fullname, token):
         except Exception:
             missing_access.add(username)
     return missing_access
+
 
 def compare_areas(old, new, repo_fullname=None, token=None):
     old_areas = set(old.keys())
@@ -144,6 +151,10 @@ def compare_areas(old, new, repo_fullname=None, token=None):
                 print(f"  - {u}")
         if not missing_maint and not missing_collab:
             print("All added maintainers and collaborators have at least triage access.")
+        else:
+            print("Some added maintainers or collaborators do not have sufficient access.")
+            sys.exit(1)
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -159,6 +170,7 @@ def main():
     new_areas = load_areas(args.new)
     token = os.environ.get("GITHUB_TOKEN") or args.token
     compare_areas(old_areas, new_areas, repo_fullname=args.repo, token=token)
+
 
 if __name__ == "__main__":
     main()
