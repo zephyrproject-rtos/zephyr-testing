@@ -329,6 +329,7 @@ BeagleBoard Platforms:
     - con-pax
     - vaishnavachath
     - glneo
+    - dcpleung
   files:
     - boards/beagle/
   labels:
@@ -5871,6 +5872,7 @@ zbus:
   collaborators:
     - lyakh
     - pillo79
+    - nashif
   files:
     - cmake/llext-edk.cmake
     - samples/subsys/llext/
