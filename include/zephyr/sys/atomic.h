@@ -237,6 +237,7 @@ static inline void atomic_set_bit_to(atomic_t *target, int bit, bool val)
 }
 
 /**
+ * @def atomic_cas
  * @brief Atomic compare-and-set.
  *
  * This routine performs an atomic compare-and-set on @a target. If the current
@@ -251,9 +252,9 @@ static inline void atomic_set_bit_to(atomic_t *target, int bit, bool val)
  * @param new_value New value to store.
  * @return true if @a new_value is written, false otherwise.
  */
-bool atomic_cas(atomic_t *target, atomic_val_t old_value, atomic_val_t new_value);
 
 /**
+ * @def atomic_ptr_cas
  * @brief Atomic compare-and-set with pointer values
  *
  * This routine performs an atomic compare-and-set on @a target. If the current
@@ -268,10 +269,10 @@ bool atomic_cas(atomic_t *target, atomic_val_t old_value, atomic_val_t new_value
  * @param new_value New value to store.
  * @return true if @a new_value is written, false otherwise.
  */
-bool atomic_ptr_cas(atomic_ptr_t *target, atomic_ptr_val_t old_value,
-		    atomic_ptr_val_t new_value);
+
 
 /**
+ * @def atomic_add
  * @brief Atomic addition.
  *
  * This routine performs an atomic addition on @a target.
@@ -283,9 +284,8 @@ bool atomic_ptr_cas(atomic_ptr_t *target, atomic_ptr_val_t old_value,
  *
  * @return Previous value of @a target.
  */
-atomic_val_t atomic_add(atomic_t *target, atomic_val_t value);
 
-/**
+/** @def atomic_sub
  * @brief Atomic subtraction.
  *
  * This routine performs an atomic subtraction on @a target.
@@ -297,9 +297,9 @@ atomic_val_t atomic_add(atomic_t *target, atomic_val_t value);
  *
  * @return Previous value of @a target.
  */
-atomic_val_t atomic_sub(atomic_t *target, atomic_val_t value);
 
 /**
+ * @def atomic_inc
  * @brief Atomic increment.
  *
  * This routine performs an atomic increment by 1 on @a target.
@@ -310,9 +310,9 @@ atomic_val_t atomic_sub(atomic_t *target, atomic_val_t value);
  *
  * @return Previous value of @a target.
  */
-atomic_val_t atomic_inc(atomic_t *target);
 
 /**
+ * @def
  * @brief Atomic decrement.
  *
  * This routine performs an atomic decrement by 1 on @a target.
@@ -323,9 +323,9 @@ atomic_val_t atomic_inc(atomic_t *target);
  *
  * @return Previous value of @a target.
  */
-atomic_val_t atomic_dec(atomic_t *target);
 
 /**
+ * @def atomic_get
  * @brief Atomic get.
  *
  * This routine performs an atomic read on @a target.
@@ -336,9 +336,9 @@ atomic_val_t atomic_dec(atomic_t *target);
  *
  * @return Value of @a target.
  */
-atomic_val_t atomic_get(const atomic_t *target);
 
 /**
+ * @def atomic_ptr_get
  * @brief Atomic get a pointer value
  *
  * This routine performs an atomic read on @a target.
@@ -349,9 +349,9 @@ atomic_val_t atomic_get(const atomic_t *target);
  *
  * @return Value of @a target.
  */
-atomic_ptr_val_t atomic_ptr_get(const atomic_ptr_t *target);
 
 /**
+ * @def atomic_set
  * @brief Atomic get-and-set.
  *
  * This routine atomically sets @a target to @a value and returns
@@ -364,9 +364,9 @@ atomic_ptr_val_t atomic_ptr_get(const atomic_ptr_t *target);
  *
  * @return Previous value of @a target.
  */
-atomic_val_t atomic_set(atomic_t *target, atomic_val_t value);
 
 /**
+ * @def atomic_ptr_set
  * @brief Atomic get-and-set for pointer values
  *
  * This routine atomically sets @a target to @a value and returns
@@ -379,9 +379,9 @@ atomic_val_t atomic_set(atomic_t *target, atomic_val_t value);
  *
  * @return Previous value of @a target.
  */
-atomic_ptr_val_t atomic_ptr_set(atomic_ptr_t *target, atomic_ptr_val_t value);
 
 /**
+ * @def atomic_clear
  * @brief Atomic clear.
  *
  * This routine atomically sets @a target to zero and returns its previous
@@ -393,9 +393,9 @@ atomic_ptr_val_t atomic_ptr_set(atomic_ptr_t *target, atomic_ptr_val_t value);
  *
  * @return Previous value of @a target.
  */
-atomic_val_t atomic_clear(atomic_t *target);
 
 /**
+ * @def atomic_ptr_clear
  * @brief Atomic clear of a pointer value
  *
  * This routine atomically sets @a target to zero and returns its previous
@@ -407,9 +407,9 @@ atomic_val_t atomic_clear(atomic_t *target);
  *
  * @return Previous value of @a target.
  */
-atomic_ptr_val_t atomic_ptr_clear(atomic_ptr_t *target);
 
 /**
+ * @def atomic_or
  * @brief Atomic bitwise inclusive OR.
  *
  * This routine atomically sets @a target to the bitwise inclusive OR of
@@ -422,9 +422,9 @@ atomic_ptr_val_t atomic_ptr_clear(atomic_ptr_t *target);
  *
  * @return Previous value of @a target.
  */
-atomic_val_t atomic_or(atomic_t *target, atomic_val_t value);
 
 /**
+ * @def atomic_xor
  * @brief Atomic bitwise exclusive OR (XOR).
  *
  * @note @atomic_api
@@ -437,9 +437,9 @@ atomic_val_t atomic_or(atomic_t *target, atomic_val_t value);
  *
  * @return Previous value of @a target.
  */
-atomic_val_t atomic_xor(atomic_t *target, atomic_val_t value);
 
 /**
+ * @def atomic_and
  * @brief Atomic bitwise AND.
  *
  * This routine atomically sets @a target to the bitwise AND of @a target
@@ -452,9 +452,9 @@ atomic_val_t atomic_xor(atomic_t *target, atomic_val_t value);
  *
  * @return Previous value of @a target.
  */
-atomic_val_t atomic_and(atomic_t *target, atomic_val_t value);
 
 /**
+ * @def atomic_nand
  * @brief Atomic bitwise NAND.
  *
  * This routine atomically sets @a target to the bitwise NAND of @a target
@@ -467,8 +467,6 @@ atomic_val_t atomic_and(atomic_t *target, atomic_val_t value);
  *
  * @return Previous value of @a target.
  */
-atomic_val_t atomic_nand(atomic_t *target, atomic_val_t value);
-
 /**
  * @}
  */
