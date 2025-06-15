@@ -329,6 +329,7 @@ BeagleBoard Platforms:
     - con-pax
     - vaishnavachath
     - glneo
+    - foobar
   files:
     - boards/beagle/
   labels:
