@@ -47,6 +47,9 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.ZB_PR_ASSIGNER_GITHUB_TOKEN }}
       run: |
         west init -l . || true
+        git log | head -n 10
+        git diff origin/${{ github.base_ref }}..
+
         FLAGS="-v"
         FLAGS+=" -o ${{ github.event.repository.owner.login }}"
         FLAGS+=" -r ${{ github.event.repository.name }}"
