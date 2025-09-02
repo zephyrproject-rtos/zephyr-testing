@@ -121,6 +121,7 @@ manifest:
       path: modules/hal/cmsis
       groups:
         - hal
+        - foo
     - name: cmsis-dsp
       revision: 97512610ec92058f0119450b9e743eeb7e95b5c8
       path: modules/lib/cmsis-dsp
