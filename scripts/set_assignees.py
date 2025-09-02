@@ -64,6 +64,7 @@ def parse_args():
 
 
 def process_manifest():
+    log("Processing manifest changes")
     repo = Repo(zephyr_base)
     old_manifest_content = repo.git.show(f"{args.commits[:-2]}:west.yml")
     with open("west_old.yml", "w") as manifest:
@@ -85,8 +86,7 @@ def process_manifest():
     projs = rprojs | uprojs | aprojs
     projs_names = [name for name, rev in projs]
 
-    if not projs_names:
-        return
+    log(f"found modified projects: {projs_names}")
     areas = []
     for p in projs_names:
         areas.append(f'West project: {p}')
