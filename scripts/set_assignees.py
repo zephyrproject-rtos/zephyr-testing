@@ -13,10 +13,14 @@ from github.GithubException import UnknownObjectException
 from collections import defaultdict
 from west.manifest import Manifest
 from west.manifest import ManifestProject
+from git import Repo
+from pathlib import Path
 
 TOP_DIR = os.path.join(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(TOP_DIR, "scripts"))
 from get_maintainer import Maintainers
+
+zephyr_base = os.getenv('ZEPHYR_BASE', os.path.join(TOP_DIR, '..'))
 
 def log(s):
     if args.verbose > 0:
@@ -50,10 +54,45 @@ def parse_args():
     parser.add_argument("-r", "--repo", default="zephyr",
                         help="Github repository")
 
+    parser.add_argument("-c", "--commits", default=None,
+                        help="Commit range in the form: a..b")
+
     parser.add_argument("-v", "--verbose", action="count", default=0,
                         help="Verbose Output")
 
     args = parser.parse_args()
+
+
+def process_manifest():
+    repo = Repo(zephyr_base)
+    old_manifest_content = repo.git.show(f"{args.commits[:-2]}:west.yml")
+    with open("west_old.yml", "w") as manifest:
+        manifest.write(old_manifest_content)
+    old_manifest = Manifest.from_file("west_old.yml")
+    new_manifest = Manifest.from_file("west.yml")
+    old_projs = set((p.name, p.revision) for p in old_manifest.projects)
+    new_projs = set((p.name, p.revision) for p in new_manifest.projects)
+    # Removed projects
+    rprojs = set(filter(lambda p: p[0] not in list(p[0] for p in new_projs),
+        old_projs - new_projs))
+    # Updated projects
+    uprojs = set(filter(lambda p: p[0] in list(p[0] for p in old_projs),
+        new_projs - old_projs))
+    # Added projects
+    aprojs = new_projs - old_projs - uprojs
+
+    # All projs
+    projs = rprojs | uprojs | aprojs
+    projs_names = [name for name, rev in projs]
+
+    if not projs_names:
+        return
+    areas = []
+    for p in projs_names:
+        areas.append(f'West project: {p}')
+
+    log(f'manifest areas: {areas}')
+    return areas
 
 def process_pr(gh, maintainer_file, number):
 
@@ -70,10 +109,6 @@ def process_pr(gh, maintainer_file, number):
     all_areas = set()
     fn = list(pr.get_files())
 
-    for changed_file in fn:
-        if changed_file.filename in ['west.yml','submanifests/optional.yaml']:
-            break
-
     if pr.commits == 1 and (pr.additions <= 1 and pr.deletions <= 1):
         labels = {'size: XS'}
 
@@ -84,7 +119,16 @@ def process_pr(gh, maintainer_file, number):
     for changed_file in fn:
         num_files += 1
         log(f"file: {changed_file.filename}")
-        areas = maintainer_file.path2areas(changed_file.filename)
+
+        areas = []
+        if changed_file.filename in ['west.yml','submanifests/optional.yaml']:
+            changed_areas = process_manifest()
+            for _area in changed_areas:
+                area_match = maintainer_file.name2areas(_area)
+                if area_match:
+                    areas.extend(area_match)
+        else:
+            areas = maintainer_file.path2areas(changed_file.filename)
 
         if not areas:
             continue
