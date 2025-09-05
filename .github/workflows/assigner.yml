@@ -46,10 +46,13 @@ jobs:
           pip install -r scripts/requirements-actions.txt --require-hashes
 
       - name: west setup
+        if: >
+          github.event.workflow_run.event == 'pull_request'
         run: |
           git config --global user.email "you@example.com"
           git config --global user.name "Your Name"
           west init -l . || true
+          mkdir -p ./pr
 
       - name: Run assignment script
         env:
@@ -60,23 +63,25 @@ jobs:
           FLAGS+=" -r ${{ github.event.repository.name }}"
           FLAGS+=" -M MAINTAINERS.yml"
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            FLAGS+=" -P ${{ github.event.pull_request.number }} -c origin/${{ github.base_ref }}.."
+            FLAGS+=" -P ${{ github.event.pull_request.number }} --manifest -c origin/${{ github.base_ref }}.."
+            python3 scripts/set_assignees.py $FLAGS
+            cp -f manifest_areas.json ./pr/
           elif [ "${{ github.event_name }}" = "issues" ]; then
             FLAGS+=" -I ${{ github.event.issue.number }}"
+            python3 scripts/set_assignees.py $FLAGS
           elif [ "${{ github.event_name }}" = "schedule" ]; then
             FLAGS+=" --modules"
+            python3 scripts/set_assignees.py $FLAGS
           else
             echo "Unknown event: ${{ github.event_name }}"
             exit 1
           fi
 
-          python3 scripts/set_assignees.py $FLAGS
 
       - name: Save PR number
         if: >
           github.event.workflow_run.event == 'pull_request'
         run: |
-          mkdir -p ./pr
           echo ${{ github.event.number }} > ./pr/NR
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: >

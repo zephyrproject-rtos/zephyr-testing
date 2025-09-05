@@ -57,6 +57,9 @@ def parse_args():
     parser.add_argument("-c", "--commits", default=None,
                         help="Commit range in the form: a..b")
 
+    parser.add_argument("-m", "--manifest", action="store_true", default=False,
+                        help="Dump manifest changes")
+
     parser.add_argument("-v", "--verbose", action="count", default=0,
                         help="Verbose Output")
 
@@ -93,6 +96,28 @@ def process_manifest():
 
     log(f'manifest areas: {areas}')
     return areas
+
+
+def dump_manifest_changes(gh, maintainer_file, pr):
+    gh_repo = gh.get_repo(f"{args.org}/{args.repo}")
+    pr = gh_repo.get_pull(number)
+    fn = list(pr.get_files())
+    areas = set()
+    for changed_file in fn:
+        log(f"file: {changed_file.filename}")
+
+        if changed_file.filename in ['west.yml','submanifests/optional.yaml']:
+            changed_areas = process_manifest()
+            for _area in changed_areas:
+                area_match = maintainer_file.name2areas(_area)
+                if area_match:
+                    areas.extend(area_match)
+
+    log(f"Areas: {areas}")
+    # now dump the list of areas into a json file
+    import json
+    with open("manifest_areas.json", "w") as f:
+        json.dump([area.name for area in areas], f, indent=4)
 
 def process_pr(gh, maintainer_file, number):
 
@@ -402,7 +427,9 @@ def main():
     gh = Github(token)
     maintainer_file = Maintainers(args.maintainer_file)
 
-    if args.pull_request:
+    if args.pull_request and args.manifest:
+        dump_manifest_changes(gh, maintainer_file)
+    elif args.pull_request:
         process_pr(gh, maintainer_file, args.pull_request)
     elif args.issue:
         process_issue(gh, maintainer_file, args.issue)
