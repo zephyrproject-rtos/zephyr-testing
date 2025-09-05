@@ -75,4 +75,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.ZB_PR_ASSIGNER_GITHUB_TOKEN }}
         run: |
           cat ./pr/manifest_areas.json
-          python3 scripts/set_assignees.py -P ${{ env.PR_NUM }} -M MAINTAINERS.yml -v
+          python3 scripts/set_assignees.py -P ${{ env.PR_NUM }} -M MAINTAINERS.yml -v \
+            --repo ${{ github.event.repository.name }}
