@@ -46,9 +46,6 @@ jobs:
           pip install -r scripts/requirements-actions.txt --require-hashes
 
       - name: west setup
-        env:
-          BASE_REF: ${{ github.base_ref }}
-        working-directory: zephyrproject/zephyr
         run: |
           git config --global user.email "you@example.com"
           git config --global user.name "Your Name"
