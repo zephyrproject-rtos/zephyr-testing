@@ -428,7 +428,7 @@ def main():
     maintainer_file = Maintainers(args.maintainer_file)
 
     if args.pull_request and args.manifest:
-        dump_manifest_changes(gh, maintainer_file)
+        dump_manifest_changes(gh, maintainer_file, args.pull_request)
     elif args.pull_request:
         process_pr(gh, maintainer_file, args.pull_request)
     elif args.issue:
