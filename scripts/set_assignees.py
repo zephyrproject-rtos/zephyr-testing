@@ -152,8 +152,8 @@ def process_pr(gh, maintainer_file, number):
         if changed_file.filename in ['west.yml','submanifests/optional.yaml']:
             if args.areas and Path(args.areas).is_file():
                 with open(args.areas, "r") as f:
-                    areas = json.load(f)
-                for _area in areas:
+                    parsed_areas = json.load(f)
+                for _area in parsed_areas:
                     area_match = maintainer_file.name2areas(_area)
                     if area_match:
                         areas.extend(area_match)
