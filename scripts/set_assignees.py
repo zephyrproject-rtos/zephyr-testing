@@ -8,6 +8,7 @@ import sys
 import os
 import time
 import datetime
+import json
 from github import Github, GithubException
 from github.GithubException import UnknownObjectException
 from collections import defaultdict
@@ -102,7 +103,7 @@ def dump_manifest_changes(gh, maintainer_file, number):
     gh_repo = gh.get_repo(f"{args.org}/{args.repo}")
     pr = gh_repo.get_pull(number)
     fn = list(pr.get_files())
-    areas = set()
+    areas = []
     for changed_file in fn:
         log(f"file: {changed_file.filename}")
 
@@ -115,7 +116,6 @@ def dump_manifest_changes(gh, maintainer_file, number):
 
     log(f"Areas: {areas}")
     # now dump the list of areas into a json file
-    import json
     with open("manifest_areas.json", "w") as f:
         json.dump([area.name for area in areas], f, indent=4)
 
