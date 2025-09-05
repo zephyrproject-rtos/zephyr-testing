@@ -4,7 +4,7 @@ name: Pull Request Assigner Completion Workflow
 # access to secrets
 on:
   workflow_run:
-    workflows: ["Pull	Request Assigner"]
+    workflows: ["Pull Request Assigner"]
     types:
       - completed
 
