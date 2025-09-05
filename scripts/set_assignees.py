@@ -144,14 +144,24 @@ def process_pr(gh, maintainer_file, number):
         return
 
     for changed_file in fn:
+
         num_files += 1
         log(f"file: {changed_file.filename}")
 
         areas = []
         if changed_file.filename in ['west.yml','submanifests/optional.yaml']:
-            continue
-
-        areas = maintainer_file.path2areas(changed_file.filename)
+            if args.areas and Path(args.areas).is_file():
+                with open(args.areas, "r") as f:
+                    areas = json.load(f)
+                for _area in areas:
+                    area_match = maintainer_file.name2areas(_area)
+                    if area_match:
+                        areas.extend(area_match)
+            else:
+                log(f"Manifest changes detected but no --areas file specified, skipping...")
+                continue
+        else:
+            areas = maintainer_file.path2areas(changed_file.filename)
 
         if not areas:
             continue
