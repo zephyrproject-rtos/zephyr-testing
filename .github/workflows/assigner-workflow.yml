@@ -34,7 +34,7 @@ jobs:
         with:
           script: |
             let fs = require("fs");
-            let pr_number = Number(fs.readFileSync("./NR"));
+            let pr_number = Number(fs.readFileSync("./pr/NR"));
             core.exportVariable("PR_NUM", pr_number);
 
       - name: Check PR number
