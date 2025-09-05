@@ -75,7 +75,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.ZB_PR_ASSIGNER_GITHUB_TOKEN }}
         run: |
           if [ -f "./pr/manifest_areas.json" ]; then
-            ARGS-"--areas ./pr/manifest_areas.json"
+            ARGS="--areas ./pr/manifest_areas.json"
           else
             ARGS=""
           fi
