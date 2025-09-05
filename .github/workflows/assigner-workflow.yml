@@ -1,19 +1,12 @@
-name: Pull Request Assigner
+name: Pull Request Assigner Completion Workflow
 
+# read-write repo token
+# access to secrets
 on:
-  pull_request:
+  workflow_run:
+    workflows: ["Pull	Request Assigner"]
     types:
-    - opened
-    - synchronize
-    - reopened
-    - ready_for_review
-    branches:
-    - main
-    - collab-*
-    - v*-branch
-  issues:
-    types:
-    - labeled
+      - completed
 
 permissions:
   contents: read
@@ -21,13 +14,34 @@ permissions:
 jobs:
   assignment:
     name: Pull Request Assignment
-    if: github.event.pull_request.draft == false
     runs-on: ubuntu-24.04
-    permissions:
-      pull-requests: write # to add assignees to pull requests
-      issues: write        # to add assignees to issues
+    if: >
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success'
 
     steps:
+		- name: 'Download artifact'
+			uses: actions/github-script@v3.1.0
+			with:
+				script: |
+					var artifacts = await github.actions.listWorkflowRunArtifacts({
+						 owner: context.repo.owner,
+						 repo: context.repo.repo,
+						 run_id: ${{github.event.workflow_run.id }},
+					});
+					var matchArtifact = artifacts.data.artifacts.filter((artifact) => {
+						return artifact.name == "pr"
+					})[0];
+					var download = await github.actions.downloadArtifact({
+						 owner: context.repo.owner,
+						 repo: context.repo.repo,
+						 artifact_id: matchArtifact.id,
+						 archive_format: 'zip',
+					});
+					var fs = require('fs');
+					fs.writeFileSync('${{github.workspace}}/pr.zip', Buffer.from(download.data));
+		- run: unzip pr.zip
+
     - name: Check out source code
       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       with:
@@ -53,7 +67,7 @@ jobs:
         FLAGS+=" -o ${{ github.event.repository.owner.login }}"
         FLAGS+=" -r ${{ github.event.repository.name }}"
         FLAGS+=" -M MAINTAINERS.yml"
-        if [ "${{ github.event_name }}" = "pull_request" ]; then
+        if [ "${{ github.event_name }}" = "pull_request_target" ]; then
             FLAGS+=" -P ${{ github.event.pull_request.number }} -c origin/${{ github.base_ref }}.."
         elif [ "${{ github.event_name }}" = "issues" ]; then
             FLAGS+=" -I ${{ github.event.issue.number }}"
@@ -65,17 +79,3 @@ jobs:
         fi
 
         python3 scripts/set_assignees.py $FLAGS
-
-		- name: Save PR number
-      if: >
-        github.event.workflow_run.event == 'pull_request'
-			run: |
-				mkdir -p ./pr
-				echo ${{ github.event.number }} > ./pr/NR
-		- uses: actions/upload-artifact@v2
-      if: >
-        github.event.workflow_run.event == 'pull_request'
-			with:
-				name: pr
-				path: pr/
-
