@@ -74,6 +74,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.ZB_PR_ASSIGNER_GITHUB_TOKEN }}
         run: |
-          cat ./pr/manifest_areas.json
+          if [ -f "./pr/manifest_areas.json" ]; then
+            ARGS-"--areas ./pr/manifest_areas.json"
+          else
+            ARGS=""
+          fi
           python3 scripts/set_assignees.py -P ${{ env.PR_NUM }} -M MAINTAINERS.yml -v \
-            --repo ${{ github.event.repository.name }}
+            --repo ${{ github.event.repository.name }} ${ARGS}
