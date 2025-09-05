@@ -57,7 +57,7 @@ def parse_args():
     parser.add_argument("-c", "--commits", default=None,
                         help="Commit range in the form: a..b")
 
-    parser.add_argument("-m", "--manifest", action="store_true", default=False,
+    parser.add_argument("--manifest", action="store_true", default=False,
                         help="Dump manifest changes")
 
     parser.add_argument("-v", "--verbose", action="count", default=0,
