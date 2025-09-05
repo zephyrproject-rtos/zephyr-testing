@@ -98,7 +98,7 @@ def process_manifest():
     return areas
 
 
-def dump_manifest_changes(gh, maintainer_file, pr):
+def dump_manifest_changes(gh, maintainer_file, number):
     gh_repo = gh.get_repo(f"{args.org}/{args.repo}")
     pr = gh_repo.get_pull(number)
     fn = list(pr.get_files())
