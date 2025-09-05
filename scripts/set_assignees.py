@@ -147,13 +147,9 @@ def process_pr(gh, maintainer_file, number):
 
         areas = []
         if changed_file.filename in ['west.yml','submanifests/optional.yaml']:
-            changed_areas = process_manifest()
-            for _area in changed_areas:
-                area_match = maintainer_file.name2areas(_area)
-                if area_match:
-                    areas.extend(area_match)
-        else:
-            areas = maintainer_file.path2areas(changed_file.filename)
+            continue
+
+        areas = maintainer_file.path2areas(changed_file.filename)
 
         if not areas:
             continue
