@@ -59,7 +59,7 @@ jobs:
           exit 1
 
       - name: Set up Python
-        uses: zephyrproject-rtos/action-python-setup@main
+        uses: zephyrproject-rtos/action-python-env@main
         with:
           python-version: 3.12
 
