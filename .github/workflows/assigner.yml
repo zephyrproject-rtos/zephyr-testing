@@ -53,16 +53,15 @@ jobs:
 
       - name: Run assignment script
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.ZB_PR_ASSIGNER_GITHUB_TOKEN }}
         run: |
           FLAGS="-v"
           FLAGS+=" -o ${{ github.event.repository.owner.login }}"
           FLAGS+=" -r ${{ github.event.repository.name }}"
           FLAGS+=" -M MAINTAINERS.yml"
           if [ "${{ github.event_name }}" = "pull_request_target" ]; then
-            FLAGS+=" -P ${{ github.event.pull_request.number }} --old-manifest pr_west.yml"
+            FLAGS+=" -P ${{ github.event.pull_request.number }} --updated-manifest pr_west.yml"
             python3 scripts/set_assignees.py $FLAGS
-            cp -f manifest_areas.json ./pr/
           elif [ "${{ github.event_name }}" = "issues" ]; then
             FLAGS+=" -I ${{ github.event.issue.number }}"
             python3 scripts/set_assignees.py $FLAGS
