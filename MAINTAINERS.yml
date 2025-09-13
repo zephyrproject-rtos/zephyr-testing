@@ -167,6 +167,7 @@ ARC arch:
   collaborators:
     - abrodkin
     - tagunil
+    - random
   files:
     - arch/arc/
     - include/zephyr/arch/arc/
