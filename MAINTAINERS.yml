@@ -246,6 +246,7 @@ ARM64 arch:
     - wearyzen
     - ithinuel
     - JiafeiPan
+    - carlocaione
   files:
     - arch/arm64/
     - include/zephyr/arch/arm64/
