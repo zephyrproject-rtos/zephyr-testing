@@ -1,6 +1,8 @@
 name: Code Coverage with codecov
 
 on:
+  workflow_dispatch:
+    branches: [main]
   schedule:
     - cron: '25 06,18 * * *'
 
