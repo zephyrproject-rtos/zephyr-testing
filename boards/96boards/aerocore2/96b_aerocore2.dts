@@ -21,8 +21,8 @@
 		zephyr,ccm = &ccm0;
 	};
 
-	leds {
-		compatible = "gpio-leds";
+
+	leds { compatible = "gpio-leds";
 
 		yellow_led_1: led_1 {
 			gpios = <&gpioe 10 GPIO_ACTIVE_HIGH>;
