@@ -91,6 +91,8 @@ Deprecated APIs and options
 * :kconfig:option:`CONFIG_JWT_SIGN_RSA_LEGACY` is deprecated. Please switch to the
   PSA Crypto API based alternative (i.e. :kconfig:option:`CONIFG_JWT_SIGN_RSA_PSA`).
 
+* :kconfig:option:`CONFIG_XOPEN_STREAMS` was deprecated. Instead, use :kconfig:option:`CONFIG_XSI_STREAMS`.
+
 New APIs and options
 ====================
 
