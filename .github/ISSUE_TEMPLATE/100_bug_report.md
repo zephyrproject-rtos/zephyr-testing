@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Create a report to help us improve Zephyr
+about: Create a bug report using this template if forms are not working for you.
 title: ''
 labels: bug
 assignees: ''
