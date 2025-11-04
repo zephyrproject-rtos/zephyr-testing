@@ -32,6 +32,9 @@
 #     labels:
 #         List of GitHub labels to add to pull requests that modify the area.
 #
+#     tests:
+#         List of test identifiers to be run when this area is affected by a PR.
+#
 #     files:
 #         List of paths and/or glob patterns giving the files in the area,
 #         relative to the root directory.
