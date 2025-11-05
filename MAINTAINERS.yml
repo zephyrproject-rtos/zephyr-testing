@@ -957,9 +957,22 @@ Continuous Integration:
   maintainers:
     - stephanosio
     - nashif
-  collaborators:
-    - fabiobaltieri
-    - kartben
+  file-groups:
+    - name: CI scripts
+      collaborators:
+        - kartben
+      files:
+        - scripts/ci/
+    - name: Gitlint
+      collaborators:
+        - fabiobaltieri
+      files:
+        - scripts/gitlint/
+    - name: Assignee setter
+      collaborators:
+        - kartben
+      files:
+        - scripts/ci/set_assignees.py
   files:
     - .github/
     - scripts/requirements-actions.*
