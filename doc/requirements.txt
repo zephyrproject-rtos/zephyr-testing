@@ -163,8 +163,8 @@ docutils==0.21.2 \
     #   sphinx-rtd-theme
     #   sphinx-tabs
     #   sphinx-togglebutton
-doxmlparser==1.15.0 \
-    --hash=sha256:a5107dbc96577c1078377790df9332d91845ce0f07c93b3fa393023195a4fe34
+doxmlparser==1.16.1 \
+    --hash=sha256:3f51651077a8a77360548e4a236b7b9ae71a283f187373677fa4a2ab763b9c2e
     # via -r requirements.in
 exceptiongroup==1.3.1 ; python_full_version < '3.11' \
     --hash=sha256:8b412432c6055b0b7d14c310000ae93352ed6754f70fa8f7c34141f91c4e3219 \
