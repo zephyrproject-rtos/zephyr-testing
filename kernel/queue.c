@@ -10,7 +10,7 @@
  * @brief dynamic-size QUEUE object.
  */
 
-
+/* dummy */
 #include <zephyr/kernel.h>
 #include <zephyr/kernel_structs.h>
 
