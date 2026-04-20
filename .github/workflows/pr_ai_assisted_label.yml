@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-24.04
     if: github.repository == 'zephyrproject-rtos/zephyr-testing'
     permissions:
-      pull-requests: write # add/remove label on the pull request
+      pull-requests: write # add/remove label on the pull request  xxx
     steps:
       - name: Sync label from commit messages
         env:
