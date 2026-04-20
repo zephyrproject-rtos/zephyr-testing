@@ -7,6 +7,7 @@ on:
       - synchronize
       - reopened
     branches:
+      - ai_labels
       - main
       - collab-*
       - v*-branch
@@ -22,7 +23,7 @@ jobs:
   label:
     name: Sync AI-assisted label
     runs-on: ubuntu-24.04
-    if: github.repository == 'zephyrproject-rtos/zephyr'
+    if: github.repository == 'zephyrproject-rtos/zephyr-testing'
     permissions:
       pull-requests: write # add/remove label on the pull request
     steps:
