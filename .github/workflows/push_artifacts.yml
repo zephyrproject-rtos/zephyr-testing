@@ -132,3 +132,22 @@ jobs:
           path: dts_catalog.json
           retention-days: 90
           if-no-files-found: error
+
+      # The following steps save and upload the list of Python packages installed in the container.
+      # This is useful for debugging and reproducing the environment used in this workflow.
+
+      - name: Save the list of Python packages
+        shell: bash
+        run: |
+          FREEZE_FILE="frozen-requirements.txt"
+          timestamp="$(date)"
+          version="$(git describe --abbrev=12 --always)"
+          echo -e "# Generated at $timestamp ($version)\n" > $FREEZE_FILE
+          pip freeze | tee -a $FREEZE_FILE
+
+      - name: Upload the list of Python packages
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: Frozen PIP package set
+          path: |
+            frozen-requirements.txt
