@@ -102,3 +102,8 @@ west-commands:
       - name: gtags
         class: Gtags
         help: create a GNU global tags file for the current workspace
+  - file: scripts/west_commands/dts_catalog.py
+    commands:
+      - name: dts-catalog
+        class: DtsCatalog
+        help: query the DTS hardware catalog

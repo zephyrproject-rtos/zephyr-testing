@@ -317,6 +317,149 @@ def cmd_who_uses(db: dict, args: argparse.Namespace) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Subcommand: hardware — pretty-print helpers
+# ---------------------------------------------------------------------------
+
+_PRETTY_WIDTH = 72
+
+_TYPE_LABEL: dict[str, str] = {
+    "adc":                  "ADC",
+    "audio":                "AUDIO",
+    "bluetooth":            "BT",
+    "can":                  "CAN",
+    "clock":                "CLOCK",
+    "dac":                  "DAC",
+    "display":              "DISPLAY",
+    "dma":                  "DMA",
+    "ethernet":             "ETH",
+    "flash":                "FLASH",
+    "gpio":                 "GPIO",
+    "i2c":                  "I2C",
+    "input":                "INPUT",
+    "interrupt-controller": "IRQ",
+    "led":                  "LED",
+    "pinctrl":              "PINCTRL",
+    "pwm":                  "PWM",
+    "rtc":                  "RTC",
+    "sensor":               "SENSOR",
+    "serial":               "SERIAL",
+    "spi":                  "SPI",
+    "timer":                "TIMER",
+    "usb":                  "USB",
+    "watchdog":             "WATCHDOG",
+    "wifi":                 "WIFI",
+}
+
+
+def _hw_box_line(text: str, width: int) -> str:
+    """Return a box-border line padded to *width* total characters."""
+    return "│" + text + " " * (width - 2 - len(text)) + "│"
+
+
+def _print_hardware_pretty(
+    board: str,
+    target_name: str,
+    result: dict,
+    okay_only: bool,
+    width: int = _PRETTY_WIDTH,
+) -> None:
+    """Render a hardware catalogue entry as a structured ASCII tree."""
+    W = width
+
+    # ── header box ──────────────────────────────────────────────────────────
+    print("┌" + "─" * (W - 2) + "┐")
+    print(_hw_box_line(f"  Board  : {board}", W))
+    print(_hw_box_line(f"  Target : {target_name}", W))
+    if okay_only:
+        print(_hw_box_line("  Filter : okay nodes only", W))
+    print("└" + "─" * (W - 2) + "┘")
+    print()
+
+    if not result:
+        print("  (no hardware entries matched)")
+        return
+
+    total_ok = 0
+    total_dis = 0
+
+    for btype in sorted(result.keys()):
+        compats = result[btype]
+        label = _TYPE_LABEL.get(btype, btype.upper())
+        n = len(compats)
+        count_str = f"{n} compatible{'s' if n != 1 else ''}"
+
+        # Section header: "  ┬  SERIAL  ──────────────  2 compatibles"
+        header_prefix = f"  ┬  {label}  "
+        dash_count = max(4, W - len(header_prefix) - len(count_str) - 2)
+        print(header_prefix + "─" * dash_count + "  " + count_str)
+
+        compat_items = sorted(compats.items())
+        for idx, (compat, info) in enumerate(compat_items):
+            is_last = idx == len(compat_items) - 1
+            is_okay = info.get("okay", False)
+
+            if is_okay:
+                total_ok += 1
+                dot = "●"
+                tag = "[okay]    "
+            else:
+                total_dis += 1
+                dot = "○"
+                tag = "[disabled]"
+
+            connector = "└─" if is_last else "├─"
+            cont = "   " if is_last else "│  "
+
+            # Compat line with right-aligned status tag
+            prefix = f"  {connector} {dot} "
+            tag_col = W - len(tag)
+            line = prefix + compat
+            padding = max(1, tag_col - len(line))
+            print(line + " " * padding + tag)
+
+            # Locations
+            locs = info.get("locations", [])
+            if locs:
+                max_locs_w = W - len(cont) - 14
+                locs_joined = "  ".join(locs)
+                if len(locs_joined) > max_locs_w:
+                    truncated: list[str] = []
+                    used = 0
+                    for loc in locs:
+                        if used + len(loc) + 2 > max_locs_w - 12:
+                            truncated.append(f"(+{len(locs) - len(truncated)} more)")
+                            break
+                        truncated.append(loc)
+                        used += len(loc) + 2
+                    locs_joined = "  ".join(truncated)
+                print(f"  {cont}  Locations: {locs_joined}")
+
+            # Description
+            desc = (info.get("description") or "").strip()
+            if desc:
+                max_d = W - len(cont) - 6
+                if len(desc) > max_d:
+                    desc = desc[: max_d - 3] + "..."
+                print(f"  {cont}  {desc}")
+
+            if not is_last:
+                print("  │")
+
+        print()
+
+    # ── summary footer ───────────────────────────────────────────────────────
+    total = total_ok + total_dis
+    print("  " + "─" * (W - 4))
+    parts = [
+        f"{len(result)} type{'s' if len(result) != 1 else ''}",
+        f"{total} compatible{'s' if total != 1 else ''}",
+        f"{total_ok} okay",
+        f"{total_dis} disabled",
+    ]
+    print("  " + "  |  ".join(parts))
+
+
+# ---------------------------------------------------------------------------
 # Subcommand: hardware
 # ---------------------------------------------------------------------------
 
@@ -347,6 +490,8 @@ def cmd_hardware(db: dict, args: argparse.Namespace) -> None:
             {"board": board, "target": target_name, "hardware": result},
             as_json=True,
         )
+    elif getattr(args, "pretty", False):
+        _print_hardware_pretty(board, target_name, result, okay_only)
     else:
         status_tag = " [okay only]" if okay_only else ""
         type_tag = f" [type={binding_type_filter}]" if binding_type_filter else ""
@@ -433,6 +578,10 @@ def build_parser() -> argparse.ArgumentParser:
         help="Show only nodes with status = okay.",
     )
     p.add_argument("--json", action="store_true", help="Output as JSON.")
+    p.add_argument(
+        "--pretty", "-P", action="store_true",
+        help="Render output as a structured ASCII tree (ignored when --json is set).",
+    )
 
     return parser
 
