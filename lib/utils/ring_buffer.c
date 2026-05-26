@@ -8,7 +8,19 @@
 
 #include <zephyr/sys/minmax.h>
 #include <zephyr/sys/ring_buffer.h>
-#include <string.h>
+
+static inline void ring_buf_copy_bytes(uint8_t *dst, const uint8_t *src, uint32_t len)
+{
+	if (dst < src) {
+		for (uint32_t i = 0U; i < len; i++) {
+			dst[i] = src[i];
+		}
+	} else if (dst > src) {
+		for (uint32_t i = len; i > 0U; i--) {
+			dst[i - 1U] = src[i - 1U];
+		}
+	}
+}
 
 uint32_t ring_buf_area_claim(struct ring_buf *buf, struct ring_buf_index *ring,
 			     uint8_t **data, uint32_t size)
@@ -63,7 +75,7 @@ uint32_t ring_buf_put(struct ring_buf *buf, const uint8_t *data, uint32_t size)
 		if (partial_size == 0) {
 			break;
 		}
-		memcpy(dst, data, partial_size);
+			ring_buf_copy_bytes(dst, data, partial_size);
 		total_size += partial_size;
 		size -= partial_size;
 		data += partial_size;
@@ -89,7 +101,7 @@ uint32_t ring_buf_get(struct ring_buf *buf, uint8_t *data, uint32_t size)
 			break;
 		}
 		if (data) {
-			memcpy(data, src, partial_size);
+				ring_buf_copy_bytes(data, src, partial_size);
 			data += partial_size;
 		}
 		total_size += partial_size;
@@ -116,7 +128,7 @@ uint32_t ring_buf_peek(struct ring_buf *buf, uint8_t *data, uint32_t size)
 			break;
 		}
 		__ASSERT_NO_MSG(data != NULL);
-		memcpy(data, src, partial_size);
+			ring_buf_copy_bytes(data, src, partial_size);
 		data += partial_size;
 		total_size += partial_size;
 		size -= partial_size;
@@ -170,7 +182,7 @@ int ring_buf_item_put(struct ring_buf *buf, uint16_t type, uint8_t value,
 		if (partial_size == 0) {
 			break;
 		}
-		memcpy(dst, data, partial_size);
+			ring_buf_copy_bytes(dst, data, partial_size);
 		size -= partial_size;
 		total_size += partial_size;
 		data += partial_size;
@@ -220,7 +232,7 @@ int ring_buf_item_get(struct ring_buf *buf, uint16_t *type, uint8_t *value,
 			break;
 		}
 		if (data) {
-			memcpy(data, src, partial_size);
+				ring_buf_copy_bytes(data, src, partial_size);
 			data += partial_size;
 		}
 		total_size += partial_size;
