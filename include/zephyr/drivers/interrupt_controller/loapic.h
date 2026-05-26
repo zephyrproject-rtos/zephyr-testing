@@ -163,7 +163,9 @@ static inline void x86_write_loapic(unsigned int reg, uint32_t val)
  */
 static inline void z_loapic_ipi(uint8_t apic_id, uint32_t ipi, uint8_t vector)
 {
-	ipi |= vector;
+	uint32_t icrhi = ((uint32_t)apic_id) << 24U;
+
+	ipi |= (uint32_t)vector;
 
 #ifndef CONFIG_X2APIC
 	/*
@@ -173,7 +175,7 @@ static inline void z_loapic_ipi(uint8_t apic_id, uint32_t ipi, uint8_t vector)
 	while (x86_read_xapic(LOAPIC_ICRLO) & LOAPIC_ICR_BUSY) {
 	}
 
-	x86_write_xapic(LOAPIC_ICRHI, ((uint32_t)apic_id) << 24U);
+	x86_write_xapic(LOAPIC_ICRHI, icrhi);
 	x86_write_xapic(LOAPIC_ICRLO, ipi);
 #else
 	/*
