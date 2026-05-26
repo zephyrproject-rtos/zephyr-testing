@@ -671,6 +671,10 @@ static int uart_ns16550_configure(const struct device *dev,
 		break;
 	default:
 		ret = -ENOTSUP;
+		break;
+	}
+
+	if (ret != 0) {
 		goto out;
 	}
 
@@ -683,6 +687,10 @@ static int uart_ns16550_configure(const struct device *dev,
 		break;
 	default:
 		ret = -ENOTSUP;
+		break;
+	}
+
+	if (ret != 0) {
 		goto out;
 	}
 
@@ -698,6 +706,10 @@ static int uart_ns16550_configure(const struct device *dev,
 		break;
 	default:
 		ret = -ENOTSUP;
+		break;
+	}
+
+	if (ret != 0) {
 		goto out;
 	}
 
@@ -825,20 +837,22 @@ static int uart_ns16550_pm_action(const struct device *dev, enum pm_device_actio
 	case PM_DEVICE_ACTION_SUSPEND:
 		break;
 	case PM_DEVICE_ACTION_TURN_ON:
-		return uart_ns16550_configure(dev, uart_cfg);
+		ret = uart_ns16550_configure(dev, uart_cfg);
+		break;
 	case PM_DEVICE_ACTION_TURN_OFF:
 		if (dev_cfg->clock_dev != NULL) {
 			ret = clock_control_off(dev_cfg->clock_dev, dev_cfg->clock_subsys);
 		}
 		if (ret != 0 && ret != -EALREADY && ret != -ENOSYS) {
-			return ret;
+			break;
 		}
 		break;
 	default:
-		return -ENOTSUP;
+		ret = -ENOTSUP;
+		break;
 	}
 
-	return 0;
+	return ret;
 }
 
 /**
