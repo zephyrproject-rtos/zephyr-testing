@@ -2037,27 +2037,25 @@ void arch_reserved_pages_update(void)
 #ifdef CONFIG_X86_MEMMAP
 	for (int i = 0; i < CONFIG_X86_MEMMAP_ENTRIES; i++) {
 		struct x86_memmap_entry *entry = &x86_memmap[i];
+		bool reserve = false;
 
 		switch (entry->type) {
 		case X86_MEMMAP_ENTRY_UNUSED:
-			__fallthrough;
 		case X86_MEMMAP_ENTRY_RAM:
-			continue;
-
+			reserve = false;
+			break;
 		case X86_MEMMAP_ENTRY_ACPI:
-			__fallthrough;
 		case X86_MEMMAP_ENTRY_NVS:
-			__fallthrough;
 		case X86_MEMMAP_ENTRY_DEFECTIVE:
-			__fallthrough;
 		default:
-			/* If any of three above cases satisfied, exit switch
-			 * and mark page reserved
-			 */
+			/* Mark non-RAM and unknown regions reserved. */
+			reserve = true;
 			break;
 		}
 
-		mark_addr_page_reserved(entry->base, entry->length);
+		if (reserve) {
+			mark_addr_page_reserved(entry->base, entry->length);
+		}
 	}
 #endif /* CONFIG_X86_MEMMAP */
 }
