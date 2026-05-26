@@ -463,8 +463,9 @@ int cbvprintf_package(void *packaged, size_t len, uint32_t flags,
 
 			case CBPRINTF_PACKAGE_ARG_TYPE_PTR_CHAR:
 				is_str_arg = true;
-
-				__fallthrough;
+				align = VA_STACK_ALIGN(void *);
+				size = sizeof(void *);
+				break;
 			case CBPRINTF_PACKAGE_ARG_TYPE_PTR_VOID:
 				align = VA_STACK_ALIGN(void *);
 				size = sizeof(void *);
@@ -556,8 +557,10 @@ int cbvprintf_package(void *packaged, size_t len, uint32_t flags,
 
 			case 's':
 				is_str_arg = true;
-
-				__fallthrough;
+				align = VA_STACK_ALIGN(void *);
+				size = sizeof(void *);
+				parsing = false;
+				break;
 			case 'p':
 			case 'n':
 				align = VA_STACK_ALIGN(void *);
