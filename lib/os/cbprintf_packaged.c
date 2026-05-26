@@ -390,40 +390,33 @@ int cbvprintf_package(void *packaged, size_t len, uint32_t flags,
 			 * quite a few of the data types have the same
 			 * storage size.
 			 */
+			bool skip_copy = false;
+
 			switch (arg_tag) {
 			case CBPRINTF_PACKAGE_ARG_TYPE_CHAR:
-				__fallthrough;
 			case CBPRINTF_PACKAGE_ARG_TYPE_UNSIGNED_CHAR:
-				__fallthrough;
 			case CBPRINTF_PACKAGE_ARG_TYPE_SHORT:
-				__fallthrough;
 			case CBPRINTF_PACKAGE_ARG_TYPE_UNSIGNED_SHORT:
-				__fallthrough;
 			case CBPRINTF_PACKAGE_ARG_TYPE_INT:
-				__fallthrough;
 			case CBPRINTF_PACKAGE_ARG_TYPE_UNSIGNED_INT:
 				align = VA_STACK_ALIGN(int);
 				size = sizeof(int);
 				break;
 
 			case CBPRINTF_PACKAGE_ARG_TYPE_LONG:
-				__fallthrough;
 			case CBPRINTF_PACKAGE_ARG_TYPE_UNSIGNED_LONG:
 				align = VA_STACK_ALIGN(long);
 				size = sizeof(long);
 				break;
 
 			case CBPRINTF_PACKAGE_ARG_TYPE_LONG_LONG:
-				__fallthrough;
 			case CBPRINTF_PACKAGE_ARG_TYPE_UNSIGNED_LONG_LONG:
 				align = VA_STACK_ALIGN(long long);
 				size = sizeof(long long);
 				break;
 
 			case CBPRINTF_PACKAGE_ARG_TYPE_FLOAT:
-				__fallthrough;
 			case CBPRINTF_PACKAGE_ARG_TYPE_DOUBLE:
-				__fallthrough;
 			case CBPRINTF_PACKAGE_ARG_TYPE_LONG_DOUBLE: {
 				/*
 				 * Handle floats separately as they may be
@@ -458,7 +451,8 @@ int cbvprintf_package(void *packaged, size_t len, uint32_t flags,
 				}
 				buf += size;
 				parsing = false;
-				continue;
+				skip_copy = true;
+				break;
 			}
 
 			case CBPRINTF_PACKAGE_ARG_TYPE_PTR_CHAR:
@@ -473,6 +467,10 @@ int cbvprintf_package(void *packaged, size_t len, uint32_t flags,
 
 			default:
 				return -EINVAL;
+			}
+
+			if (skip_copy) {
+				continue;
 			}
 
 		} else
@@ -492,11 +490,15 @@ int cbvprintf_package(void *packaged, size_t len, uint32_t flags,
 				}
 				continue;
 			}
+
+			bool scan_only = false;
+
 			switch (*fmt) {
 			case '%':
 				parsing = false;
 				arg_idx--;
-				continue;
+				scan_only = true;
+				break;
 
 			case '#':
 			case '-':
@@ -516,7 +518,8 @@ int cbvprintf_package(void *packaged, size_t len, uint32_t flags,
 			case 'h':
 			case 'l':
 			case 'L':
-				continue;
+				scan_only = true;
+				break;
 
 			case '*':
 				break;
@@ -524,17 +527,20 @@ int cbvprintf_package(void *packaged, size_t len, uint32_t flags,
 			case 'j':
 				align = VA_STACK_ALIGN(intmax_t);
 				size = sizeof(intmax_t);
-				continue;
+				scan_only = true;
+				break;
 
 			case 'z':
 				align = VA_STACK_ALIGN(size_t);
 				size = sizeof(size_t);
-				continue;
+				scan_only = true;
+				break;
 
 			case 't':
 				align = VA_STACK_ALIGN(ptrdiff_t);
 				size = sizeof(ptrdiff_t);
-				continue;
+				scan_only = true;
+				break;
 
 			case 'c':
 			case 'd':
@@ -608,11 +614,17 @@ int cbvprintf_package(void *packaged, size_t len, uint32_t flags,
 				}
 				buf += size;
 				parsing = false;
-				continue;
+				scan_only = true;
+				break;
 			}
 
 			default:
 				parsing = false;
+				scan_only = true;
+				break;
+			}
+
+			if (scan_only) {
 				continue;
 			}
 		}

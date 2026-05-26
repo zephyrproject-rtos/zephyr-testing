@@ -513,6 +513,7 @@ static inline const char *extract_length(struct conversion *conv,
 static inline const char *extract_specifier(struct conversion *conv,
 					    const char *sp)
 {
+	bool int_conv = false;
 	bool unsupported = false;
 
 	conv->specifier = *sp;
@@ -521,50 +522,11 @@ static inline const char *extract_specifier(struct conversion *conv,
 	switch (conv->specifier) {
 	case SINT_CONV_CASES:
 		conv->specifier_cat = SPECIFIER_SINT;
-		goto int_conv;
+		int_conv = true;
+		break;
 	case UINT_CONV_CASES:
 		conv->specifier_cat = SPECIFIER_UINT;
-int_conv:
-		/* L length specifier not acceptable */
-		if (conv->length_mod == LENGTH_UPPER_L) {
-			conv->invalid = true;
-		}
-
-		/* For c LENGTH_NONE and LENGTH_L would be ok,
-		 * but we don't support formatting wide characters.
-		 */
-		if (conv->specifier == 'c') {
-			unsupported = (conv->length_mod != LENGTH_NONE);
-		} else if (!IS_ENABLED(CONFIG_CBPRINTF_FULL_INTEGRAL)) {
-			/* Disable conversion that might produce truncated
-			 * results with buffers sized for 32 bits.
-			 */
-			switch (conv->length_mod) {
-			case LENGTH_L:
-				unsupported = sizeof(long) > 4;
-				break;
-			case LENGTH_LL:
-				unsupported = sizeof(long long) > 4;
-				break;
-			case LENGTH_J:
-				unsupported = sizeof(uintmax_t) > 4;
-				break;
-			case LENGTH_Z:
-				unsupported = sizeof(size_t) > 4;
-				break;
-			case LENGTH_T:
-				unsupported = sizeof(ptrdiff_t) > 4;
-				break;
-			default:
-				/* Add an empty default with break, this is a defensive
-				 * programming. Static analysis tool won't raise a violation
-				 * if default is empty, but has that comment.
-				 */
-				break;
-			}
-		} else {
-			;
-		}
+		int_conv = true;
 		break;
 
 	case FP_CONV_CASES:
@@ -625,6 +587,49 @@ int_conv:
 	default:
 		conv->invalid = true;
 		break;
+	}
+
+	if (int_conv) {
+		/* L length specifier not acceptable */
+		if (conv->length_mod == LENGTH_UPPER_L) {
+			conv->invalid = true;
+		}
+
+		/* For c LENGTH_NONE and LENGTH_L would be ok,
+		 * but we don't support formatting wide characters.
+		 */
+		if (conv->specifier == 'c') {
+			unsupported = (conv->length_mod != LENGTH_NONE);
+		} else if (!IS_ENABLED(CONFIG_CBPRINTF_FULL_INTEGRAL)) {
+			/* Disable conversion that might produce truncated
+			 * results with buffers sized for 32 bits.
+			 */
+			switch (conv->length_mod) {
+			case LENGTH_L:
+				unsupported = sizeof(long) > 4;
+				break;
+			case LENGTH_LL:
+				unsupported = sizeof(long long) > 4;
+				break;
+			case LENGTH_J:
+				unsupported = sizeof(uintmax_t) > 4;
+				break;
+			case LENGTH_Z:
+				unsupported = sizeof(size_t) > 4;
+				break;
+			case LENGTH_T:
+				unsupported = sizeof(ptrdiff_t) > 4;
+				break;
+			default:
+				/* Add an empty default with break, this is a defensive
+				 * programming. Static analysis tool won't raise a violation
+				 * if default is empty, but has that comment.
+				 */
+				break;
+			}
+		} else {
+			;
+		}
 	}
 
 	conv->unsupported |= unsupported;
@@ -1620,6 +1625,8 @@ int z_cbvprintf_impl(cbprintf_cb __out, void *ctx, const char *fp,
 			continue;
 		}
 
+		bool integer_conv = false;
+
 		/* Do formatting, either into the buffer or
 		 * referencing external data.
 		 */
@@ -1655,8 +1662,8 @@ int z_cbvprintf_impl(cbprintf_cb __out, void *ctx, const char *fp,
 				/* Use 0x prefix */
 				conv->altform_0c = true;
 				conv->specifier = 'x';
-
-				goto prec_int_pad0;
+				integer_conv = true;
+				break;
 			}
 
 			bps = "(nil)";
@@ -1693,33 +1700,14 @@ int z_cbvprintf_impl(cbprintf_cb __out, void *ctx, const char *fp,
 				value->uint = (uint_value_type)sint;
 			}
 			bps = encode_uint(value->uint, conv, buf, bpe);
-			goto prec_int_pad0;
+			integer_conv = true;
+			break;
 		case 'o':
 		case 'u':
 		case 'x':
 		case 'X':
 			bps = encode_uint(value->uint, conv, buf, bpe);
-
-		prec_int_pad0:
-			/* Update pad0 values based on precision and converted
-			 * length.  Note that a non-empty sign is not in the
-			 * converted sequence, but it does not affect the
-			 * padding size.
-			 */
-			if (precision >= 0) {
-				size_t len = bpe - bps;
-
-				/* Zero-padding flag is ignored for integer
-				 * conversions with precision.
-				 */
-				conv->flag_zero = false;
-
-				/* Set pad0_value to satisfy precision */
-				if (len < (size_t)precision) {
-					conv->pad0_value = precision - (int)len;
-				}
-			}
-
+			integer_conv = true;
 			break;
 		case 'n':
 			if (IS_ENABLED(CONFIG_CBPRINTF_N_SPECIFIER)) {
@@ -1740,6 +1728,27 @@ int z_cbvprintf_impl(cbprintf_cb __out, void *ctx, const char *fp,
 			 * if default is empty, but has that comment.
 			 */
 			break;
+		}
+
+		if (integer_conv) {
+			/* Update pad0 values based on precision and converted
+			 * length.  Note that a non-empty sign is not in the
+			 * converted sequence, but it does not affect the
+			 * padding size.
+			 */
+			if (precision >= 0) {
+				size_t len = bpe - bps;
+
+				/* Zero-padding flag is ignored for integer
+				 * conversions with precision.
+				 */
+				conv->flag_zero = false;
+
+				/* Set pad0_value to satisfy precision */
+				if (len < (size_t)precision) {
+					conv->pad0_value = precision - (int)len;
+				}
+			}
 		}
 
 		/* If we don't have a converted value to emit, move
