@@ -58,20 +58,30 @@ static const char *thread_name_get(struct k_thread *thread)
 
 static const char *reason_to_str(unsigned int reason)
 {
+	const char *reason_str;
+
 	switch (reason) {
 	case K_ERR_CPU_EXCEPTION:
-		return "CPU exception";
+		reason_str = "CPU exception";
+		break;
 	case K_ERR_SPURIOUS_IRQ:
-		return "Unhandled interrupt";
+		reason_str = "Unhandled interrupt";
+		break;
 	case K_ERR_STACK_CHK_FAIL:
-		return "Stack overflow";
+		reason_str = "Stack overflow";
+		break;
 	case K_ERR_KERNEL_OOPS:
-		return "Kernel oops";
+		reason_str = "Kernel oops";
+		break;
 	case K_ERR_KERNEL_PANIC:
-		return "Kernel panic";
+		reason_str = "Kernel panic";
+		break;
 	default:
-		return "Unknown error";
+		reason_str = "Unknown error";
+		break;
 	}
+
+	return reason_str;
 }
 
 /* LCOV_EXCL_START */

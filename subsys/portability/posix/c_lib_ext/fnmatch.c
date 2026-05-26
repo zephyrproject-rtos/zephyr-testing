@@ -146,6 +146,11 @@ static int rangematch_cc(const char **pattern, int ch)
 		ret = !isxdigit(ch);
 		break;
 	default:
+		ret = RANGE_ERROR;
+		break;
+	}
+
+	if (ret == RANGE_ERROR) {
 		return RANGE_ERROR;
 	}
 
@@ -204,15 +209,15 @@ static int rangematch(const char **pattern, char test, int flags)
 				return RANGE_ERROR;
 			}
 		} else {
-			switch (rangematch_cc(&pat, test)) {
-			case RANGE_ERROR:
-				/* not a character class, proceed below */
-				break;
-			case RANGE_MATCH:
+			int cc_result = rangematch_cc(&pat, test);
+
+			if (cc_result == RANGE_MATCH) {
 				/* a valid character class that was matched */
 				ok = 1;
 				continue;
-			case RANGE_NOMATCH:
+			}
+
+			if (cc_result == RANGE_NOMATCH) {
 				/* a valid character class that was not matched */
 				continue;
 			}
@@ -346,14 +351,16 @@ static int fnmatchx(const char *pattern, const char *string, const char *strings
 				return FNM_NOMATCH;
 			}
 
-			switch (rangematch(&pattern, sc, flags)) {
-			case RANGE_ERROR:
+			int range_match = rangematch(&pattern, sc, flags);
+
+			if (range_match == RANGE_ERROR) {
 				goto norm;
-			case RANGE_MATCH:
-				break;
-			case RANGE_NOMATCH:
+			}
+
+			if (range_match == RANGE_NOMATCH) {
 				return FNM_NOMATCH;
 			}
+
 			++string;
 			break;
 		case '\\':

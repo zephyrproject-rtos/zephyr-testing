@@ -254,18 +254,27 @@ void z_log_minimal_printk(const char *fmt, ...);
 
 static inline char z_log_minimal_level_to_char(int level)
 {
+	char level_char;
+
 	switch (level) {
 	case LOG_LEVEL_ERR:
-		return 'E';
+		level_char = 'E';
+		break;
 	case LOG_LEVEL_WRN:
-		return 'W';
+		level_char = 'W';
+		break;
 	case LOG_LEVEL_INF:
-		return 'I';
+		level_char = 'I';
+		break;
 	case LOG_LEVEL_DBG:
-		return 'D';
+		level_char = 'D';
+		break;
 	default:
-		return '?';
+		level_char = '?';
+		break;
 	}
+
+	return level_char;
 }
 
 #define Z_LOG_INST(_inst) COND_CODE_1(CONFIG_LOG, (_inst), NULL)
