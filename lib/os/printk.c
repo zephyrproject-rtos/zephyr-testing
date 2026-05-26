@@ -97,6 +97,22 @@ static int char_out(int c, void *ctx_p)
 	return _char_out(c);
 }
 
+#ifdef CONFIG_PICOLIBC
+static int picolibc_buf_char_out(char c, FILE *file)
+{
+	struct buf_out_context *ctx = CONTAINER_OF(file, struct buf_out_context, file);
+
+	return buf_char_out((int)c, ctx);
+}
+
+static int picolibc_char_out(char c, FILE *file)
+{
+	ARG_UNUSED(file);
+
+	return char_out((int)c, NULL);
+}
+#endif
+
 void vprintk(const char *fmt, va_list ap)
 {
 	if (IS_ENABLED(CONFIG_LOG_PRINTK)) {
@@ -107,8 +123,8 @@ void vprintk(const char *fmt, va_list ap)
 	if (k_is_user_context()) {
 		struct buf_out_context ctx = {
 #ifdef CONFIG_PICOLIBC
-			.file = FDEV_SETUP_STREAM((int(*)(char, FILE *))buf_char_out,
-						  NULL, NULL, _FDEV_SETUP_WRITE),
+			.file = FDEV_SETUP_STREAM(picolibc_buf_char_out, NULL, NULL,
+					  _FDEV_SETUP_WRITE),
 #else
 			0
 #endif
@@ -129,8 +145,8 @@ void vprintk(const char *fmt, va_list ap)
 #endif
 
 #ifdef CONFIG_PICOLIBC
-		FILE console = FDEV_SETUP_STREAM((int(*)(char, FILE *))char_out,
-						 NULL, NULL, _FDEV_SETUP_WRITE);
+		FILE console = FDEV_SETUP_STREAM(picolibc_char_out, NULL, NULL,
+					 _FDEV_SETUP_WRITE);
 		(void) vfprintf(&console, fmt, ap);
 #else
 		cbvprintf(char_out, NULL, fmt, ap);

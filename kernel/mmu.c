@@ -500,7 +500,10 @@ static int virt_to_page_frame(void *virt, uintptr_t *phys)
 }
 /* LCOV_EXCL_STOP */
 
-__weak FUNC_ALIAS(virt_to_page_frame, arch_page_phys_get, int);
+__weak int arch_page_phys_get(void *virt, uintptr_t *phys)
+{
+	return virt_to_page_frame(virt, phys);
+}
 
 #ifdef CONFIG_DEMAND_PAGING
 static int page_frame_prepare_locked(struct k_mem_page_frame *pf, bool *dirty_ptr,
@@ -884,7 +887,10 @@ static size_t virt_region_align(uintptr_t phys, size_t size)
 	return CONFIG_MMU_PAGE_SIZE;
 }
 
-__weak FUNC_ALIAS(virt_region_align, arch_virt_region_align, size_t);
+__weak size_t arch_virt_region_align(uintptr_t phys, size_t size)
+{
+	return virt_region_align(phys, size);
+}
 
 /* This may be called from arch early boot code before z_cstart() is invoked.
  * Data will be copied and BSS zeroed, but this must not rely on any

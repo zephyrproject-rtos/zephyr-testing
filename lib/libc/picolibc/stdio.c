@@ -6,7 +6,14 @@
 
 #include "picolibc-hooks.h"
 
-static LIBC_DATA int (*_stdout_hook)(int);
+static LIBC_DATA int (*_stdout_hook)(int c);
+static unsigned char stdin_hook_default(void);
+static LIBC_DATA unsigned char (*_stdin_hook)(void) = stdin_hook_default;
+
+static unsigned char stdin_hook_default(void)
+{
+	return 0;
+}
 
 int z_impl_zephyr_fputc(int a, FILE *out)
 {
@@ -43,6 +50,13 @@ static int picolibc_put(char a, FILE *f)
 	return 0;
 }
 
+static int picolibc_get(FILE *stream)
+{
+	ARG_UNUSED(stream);
+
+	return _stdin_hook();
+}
+
 static LIBC_DATA FILE __stdout = FDEV_SETUP_STREAM(picolibc_put, NULL, NULL, 0);
 static LIBC_DATA FILE __stdin = FDEV_SETUP_STREAM(NULL, NULL, NULL, 0);
 
@@ -64,6 +78,7 @@ void __stdout_hook_install(int (*hook)(int c))
 
 void __stdin_hook_install(unsigned char (*hook)(void))
 {
-	__stdin.get = (int (*)(FILE *)) hook;
+	_stdin_hook = hook;
+	__stdin.get = picolibc_get;
 	__stdin.flags |= _FDEV_SETUP_READ;
 }
