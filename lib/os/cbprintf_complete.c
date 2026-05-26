@@ -751,7 +751,9 @@ static char _get_digit(uint64_t *fr, int *digit_count)
 	if (*digit_count > 0) {
 		--*digit_count;
 		*fr *= 10U;
-		rval = ((*fr >> 60) & 0xF) + '0';
+		uint8_t digit = (uint8_t)((*fr >> 60U) & 0xFU);
+
+		rval = (char)(digit + (uint8_t)'0');
 		*fr &= (BIT64(60) - 1U);
 	} else {
 		rval = '0';
@@ -1310,7 +1312,7 @@ static inline void store_count(const struct conversion *conv,
 			       void *dp,
 			       int count)
 {
-	switch ((enum length_mod_enum)conv->length_mod) {
+	switch (conv->length_mod) {
 	case LENGTH_NONE:
 		*(int *)dp = count;
 		break;
@@ -1500,10 +1502,8 @@ int z_cbvprintf_impl(cbprintf_cb __out, void *ctx, const char *fp,
 		 * passing a pointer to va_list doesn't work on x86_64.  See
 		 * https://stackoverflow.com/a/8048892.
 		 */
-		enum specifier_cat_enum specifier_cat
-			= (enum specifier_cat_enum)conv->specifier_cat;
-		enum length_mod_enum length_mod
-			= (enum length_mod_enum)conv->length_mod;
+		unsigned int specifier_cat = conv->specifier_cat;
+		unsigned int length_mod = conv->length_mod;
 
 		/* Extract the value based on the argument category and length.
 		 *
