@@ -591,7 +591,7 @@ static int uart_ns16550_configure(const struct device *dev,
 	const struct uart_ns16550_dev_config * const dev_cfg = dev->config;
 	uint8_t mdc = 0U, c;
 	uint32_t pclk = 0U;
-	int ret;
+	int ret = 0;
 
 	k_spinlock_key_t key = k_spin_lock(&dev_data->lock);
 
