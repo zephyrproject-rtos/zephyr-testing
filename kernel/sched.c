@@ -313,7 +313,7 @@ void z_thread_halt(struct k_thread *thread, k_spinlock_key_t key,
 			thread_halt_spin(thread, key);
 		} else  {
 			add_to_waitq_locked(_current, wq);
-			z_swap(&_sched_spinlock, key);
+			(void)z_swap(&_sched_spinlock, key);
 		}
 	} else {
 		halt_thread(thread, terminate ? _THREAD_DEAD : _THREAD_SUSPENDED);
@@ -323,7 +323,7 @@ void z_thread_halt(struct k_thread *thread, k_spinlock_key_t key,
 				k_panic();
 				key = k_spin_lock(&_sched_spinlock);
 			}
-			z_swap(&_sched_spinlock, key);
+			(void)z_swap(&_sched_spinlock, key);
 			__ASSERT(!terminate, "aborted _current back from dead");
 		} else {
 			k_spin_unlock(&_sched_spinlock, key);
@@ -384,7 +384,7 @@ void z_sched_yield(void)
 
 	runq_yield();
 	update_cache(1);
-	z_swap(&_sched_spinlock, key);
+	(void)z_swap(&_sched_spinlock, key);
 }
 
 /* _sched_spinlock must be held */
@@ -409,7 +409,7 @@ void z_sched_add_to_waitq_locked(struct k_thread *thread, _wait_q_t *wait_q)
 static void add_thread_timeout(struct k_thread *thread, k_timeout_t timeout)
 {
 	if (!K_TIMEOUT_EQ(timeout, K_FOREVER)) {
-		z_add_thread_timeout(thread, timeout);
+		(void)z_add_thread_timeout(thread, timeout);
 	}
 }
 
@@ -594,7 +594,7 @@ void z_reschedule(struct k_spinlock *lock, k_spinlock_key_t key)
 void z_reschedule_irqlock(uint32_t key)
 {
 	if (resched(key) && need_swap()) {
-		z_swap_irqlock(key);
+		(void)z_swap_irqlock(key);
 	} else {
 		/* TODO: We only hold the IRQ lock here, not _sched_spinlock,
 		 * violating the locking requirement documented in
@@ -831,7 +831,7 @@ static ALWAYS_INLINE void halt_thread(struct k_thread *thread, uint8_t new_state
 			return;
 		}
 
-		arch_coprocessors_disable(thread);
+		(void)arch_coprocessors_disable(thread);
 
 		SYS_PORT_TRACING_FUNC(k_thread, sched_abort, thread);
 
@@ -892,5 +892,5 @@ void z_thread_suspend_current(struct k_thread *thread)
 	z_metairq_preempted_clear(thread);
 	dequeue_thread(thread);
 	update_cache(1);
-	z_swap(&_sched_spinlock, key);
+	(void)z_swap(&_sched_spinlock, key);
 }
