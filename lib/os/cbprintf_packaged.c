@@ -904,7 +904,10 @@ bool is_ptr(const char *fmt, int n)
 	bool mod = false;
 	int cnt = 0;
 
-	while ((c = *fmt++) != '\0') {
+	while (*fmt != '\0') {
+		c = *fmt;
+		++fmt;
+
 		if (mod) {
 			if (cnt == n) {
 				if (c == 'p') {
