@@ -42,7 +42,7 @@ void hello_loop(const char *my_name,
 
 	while (1) {
 		/* take my semaphore */
-		k_sem_take(my_sem, K_FOREVER);
+		(void)k_sem_take(my_sem, K_FOREVER);
 
 		current_thread = k_current_get();
 		tname = k_thread_name_get(current_thread);
@@ -62,7 +62,7 @@ void hello_loop(const char *my_name,
 
 		/* wait a while, then let other thread have a turn */
 		k_busy_wait(100000);
-		k_msleep(SLEEPTIME);
+		(void)k_msleep(SLEEPTIME);
 		k_sem_give(other_sem);
 	}
 }
@@ -101,11 +101,11 @@ extern const k_tid_t thread_b;
 
 int main(void)
 {
-	k_thread_create(&thread_a_data, thread_a_stack_area,
+	(void)k_thread_create(&thread_a_data, thread_a_stack_area,
 			K_THREAD_STACK_SIZEOF(thread_a_stack_area),
 			thread_a_entry_point, NULL, NULL, NULL,
 			PRIORITY, 0, K_FOREVER);
-	k_thread_name_set(&thread_a_data, "thread_a");
+	(void)k_thread_name_set(&thread_a_data, "thread_a");
 
 #if PIN_THREADS
 	if (arch_num_cpus() > 1) {
