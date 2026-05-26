@@ -499,8 +499,9 @@ TYPE_SECTION_END_EXTERN(struct log_source_const_data, log_const);
 static inline uint32_t log_const_source_id(
 				const struct log_source_const_data *data)
 {
-	return ((const uint8_t *)data - (uint8_t *)TYPE_SECTION_START(log_const))/
-			sizeof(struct log_source_const_data);
+	return (uint32_t)(((uintptr_t)data -
+			   (uintptr_t)TYPE_SECTION_START(log_const)) /
+			  sizeof(struct log_source_const_data));
 }
 
 TYPE_SECTION_START_EXTERN(struct log_source_dynamic_data, log_dynamic);
@@ -524,8 +525,9 @@ TYPE_SECTION_END_EXTERN(struct log_source_dynamic_data, log_dynamic);
  */
 static inline uint32_t log_dynamic_source_id(struct log_source_dynamic_data *data)
 {
-	return ((uint8_t *)data - (uint8_t *)TYPE_SECTION_START(log_dynamic))/
-			sizeof(struct log_source_dynamic_data);
+	return (uint32_t)(((uintptr_t)data -
+			   (uintptr_t)TYPE_SECTION_START(log_dynamic)) /
+			  sizeof(struct log_source_dynamic_data));
 }
 
 /** @brief Get index of the log source based on the address of the associated data.

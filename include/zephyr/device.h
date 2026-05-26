@@ -569,7 +569,9 @@ static inline device_handle_t device_handle_get(const struct device *dev)
 	 * fixed sequence we'll need another solution.
 	 */
 	if (dev != NULL) {
-		ret = 1 + (device_handle_t)(dev - STRUCT_SECTION_START(device));
+		ret = 1 + (device_handle_t)(((uintptr_t)dev -
+						 (uintptr_t)STRUCT_SECTION_START(device)) /
+						 sizeof(*dev));
 	}
 
 	return ret;
