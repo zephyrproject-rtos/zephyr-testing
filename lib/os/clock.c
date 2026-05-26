@@ -52,22 +52,31 @@ static void timespec_from_ticks(uint64_t ticks, struct timespec *ts)
 
 int sys_clock_from_clockid(int clock_id)
 {
+	int ret;
+
 	switch (clock_id) {
 #if defined(CLOCK_REALTIME) || defined(_POSIX_C_SOURCE)
 	case (int)CLOCK_REALTIME:
-		return SYS_CLOCK_REALTIME;
+		ret = SYS_CLOCK_REALTIME;
+		break;
 #endif
 #if defined(CLOCK_MONOTONIC) || defined(_POSIX_MONOTONIC_CLOCK)
 	case (int)CLOCK_MONOTONIC:
-		return SYS_CLOCK_MONOTONIC;
+		ret = SYS_CLOCK_MONOTONIC;
+		break;
 #endif
 	default:
-		return -EINVAL;
+		ret = -EINVAL;
+		break;
 	}
+
+	return ret;
 }
 
 int sys_clock_gettime(int clock_id, struct timespec *ts)
 {
+	int ret = 0;
+
 	if (!is_valid_clock_id(clock_id)) {
 		return -EINVAL;
 	}
@@ -93,7 +102,12 @@ int sys_clock_gettime(int clock_id, struct timespec *ts)
 
 	default:
 		CODE_UNREACHABLE;
-		return -EINVAL; /* Should never reach here */
+		ret = -EINVAL; /* Should never reach here */
+		break;
+	}
+
+	if (ret != 0) {
+		return ret;
 	}
 
 	__ASSERT_NO_MSG(timespec_is_valid(ts));
