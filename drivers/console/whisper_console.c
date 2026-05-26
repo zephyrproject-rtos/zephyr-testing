@@ -22,7 +22,7 @@ int arch_printk_char_out(int c)
 }
 
 #if defined(CONFIG_STDOUT_CONSOLE)
-extern void __stdout_hook_install(int (*hook)(int));
+extern void __stdout_hook_install(int (*hook)(int c));
 #else
 #define __stdout_hook_install(x)                                                                   \
 	do { /* nothing */                                                                         \
