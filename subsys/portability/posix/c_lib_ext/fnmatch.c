@@ -262,34 +262,48 @@ static int fnmatchx(const char *pattern, const char *string, const char *strings
 {
 	char c;
 	char pc, sc;
+	int ret = 0;
+	bool done = false;
 
 	if (recursion-- == 0) {
 		return FNM_NORES;
 	}
 
 	while (true) {
+		done = false;
 		pc = FOLDCASE(*pattern++, flags);
 		sc = FOLDCASE(*string, flags);
 		switch (pc) {
 		case EOS:
 			if (((flags & FNM_LEADING_DIR) != 0) && (sc == '/')) {
-				return 0;
+				ret = 0;
+				done = true;
+				break;
 			}
 			if (sc == EOS) {
-				return 0;
+				ret = 0;
+			} else {
+				ret = FNM_NOMATCH;
 			}
-			return FNM_NOMATCH;
+			done = true;
+			break;
 		case '?':
 			if (sc == EOS) {
-				return FNM_NOMATCH;
+				ret = FNM_NOMATCH;
+				done = true;
+				break;
 			}
 			if ((sc == '/') && ((flags & FNM_PATHNAME) != 0)) {
-				return FNM_NOMATCH;
+				ret = FNM_NOMATCH;
+				done = true;
+				break;
 			}
 			if ((sc == '.') && ((flags & FNM_PERIOD) != 0) &&
 			    ((string == stringstart) ||
 			     (((flags & FNM_PATHNAME) != 0) && (*(string - 1) == '/')))) {
-				return FNM_NOMATCH;
+				ret = FNM_NOMATCH;
+				done = true;
+				break;
 			}
 			++string;
 			break;
@@ -303,33 +317,49 @@ static int fnmatchx(const char *pattern, const char *string, const char *strings
 			if ((sc == '.') && ((flags & FNM_PERIOD) != 0) &&
 			    ((string == stringstart) ||
 			     (((flags & FNM_PATHNAME) != 0) && (*(string - 1) == '/')))) {
-				return FNM_NOMATCH;
+				ret = FNM_NOMATCH;
+				done = true;
+				break;
 			}
 
 			/* Optimize for pattern with * at end or before /. */
 			if (c == EOS) {
 				if ((flags & FNM_PATHNAME) == 0) {
-					return 0;
+					ret = 0;
+					done = true;
+					break;
 				}
 
 				if (((flags & FNM_LEADING_DIR) != 0) ||
 				    (strchr(string, '/') == NULL)) {
-					return 0;
+					ret = 0;
+					done = true;
+					break;
 				}
 
-				return FNM_NOMATCH;
+				ret = FNM_NOMATCH;
+				done = true;
+				break;
 			} else if ((c == '/') && ((flags & FNM_PATHNAME) != 0)) {
 				string = strchr(string, '/');
 				if (string == NULL) {
-					return FNM_NOMATCH;
+					ret = FNM_NOMATCH;
+					done = true;
+					break;
 				}
+				break;
+			}
+
+			if (done) {
 				break;
 			}
 
 			/* General case, use recursion. */
 			while (sc != EOS) {
 				if (fnmatchx(pattern, string, stringstart, flags, recursion) == 0) {
-					return 0;
+					ret = 0;
+					done = true;
+					break;
 				}
 				sc = FOLDCASE(*string, flags);
 				if ((sc == '/') && ((flags & FNM_PATHNAME) != 0)) {
@@ -337,32 +367,46 @@ static int fnmatchx(const char *pattern, const char *string, const char *strings
 				}
 				++string;
 			}
-			return FNM_NOMATCH;
+			if (!done) {
+				ret = FNM_NOMATCH;
+				done = true;
+			}
+			break;
 		case '[':
 			if (sc == EOS) {
-				return FNM_NOMATCH;
+				ret = FNM_NOMATCH;
+				done = true;
+				break;
 			}
 			if ((sc == '/') && ((flags & FNM_PATHNAME) != 0)) {
-				return FNM_NOMATCH;
+				ret = FNM_NOMATCH;
+				done = true;
+				break;
 			}
 			if ((sc == '.') && ((flags & FNM_PERIOD) != 0) &&
 			    ((string == stringstart) ||
 			     (((flags & FNM_PATHNAME) != 0) && (*(string - 1) == '/')))) {
-				return FNM_NOMATCH;
+				ret = FNM_NOMATCH;
+				done = true;
+				break;
 			}
 
 			int range_match = rangematch(&pattern, sc, flags);
 
 			if (range_match == RANGE_ERROR) {
 				if (pc != sc) {
-					return FNM_NOMATCH;
+					ret = FNM_NOMATCH;
+					done = true;
+					break;
 				}
 				++string;
 				break;
 			}
 
 			if (range_match == RANGE_NOMATCH) {
-				return FNM_NOMATCH;
+				ret = FNM_NOMATCH;
+				done = true;
+				break;
 			}
 
 			++string;
@@ -370,21 +414,34 @@ static int fnmatchx(const char *pattern, const char *string, const char *strings
 		case '\\':
 			if ((flags & FNM_NOESCAPE) == 0) {
 				if (*pattern == EOS) {
-					return FNM_NOMATCH;
+					ret = FNM_NOMATCH;
+					done = true;
+					break;
 				}
 				pc = FOLDCASE(*pattern++, flags);
 			}
+			if (done) {
+				break;
+			}
 			if (pc != sc) {
-				return FNM_NOMATCH;
+				ret = FNM_NOMATCH;
+				done = true;
+				break;
 			}
 			++string;
 			break;
 		default:
 			if (pc != sc) {
-				return FNM_NOMATCH;
+				ret = FNM_NOMATCH;
+				done = true;
+				break;
 			}
 			++string;
 			break;
+		}
+
+		if (done) {
+			return ret;
 		}
 	}
 	CODE_UNREACHABLE;
