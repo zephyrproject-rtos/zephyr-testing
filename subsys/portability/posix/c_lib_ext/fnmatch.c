@@ -354,7 +354,11 @@ static int fnmatchx(const char *pattern, const char *string, const char *strings
 			int range_match = rangematch(&pattern, sc, flags);
 
 			if (range_match == RANGE_ERROR) {
-				goto norm;
+				if (pc != sc) {
+					return FNM_NOMATCH;
+				}
+				++string;
+				break;
 			}
 
 			if (range_match == RANGE_NOMATCH) {
@@ -376,7 +380,6 @@ static int fnmatchx(const char *pattern, const char *string, const char *strings
 			++string;
 			break;
 		default:
-norm:
 			if (pc != sc) {
 				return FNM_NOMATCH;
 			}
