@@ -207,7 +207,11 @@ int z_impl_k_pipe_write(struct k_pipe *pipe, const uint8_t *data, size_t len, k_
 		rc = wait_for(&pipe->space, pipe, &key, end, &need_resched, NULL);
 		if (rc != 0) {
 			if (rc == -EAGAIN) {
-				rc = written ? written : -EAGAIN;
+				if (written != 0U) {
+					rc = (int)written;
+				} else {
+					rc = -EAGAIN;
+				}
 			}
 			break;
 		}
@@ -250,14 +254,22 @@ int z_impl_k_pipe_read(struct k_pipe *pipe, uint8_t *data, size_t len, k_timeout
 		}
 
 		if (unlikely(pipe_closed(pipe))) {
-			rc = buf.used ? buf.used : -EPIPE;
+			if (buf.used != 0U) {
+				rc = (int)buf.used;
+			} else {
+				rc = -EPIPE;
+			}
 			break;
 		}
 
 		rc = wait_for(&pipe->data, pipe, &key, end, &need_resched, &buf);
 		if (rc != 0) {
 			if (rc == -EAGAIN) {
-				rc = buf.used ? buf.used : -EAGAIN;
+				if (buf.used != 0U) {
+					rc = (int)buf.used;
+				} else {
+					rc = -EAGAIN;
+				}
 			}
 			break;
 		}

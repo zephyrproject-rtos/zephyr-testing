@@ -174,7 +174,9 @@ void z_impl_k_sem_reset(struct k_sem *sem)
 			break;
 		}
 		resched = true;
-		arch_thread_return_value_set(thread, -EAGAIN);
+		int ret = -EAGAIN;
+
+		arch_thread_return_value_set(thread, (unsigned int)ret);
 		z_ready_thread(thread);
 	}
 	sem->count = 0;
