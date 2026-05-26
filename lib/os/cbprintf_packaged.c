@@ -391,6 +391,7 @@ int cbvprintf_package(void *packaged, size_t len, uint32_t flags,
 			 * storage size.
 			 */
 			bool skip_copy = false;
+			int switch_err = 0;
 
 			switch (arg_tag) {
 			case CBPRINTF_PACKAGE_ARG_TYPE_CHAR:
@@ -466,7 +467,12 @@ int cbvprintf_package(void *packaged, size_t len, uint32_t flags,
 				break;
 
 			default:
-				return -EINVAL;
+				switch_err = -EINVAL;
+				break;
+			}
+
+			if (switch_err != 0) {
+				return switch_err;
 			}
 
 			if (skip_copy) {
