@@ -114,6 +114,7 @@ int z_impl_k_condvar_wait(struct k_condvar *condvar, struct k_mutex *mutex,
 			  k_timeout_t timeout)
 {
 	k_spinlock_key_t key;
+	int lock_ret;
 	int ret = -EAGAIN;
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_condvar, wait, condvar, timeout);
@@ -129,7 +130,13 @@ int z_impl_k_condvar_wait(struct k_condvar *condvar, struct k_mutex *mutex,
 	}
 
 	key = k_spin_lock(&lock);
-	k_mutex_unlock(mutex);
+	lock_ret = k_mutex_unlock(mutex);
+	if (lock_ret != 0) {
+		k_spin_unlock(&lock, key);
+		ret = lock_ret;
+		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_condvar, wait, condvar, timeout, ret);
+		return ret;
+	}
 
 	ret = z_pend_curr(&lock, key, &condvar->wait_q, timeout);
 
@@ -138,7 +145,10 @@ int z_impl_k_condvar_wait(struct k_condvar *condvar, struct k_mutex *mutex,
 	 * calling thread when pthread_cond_wait() returns, regardless of
 	 * whether it was signaled or timed out.
 	 */
-	k_mutex_lock(mutex, K_FOREVER);
+	lock_ret = k_mutex_lock(mutex, K_FOREVER);
+	if (lock_ret != 0) {
+		ret = lock_ret;
+	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_condvar, wait, condvar, timeout, ret);
 

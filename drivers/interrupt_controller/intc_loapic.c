@@ -101,7 +101,8 @@ void z_loapic_enable(unsigned char cpu_number)
 	 *
 	 * in X2APIC, LDR is read-only.
 	 */
-	x86_write_xapic(LOAPIC_LDR, 1U << (cpu_number + 24));
+	x86_write_xapic(LOAPIC_LDR,
+			((uint32_t)1U) << (((uint32_t)cpu_number) + 24U));
 #endif
 
 	/*
