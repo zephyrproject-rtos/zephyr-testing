@@ -4,7 +4,7 @@
  */
 
 #include <stddef.h>
-#include <string.h>
+#include <stdint.h>
 #include <zephyr/sys/util_macro.h>
 #include <zephyr/linker/section_tags.h>
 #include <zephyr/linker/linker-defs.h>
@@ -26,7 +26,13 @@
 __boot_func
 void __weak arch_early_memset(void *dst, int c, size_t n)
 {
-	(void) memset(dst, c, n);
+	uint8_t *d = (uint8_t *)dst;
+
+	while (n > 0U) {
+		*d = (uint8_t)c;
+		d++;
+		n--;
+	}
 }
 
 /**
@@ -39,7 +45,22 @@ void __weak arch_early_memset(void *dst, int c, size_t n)
 __boot_func
 void __weak arch_early_memcpy(void *dst, const void *src, size_t n)
 {
-	(void) memcpy(dst, src, n);
+	uint8_t *d = (uint8_t *)dst;
+	const uint8_t *s = (const uint8_t *)src;
+
+	if (d < s) {
+		while (n > 0U) {
+			*d = *s;
+			d++;
+			s++;
+			n--;
+		}
+	} else if (d > s) {
+		while (n > 0U) {
+			n--;
+			d[n] = s[n];
+		}
+	}
 }
 
 /**
