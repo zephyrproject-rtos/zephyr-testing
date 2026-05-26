@@ -29,13 +29,19 @@ static struct k_spinlock rt_clock_offset_lock;
 
 static bool is_valid_clock_id(int clock_id)
 {
+	bool valid;
+
 	switch (clock_id) {
 	case SYS_CLOCK_MONOTONIC:
 	case SYS_CLOCK_REALTIME:
-		return true;
+		valid = true;
+		break;
 	default:
-		return false;
+		valid = false;
+		break;
 	}
+
+	return valid;
 }
 
 static void timespec_from_ticks(uint64_t ticks, struct timespec *ts)
