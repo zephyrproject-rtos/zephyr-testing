@@ -683,8 +683,8 @@ static inline k_timeout_t timespec_to_timeout(const struct timespec *req, struct
 
 	if (rem != NULL) {
 		timespec_from_timeout(timeout, rem);
-		timespec_sub(rem, req);
-		timespec_negate(rem);
+		(void)timespec_sub(rem, req);
+		(void)timespec_negate(rem);
 	}
 
 	return timeout;

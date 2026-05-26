@@ -291,8 +291,8 @@ void z_impl_k_pipe_reset(struct k_pipe *pipe)
 		ring_buf_reset(&pipe->buf);
 		if (likely(pipe->waiting != 0)) {
 			pipe->flags |= PIPE_FLAG_RESET;
-			z_sched_wake_all(&pipe->data, 0, NULL);
-			z_sched_wake_all(&pipe->space, 0, NULL);
+			(void)z_sched_wake_all(&pipe->data, 0, NULL);
+			(void)z_sched_wake_all(&pipe->space, 0, NULL);
 		}
 	}
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_pipe, reset, pipe);
@@ -303,8 +303,8 @@ void z_impl_k_pipe_close(struct k_pipe *pipe)
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_pipe, close, pipe);
 	K_SPINLOCK(&pipe->lock) {
 		pipe->flags = 0;
-		z_sched_wake_all(&pipe->data, 0, NULL);
-		z_sched_wake_all(&pipe->space, 0, NULL);
+		(void)z_sched_wake_all(&pipe->data, 0, NULL);
+		(void)z_sched_wake_all(&pipe->space, 0, NULL);
 	}
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_pipe, close, pipe);
 }
