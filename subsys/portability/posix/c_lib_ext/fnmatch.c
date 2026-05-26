@@ -370,7 +370,11 @@ static int fnmatchx(const char *pattern, const char *string, const char *strings
 				}
 				pc = FOLDCASE(*pattern++, flags);
 			}
-			__fallthrough;
+			if (pc != sc) {
+				return FNM_NOMATCH;
+			}
+			++string;
+			break;
 		default:
 norm:
 			if (pc != sc) {
