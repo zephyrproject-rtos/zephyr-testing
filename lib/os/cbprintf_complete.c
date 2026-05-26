@@ -764,19 +764,28 @@ static char _get_digit(uint64_t *fr, int *digit_count)
 
 static inline size_t conversion_radix(char specifier)
 {
+	size_t radix;
+
 	switch (specifier) {
-	default:
 	case 'd':
 	case 'i':
 	case 'u':
-		return 10;
+		radix = 10U;
+		break;
 	case 'o':
-		return 8;
+		radix = 8U;
+		break;
 	case 'p':
 	case 'x':
 	case 'X':
-		return 16;
+		radix = 16U;
+		break;
+	default:
+		radix = 10U;
+		break;
 	}
+
+	return radix;
 }
 
 /* Writes the given value into the buffer in the specified base.
@@ -1683,8 +1692,8 @@ int z_cbvprintf_impl(cbprintf_cb __out, void *ctx, const char *fp,
 			} else {
 				value->uint = (uint_value_type)sint;
 			}
-
-			__fallthrough;
+			bps = encode_uint(value->uint, conv, buf, bpe);
+			goto prec_int_pad0;
 		case 'o':
 		case 'u':
 		case 'x':
