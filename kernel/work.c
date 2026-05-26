@@ -71,7 +71,7 @@ static void handle_flush(struct k_work *work) { }
 static inline void init_flusher(struct z_work_flusher *flusher)
 {
 	struct k_work *work = &flusher->work;
-	k_sem_init(&flusher->sem, 0, 1);
+	(void)k_sem_init(&flusher->sem, 0, 1);
 	k_work_init(&flusher->work, handle_flush);
 	flag_set(&work->flags, K_WORK_FLUSHING_BIT);
 }
@@ -90,7 +90,7 @@ static sys_slist_t pending_cancels;
 static inline void init_work_cancel(struct z_work_canceller *canceler,
 				    struct k_work *work)
 {
-	k_sem_init(&canceler->sem, 0, 1);
+	(void)k_sem_init(&canceler->sem, 0, 1);
 	canceler->work = work;
 	sys_slist_append(&pending_cancels, &canceler->node);
 }
@@ -449,7 +449,7 @@ static bool work_flush_locked(struct k_work *work,
 		__ASSERT_NO_MSG(queue != NULL);
 
 		queue_flusher_locked(queue, work, flusher);
-		notify_queue_locked(queue);
+		(void)notify_queue_locked(queue);
 	}
 
 	return need_flush;
@@ -479,7 +479,7 @@ bool k_work_flush(struct k_work *work,
 	if (need_flush) {
 		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_work, flush, work, K_FOREVER);
 
-		k_sem_take(&flusher->sem, K_FOREVER);
+		(void)k_sem_take(&flusher->sem, K_FOREVER);
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, flush, work, need_flush);
@@ -595,7 +595,7 @@ bool k_work_cancel_sync(struct k_work *work,
 	if (need_wait) {
 		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_work, cancel_sync, work, sync);
 
-		k_sem_take(&canceller->sem, K_FOREVER);
+		(void)k_sem_take(&canceller->sem, K_FOREVER);
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, cancel_sync, work, sync, pending);
@@ -823,7 +823,7 @@ void k_work_queue_run(struct k_work_q *queue, const struct k_work_queue_config *
 	}
 
 	if ((cfg != NULL) && (cfg->name != NULL)) {
-		k_thread_name_set(_current, cfg->name);
+		(void)k_thread_name_set(_current, cfg->name);
 	}
 
 #if defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
@@ -875,7 +875,7 @@ void k_work_queue_start(struct k_work_q *queue,
 			      prio, 0, K_FOREVER);
 
 	if ((cfg != NULL) && (cfg->name != NULL)) {
-		k_thread_name_set(&queue->thread, cfg->name);
+		(void)k_thread_name_set(&queue->thread, cfg->name);
 	}
 
 	if ((cfg != NULL) && (cfg->essential)) {
@@ -916,7 +916,7 @@ int k_work_queue_drain(struct k_work_q *queue,
 			flag_set(&queue->flags, K_WORK_QUEUE_PLUGGED_BIT);
 		}
 
-		notify_queue_locked(queue);
+		(void)notify_queue_locked(queue);
 		ret = z_sched_wait(&lock, key, &queue->drainq,
 				   K_FOREVER, NULL);
 	} else {
@@ -973,7 +973,7 @@ int k_work_queue_stop(struct k_work_q *queue, k_timeout_t timeout)
 	}
 
 	flag_set(&queue->flags, K_WORK_QUEUE_STOP_BIT);
-	notify_queue_locked(queue);
+	(void)notify_queue_locked(queue);
 	k_spin_unlock(&lock, key);
 	SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_work_queue, stop, queue, timeout);
 	if (k_thread_join(queue->thread_id, timeout)) {
@@ -1100,7 +1100,7 @@ static int schedule_for_queue_locked(struct k_work_q **queuep,
 	dwork->queue = *queuep;
 
 	/* Add timeout */
-	z_add_timeout(&dwork->timeout, work_timeout, delay);
+	(void)z_add_timeout(&dwork->timeout, work_timeout, delay);
 
 	return ret;
 }
@@ -1263,7 +1263,7 @@ bool k_work_cancel_delayable_sync(struct k_work_delayable *dwork,
 	k_spin_unlock(&lock, key);
 
 	if (need_wait) {
-		k_sem_take(&canceller->sem, K_FOREVER);
+		(void)k_sem_take(&canceller->sem, K_FOREVER);
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, cancel_delayable_sync, dwork, sync, pending);
@@ -1311,7 +1311,7 @@ bool k_work_flush_delayable(struct k_work_delayable *dwork,
 
 	/* If necessary wait until the flusher item completes */
 	if (need_flush) {
-		k_sem_take(&flusher->sem, K_FOREVER);
+		(void)k_sem_take(&flusher->sem, K_FOREVER);
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, flush_delayable, dwork, sync, need_flush);
