@@ -110,40 +110,40 @@ static int rangematch_cc(const char **pattern, int ch)
 
 	switch (key) {
 	case FNM_CC5('a', 'l', 'n', 'u', 'm'):
-		ret = !isalnum(ch);
+		ret = !isalnum((unsigned char)ch);
 		break;
 	case FNM_CC5('a', 'l', 'p', 'h', 'a'):
-		ret = !isalpha(ch);
+		ret = !isalpha((unsigned char)ch);
 		break;
 	case FNM_CC5('b', 'l', 'a', 'n', 'k'):
-		ret = !isblank(ch);
+		ret = !isblank((unsigned char)ch);
 		break;
 	case FNM_CC5('c', 'n', 't', 'r', 'l'):
-		ret = !iscntrl(ch);
+		ret = !iscntrl((unsigned char)ch);
 		break;
 	case FNM_CC5('d', 'i', 'g', 'i', 't'):
-		ret = !isdigit(ch);
+		ret = !isdigit((unsigned char)ch);
 		break;
 	case FNM_CC5('g', 'r', 'a', 'p', 'h'):
-		ret = !isgraph(ch);
+		ret = !isgraph((unsigned char)ch);
 		break;
 	case FNM_CC5('l', 'o', 'w', 'e', 'r'):
-		ret = !islower(ch);
+		ret = !islower((unsigned char)ch);
 		break;
 	case FNM_CC5('p', 'r', 'i', 'n', 't'):
-		ret = !isprint(ch);
+		ret = !isprint((unsigned char)ch);
 		break;
 	case FNM_CC5('p', 'u', 'n', 'c', 't'):
-		ret = !ispunct(ch);
+		ret = !ispunct((unsigned char)ch);
 		break;
 	case FNM_CC5('s', 'p', 'a', 'c', 'e'):
-		ret = !isspace(ch);
+		ret = !isspace((unsigned char)ch);
 		break;
 	case FNM_CC5('u', 'p', 'p', 'e', 'r'):
-		ret = !isupper(ch);
+		ret = !isupper((unsigned char)ch);
 		break;
 	case FNM_CC6('x', 'd', 'i', 'g', 'i', 't'):
-		ret = !isxdigit(ch);
+		ret = !isxdigit((unsigned char)ch);
 		break;
 	default:
 		ret = RANGE_ERROR;
@@ -160,8 +160,8 @@ static int rangematch_cc(const char **pattern, int ch)
 
 static inline int foldcase(int ch, int flags)
 {
-	if (((flags & FNM_CASEFOLD) != 0) && isupper(ch)) {
-		return tolower(ch);
+	if (((flags & FNM_CASEFOLD) != 0) && isupper((unsigned char)ch)) {
+		return tolower((unsigned char)ch);
 	}
 
 	return ch;
@@ -238,7 +238,7 @@ static int rangematch(const char **pattern, char test, int flags)
 			}
 
 			if (flags & FNM_CASEFOLD) {
-				c2 = tolower((int)c2);
+				c2 = (char)tolower((unsigned char)c2);
 			}
 
 			if (c <= test && test <= c2) {
