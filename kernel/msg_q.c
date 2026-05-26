@@ -14,7 +14,6 @@
 
 #include <zephyr/toolchain.h>
 #include <zephyr/linker/sections.h>
-#include <string.h>
 #include <ksched.h>
 #include <wait_q.h>
 #include <zephyr/sys/dlist.h>
@@ -27,6 +26,22 @@
 #ifdef CONFIG_OBJ_CORE_MSGQ
 static struct k_obj_type obj_type_msgq;
 #endif /* CONFIG_OBJ_CORE_MSGQ */
+
+static inline void msgq_copy_bytes(void *dst, const void *src, size_t len)
+{
+	unsigned char *d = (unsigned char *)dst;
+	const unsigned char *s = (const unsigned char *)src;
+
+	if (d < s) {
+		for (size_t i = 0U; i < len; i++) {
+			d[i] = s[i];
+		}
+	} else if (d > s) {
+		for (size_t i = len; i > 0U; i--) {
+			d[i - 1U] = s[i - 1U];
+		}
+	}
+}
 
 static inline bool handle_poll_events(struct k_msgq *msgq)
 {
@@ -151,7 +166,7 @@ static inline int put_msg_in_queue(struct k_msgq *msgq, const void *data,
 			resched = true;
 
 			/* give message to waiting thread */
-			(void)memcpy(pending_thread->base.swap_data, data, msgq->msg_size);
+			msgq_copy_bytes(pending_thread->base.swap_data, data, msgq->msg_size);
 			/* wake up waiting thread */
 			arch_thread_return_value_set(pending_thread, 0);
 			z_ready_thread(pending_thread);
@@ -165,7 +180,7 @@ static inline int put_msg_in_queue(struct k_msgq *msgq, const void *data,
 				 * to write a message to the back of the queue,
 				 * copy the message and increment write_ptr
 				 */
-				(void)memcpy(msgq->write_ptr, (char *)data, msgq->msg_size);
+				msgq_copy_bytes(msgq->write_ptr, data, msgq->msg_size);
 				msgq->write_ptr += msgq->msg_size;
 				if (msgq->write_ptr == msgq->buffer_end) {
 					msgq->write_ptr = msgq->buffer_start;
@@ -181,7 +196,7 @@ static inline int put_msg_in_queue(struct k_msgq *msgq, const void *data,
 					msgq->read_ptr = msgq->buffer_end;
 				}
 				msgq->read_ptr -= msgq->msg_size;
-				(void)memcpy(msgq->read_ptr, (char *)data, msgq->msg_size);
+				msgq_copy_bytes(msgq->read_ptr, data, msgq->msg_size);
 			}
 			msgq->used_msgs++;
 			resched = handle_poll_events(msgq);
@@ -291,7 +306,7 @@ int z_impl_k_msgq_get(struct k_msgq *msgq, void *data, k_timeout_t timeout)
 
 	if (msgq->used_msgs > 0U) {
 		/* take first available message from queue */
-		(void)memcpy((char *)data, msgq->read_ptr, msgq->msg_size);
+		msgq_copy_bytes(data, msgq->read_ptr, msgq->msg_size);
 		msgq->read_ptr += msgq->msg_size;
 		if (msgq->read_ptr == msgq->buffer_end) {
 			msgq->read_ptr = msgq->buffer_start;
@@ -308,8 +323,8 @@ int z_impl_k_msgq_get(struct k_msgq *msgq, void *data, k_timeout_t timeout)
 					(msgq->write_ptr <= (msgq->buffer_end - 1)) &&
 					((size_t)(uintptr_t)(msgq->buffer_end - msgq->write_ptr) >=
 						msgq->msg_size));
-			(void)memcpy(msgq->write_ptr, (char *)pending_thread->base.swap_data,
-			       msgq->msg_size);
+			msgq_copy_bytes(msgq->write_ptr, pending_thread->base.swap_data,
+				       msgq->msg_size);
 			msgq->write_ptr += msgq->msg_size;
 			if (msgq->write_ptr == msgq->buffer_end) {
 				msgq->write_ptr = msgq->buffer_start;
@@ -368,7 +383,7 @@ int z_impl_k_msgq_peek(struct k_msgq *msgq, void *data)
 
 	if (msgq->used_msgs > 0U) {
 		/* take first available message from queue */
-		(void)memcpy((char *)data, msgq->read_ptr, msgq->msg_size);
+		msgq_copy_bytes(data, msgq->read_ptr, msgq->msg_size);
 		result = 0;
 	} else {
 		/* don't wait for a message to become available */
@@ -414,7 +429,7 @@ int z_impl_k_msgq_peek_at(struct k_msgq *msgq, void *data, uint32_t idx)
 			/* wrap-around is required */
 			start_addr = msgq->buffer_start;
 		}
-		(void)memcpy(data, start_addr + byte_offset, msgq->msg_size);
+		msgq_copy_bytes(data, start_addr + byte_offset, msgq->msg_size);
 		result = 0;
 	} else {
 		/* don't wait for a message to become available */
