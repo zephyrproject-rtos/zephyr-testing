@@ -161,16 +161,16 @@ static inline unsigned int z_impl_sys_clock_hw_cycles_per_sec_runtime_get(void)
  * https://blog.llvm.org/2011/05/what-every-c-programmer-should-know_21.html
  *
  * To silence such divide-by-zero warnings, "cheat" and never return
- * zero.  Return 1 instead. Use octal "01u" as a breadcrumb to ease a
- * little bit the huge pain of "reverse-engineering" pre-processor
- * output.
+ * zero.  Return 1 instead. Use 1U (decimal, unsigned) rather than the
+ * former octal "01u" breadcrumb to satisfy MC3A2.R7.1 (octal constants
+ * shall not be used).
  *
  * The "Elvis" operator "a/b ?: 1" is tempting because it avoids
  * evaluating the same expression twice. However: 1. it's a non-standard
  * GNU extension; 2. everything in this file is designed to be computed
  * at compile time anyway.
  */
-#define z_tmcvt_divisor(a, b) ((a)/(b) ? (a)/(b) : 01u)
+#define z_tmcvt_divisor(a, b) ((a)/(b) ? (a)/(b) : 1U)
 
 /*
  * Compute the offset needed to round the result correctly when
@@ -283,6 +283,7 @@ static inline unsigned int z_impl_sys_clock_hw_cycles_per_sec_runtime_get(void)
  * precision.  These units conversions were not available in 32 bit
  * variants historically, and doing 32 bit math with units that small
  * has precision traps that we probably don't want to support in an
+
  * official API.
  *
  * #!/usr/bin/perl -w

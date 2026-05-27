@@ -701,7 +701,19 @@ __syscall int32_t k_sleep(k_timeout_t timeout);
  */
 static inline int32_t k_msleep(int32_t ms)
 {
-	return k_sleep(Z_TIMEOUT_MS(ms));
+	/* Pre-clamp ms and store as a typed variable so that the
+	 * z_tmcvt macro inside Z_TIMEOUT_MS receives a non-composite
+	 * operand, avoiding MC3A2.R10.8 (composite expression cast to
+	 * a wider essential type inside the macro).
+	 */
+	uint32_t ms_pos = (ms > 0) ? (uint32_t)ms : 0U;
+#ifdef CONFIG_TIMEOUT_64BIT
+	uint64_t ticks_u = k_ms_to_ticks_ceil64(ms_pos);
+	k_ticks_t ticks = (k_ticks_t)ticks_u;
+#else
+	k_ticks_t ticks = k_ms_to_ticks_ceil32(ms_pos);
+#endif
+	return k_sleep(Z_TIMEOUT_TICKS(ticks));
 }
 
 /**
@@ -2088,7 +2100,13 @@ static inline k_ticks_t z_impl_k_timer_remaining_ticks(
  */
 static inline uint32_t k_timer_remaining_get(struct k_timer *timer)
 {
-	return k_ticks_to_ms_floor32(k_timer_remaining_ticks(timer));
+	/* Store in a named variable so the z_tmcvt macro receives a
+	 * non-composite operand and avoids MC3A2.R10.8 (composite
+	 * expression shall not be cast to a wider essential type).
+	 */
+	k_ticks_t remaining = k_timer_remaining_ticks(timer);
+
+	return k_ticks_to_ms_floor32(remaining);
 }
 
 #endif /* CONFIG_SYS_CLOCK_EXISTS */
@@ -2164,7 +2182,12 @@ __syscall int64_t k_uptime_ticks(void);
  */
 static inline int64_t k_uptime_get(void)
 {
-	return k_ticks_to_ms_floor64(k_uptime_ticks());
+	/* Store in a named variable so the z_tmcvt macro receives a
+	 * non-composite operand and avoids MC3A2.R10.8.
+	 */
+	k_ticks_t uptime = k_uptime_ticks();
+
+	return k_ticks_to_ms_floor64(uptime);
 }
 
 /**
@@ -2201,7 +2224,12 @@ static inline uint32_t k_uptime_get_32(void)
  */
 static inline uint32_t k_uptime_seconds(void)
 {
-	return k_ticks_to_sec_floor32(k_uptime_ticks());
+	/* Store in a named variable so the z_tmcvt macro receives a
+	 * non-composite operand and avoids MC3A2.R10.8.
+	 */
+	k_ticks_t uptime = k_uptime_ticks();
+
+	return k_ticks_to_sec_floor32(uptime);
 }
 
 /**
@@ -6572,13 +6600,18 @@ enum _poll_states_bits {
 
 #define Z_POLL_STATE_BIT(state) (1U << ((state) - 1U))
 
+/* Use unsigned arithmetic and explicit casts for enum operands to satisfy
+ * MC3A2.R10.1 (inappropriate essential type) and MC3A2.R10.4 (operands
+ * shall have the same essential type category) when this expression is
+ * used as a bitfield width.
+ */
 #define _POLL_EVENT_NUM_UNUSED_BITS \
-	(32 - (0 \
-	       + 8 /* tag */ \
-	       + _POLL_NUM_TYPES \
-	       + _POLL_NUM_STATES \
-	       + 1 /* modes */ \
-	      ))
+	(32U - (0U \
+	        + 8U /* tag */ \
+	        + (uint32_t)_POLL_NUM_TYPES \
+	        + (uint32_t)_POLL_NUM_STATES \
+	        + 1U /* modes */ \
+	       ))
 
 /* end of polling API - PRIVATE */
 
