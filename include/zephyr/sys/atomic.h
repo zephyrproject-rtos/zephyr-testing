@@ -244,6 +244,12 @@ static inline void atomic_set_bit_to(atomic_t *target, int bit, bool val)
 	}
 }
 
+#if defined(CONFIG_ATOMIC_OPERATIONS_BUILTIN)
+#define Z_ATOMIC_API_DECL static inline
+#else
+#define Z_ATOMIC_API_DECL
+#endif
+
 /**
  * @brief Atomic compare-and-set.
  *
@@ -259,7 +265,8 @@ static inline void atomic_set_bit_to(atomic_t *target, int bit, bool val)
  * @param new_value New value to store.
  * @return true if @a new_value is written, false otherwise.
  */
-bool atomic_cas(atomic_t *target, atomic_val_t old_value, atomic_val_t new_value);
+Z_ATOMIC_API_DECL bool atomic_cas(atomic_t *target, atomic_val_t old_value,
+					  atomic_val_t new_value);
 
 /**
  * @brief Atomic compare-and-set with pointer values
@@ -276,8 +283,9 @@ bool atomic_cas(atomic_t *target, atomic_val_t old_value, atomic_val_t new_value
  * @param new_value New value to store.
  * @return true if @a new_value is written, false otherwise.
  */
-bool atomic_ptr_cas(atomic_ptr_t *target, atomic_ptr_val_t old_value,
-		    atomic_ptr_val_t new_value);
+Z_ATOMIC_API_DECL bool atomic_ptr_cas(atomic_ptr_t *target,
+				      atomic_ptr_val_t old_value,
+				      atomic_ptr_val_t new_value);
 
 /**
  * @brief Atomic addition.
@@ -291,7 +299,7 @@ bool atomic_ptr_cas(atomic_ptr_t *target, atomic_ptr_val_t old_value,
  *
  * @return Previous value of @a target.
  */
-atomic_val_t atomic_add(atomic_t *target, atomic_val_t value);
+Z_ATOMIC_API_DECL atomic_val_t atomic_add(atomic_t *target, atomic_val_t value);
 
 /**
  * @brief Atomic subtraction.
@@ -305,7 +313,7 @@ atomic_val_t atomic_add(atomic_t *target, atomic_val_t value);
  *
  * @return Previous value of @a target.
  */
-atomic_val_t atomic_sub(atomic_t *target, atomic_val_t value);
+Z_ATOMIC_API_DECL atomic_val_t atomic_sub(atomic_t *target, atomic_val_t value);
 
 /**
  * @brief Atomic increment.
@@ -318,7 +326,7 @@ atomic_val_t atomic_sub(atomic_t *target, atomic_val_t value);
  *
  * @return Previous value of @a target.
  */
-atomic_val_t atomic_inc(atomic_t *target);
+Z_ATOMIC_API_DECL atomic_val_t atomic_inc(atomic_t *target);
 
 /**
  * @brief Atomic decrement.
@@ -331,7 +339,7 @@ atomic_val_t atomic_inc(atomic_t *target);
  *
  * @return Previous value of @a target.
  */
-atomic_val_t atomic_dec(atomic_t *target);
+Z_ATOMIC_API_DECL atomic_val_t atomic_dec(atomic_t *target);
 
 /**
  * @brief Atomic get.
@@ -344,7 +352,7 @@ atomic_val_t atomic_dec(atomic_t *target);
  *
  * @return Value of @a target.
  */
-atomic_val_t atomic_get(const atomic_t *target);
+Z_ATOMIC_API_DECL atomic_val_t atomic_get(const atomic_t *target);
 
 /**
  * @brief Atomic get a pointer value
@@ -357,7 +365,7 @@ atomic_val_t atomic_get(const atomic_t *target);
  *
  * @return Value of @a target.
  */
-atomic_ptr_val_t atomic_ptr_get(const atomic_ptr_t *target);
+Z_ATOMIC_API_DECL atomic_ptr_val_t atomic_ptr_get(const atomic_ptr_t *target);
 
 /**
  * @brief Atomic get-and-set.
@@ -372,7 +380,7 @@ atomic_ptr_val_t atomic_ptr_get(const atomic_ptr_t *target);
  *
  * @return Previous value of @a target.
  */
-atomic_val_t atomic_set(atomic_t *target, atomic_val_t value);
+Z_ATOMIC_API_DECL atomic_val_t atomic_set(atomic_t *target, atomic_val_t value);
 
 /**
  * @brief Atomic get-and-set for pointer values
@@ -387,7 +395,8 @@ atomic_val_t atomic_set(atomic_t *target, atomic_val_t value);
  *
  * @return Previous value of @a target.
  */
-atomic_ptr_val_t atomic_ptr_set(atomic_ptr_t *target, atomic_ptr_val_t value);
+Z_ATOMIC_API_DECL atomic_ptr_val_t atomic_ptr_set(atomic_ptr_t *target,
+					   atomic_ptr_val_t value);
 
 /**
  * @brief Atomic clear.
@@ -401,7 +410,7 @@ atomic_ptr_val_t atomic_ptr_set(atomic_ptr_t *target, atomic_ptr_val_t value);
  *
  * @return Previous value of @a target.
  */
-atomic_val_t atomic_clear(atomic_t *target);
+Z_ATOMIC_API_DECL atomic_val_t atomic_clear(atomic_t *target);
 
 /**
  * @brief Atomic clear of a pointer value
@@ -415,7 +424,7 @@ atomic_val_t atomic_clear(atomic_t *target);
  *
  * @return Previous value of @a target.
  */
-atomic_ptr_val_t atomic_ptr_clear(atomic_ptr_t *target);
+Z_ATOMIC_API_DECL atomic_ptr_val_t atomic_ptr_clear(atomic_ptr_t *target);
 
 /**
  * @brief Atomic bitwise inclusive OR.
@@ -430,7 +439,7 @@ atomic_ptr_val_t atomic_ptr_clear(atomic_ptr_t *target);
  *
  * @return Previous value of @a target.
  */
-atomic_val_t atomic_or(atomic_t *target, atomic_val_t value);
+Z_ATOMIC_API_DECL atomic_val_t atomic_or(atomic_t *target, atomic_val_t value);
 
 /**
  * @brief Atomic bitwise exclusive OR (XOR).
@@ -445,7 +454,7 @@ atomic_val_t atomic_or(atomic_t *target, atomic_val_t value);
  *
  * @return Previous value of @a target.
  */
-atomic_val_t atomic_xor(atomic_t *target, atomic_val_t value);
+Z_ATOMIC_API_DECL atomic_val_t atomic_xor(atomic_t *target, atomic_val_t value);
 
 /**
  * @brief Atomic bitwise AND.
@@ -460,7 +469,7 @@ atomic_val_t atomic_xor(atomic_t *target, atomic_val_t value);
  *
  * @return Previous value of @a target.
  */
-atomic_val_t atomic_and(atomic_t *target, atomic_val_t value);
+Z_ATOMIC_API_DECL atomic_val_t atomic_and(atomic_t *target, atomic_val_t value);
 
 /**
  * @brief Atomic bitwise NAND.
@@ -475,7 +484,9 @@ atomic_val_t atomic_and(atomic_t *target, atomic_val_t value);
  *
  * @return Previous value of @a target.
  */
-atomic_val_t atomic_nand(atomic_t *target, atomic_val_t value);
+Z_ATOMIC_API_DECL atomic_val_t atomic_nand(atomic_t *target, atomic_val_t value);
+
+#undef Z_ATOMIC_API_DECL
 
 /**
  * @}
