@@ -23,6 +23,7 @@ jobs:
     if: github.repository == 'zephyrproject-rtos/zephyr-testing'
     permissions:
       issues: write # to check if associated issue exists for backport and post comments
+      pull-requests: write # to comment on pull requests
 
     steps:
       - name: Check out source code
