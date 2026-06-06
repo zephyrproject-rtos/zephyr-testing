@@ -290,6 +290,22 @@ class Backport(object):
         return self._pulls_with_invalid_issues
 
 
+BACKPORT_CHECK_MARKER = '<!-- backport-issue-check -->'
+
+
+def clear_bot_comments(pr):
+    """Delete any previous bot comments on pr that contain the marker."""
+    try:
+        for c in pr.get_issue_comments():
+            if BACKPORT_CHECK_MARKER in c.body:
+                try:
+                    c.delete()
+                except Exception as e:
+                    logging.warning(f'failed to delete comment {c.id} on PR #{pr.number}: {e}')
+    except Exception as e:
+        logging.warning(f'failed to list comments on PR #{pr.number}: {e}')
+
+
 def main():
     args = parse_args()
 
@@ -330,6 +346,7 @@ def main():
     if pulls_without_issues:
         if args.check:
             comment = (
+                BACKPORT_CHECK_MARKER + '\n'
                 'This pull request to a release branch does not have an '
                 'associated GitHub issue.\n\n'
                 'Please update the pull request description to include a reference to '
@@ -344,6 +361,7 @@ def main():
 
             )
             for p in pulls_without_issues:
+                clear_bot_comments(p)
                 try:
                     p.create_issue_comment(comment)
                 except Exception as e:
@@ -357,6 +375,9 @@ def main():
         return os.EX_DATAERR
 
     if args.check:
+        # clean up any previous failure comments now that the PR is valid
+        for p in bp.get_pulls():
+            clear_bot_comments(p)
         return os.EX_OK
 
     if args.json:
