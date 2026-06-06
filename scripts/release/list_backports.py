@@ -332,11 +332,16 @@ def main():
             comment = (
                 'This pull request to a release branch does not have an '
                 'associated GitHub issue.\n\n'
-                'Please update the PR description to include a reference to '
+                'Please update the pull request description to include a reference to '
                 'the issue being fixed, for example:\n\n'
                 '```\nFixes #<issue_number>\n```\n\n'
-                'All changes to release branches require a corresponding issue '
-                'for tracking purposes.'
+                'For stable releases, all changes SHALL have a reference to an issue or '
+                'a published advisory documenting:\n'
+                '- the issue being fixed\n'
+                '- its severity/impact\n'
+                '\nSee https://docs.zephyrproject.org/latest/project/release_process.html#issue-tracking-during-feature-freeze '
+                'for more details.'
+
             )
             for p in pulls_without_issues:
                 try:
