@@ -46,6 +46,8 @@ BUILD_ASSERT(CONFIG_MP_NUM_CPUS == CONFIG_MP_MAX_NUM_CPUS,
 __pinned_bss
 struct z_kernel _kernel;
 
+
+
 #ifdef CONFIG_PM
 __pinned_bss atomic_t _cpus_active;
 #endif
