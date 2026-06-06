@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-24.04
     if: github.repository == 'zephyrproject-rtos/zephyr'
     permissions:
-      issues: read # to check if associated issue exists for backport
+      issues: write # to check if associated issue exists for backport and post comments
 
     steps:
       - name: Check out source code
@@ -47,4 +47,5 @@ jobs:
           -o ${{ github.event.repository.owner.login }} \
           -r ${{ github.event.repository.name }} \
           -b ${{ github.event.pull_request.base.ref }} \
-          -p ${{ github.event.pull_request.number }}
+          -p ${{ github.event.pull_request.number }} \
+          --check
