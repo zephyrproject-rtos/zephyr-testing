@@ -38,7 +38,7 @@ void z_irq_spurious(const void *unused);
  */
 struct _isr_table_entry {
 	const void *arg;
-	void (*isr)(const void *);
+	void (*isr)(const void *arg);
 };
 
 #if defined(CONFIG_GEN_SW_ISR_TABLE_ARRAY)
