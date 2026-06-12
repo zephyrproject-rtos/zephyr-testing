@@ -108,7 +108,8 @@ static inline void get_start_time_cyc(void)
 
 static inline void get_test_duration_ms(void)
 {
-	uint32_t spend_cycle = k_cycle_get_32() - tc_start_time;
+	uint32_t now = k_cycle_get_32();
+	uint32_t spend_cycle = now - tc_start_time;
 
 	tc_spend_time = k_cyc_to_ms_ceil32(spend_cycle);
 }

@@ -983,9 +983,11 @@ static void __ztest_show_suite_summary_oneline(struct ztest_suite_node *suite)
 		}
 	}
 
+	const char *result_str = TC_RESULT_TO_STR(suite_result);
+
 	TC_SUMMARY_PRINT("SUITE %s - %3d.%02d%% [%s]: pass = %d, fail = %d, "
 			 "skip = %d, total = %d duration = %u.%03u seconds\n",
-			 TC_RESULT_TO_STR(suite_result), passrate_major, passrate_minor,
+			 result_str, passrate_major, passrate_minor,
 			 suite->name, distinct_pass, distinct_fail, distinct_skip, distinct_total,
 			 suite_duration_worst_ms / 1000, suite_duration_worst_ms % 1000);
 	log_flush();
@@ -1013,17 +1015,19 @@ static void __ztest_show_suite_summary_verbose(struct ztest_suite_node *suite)
 			tc_result = TC_FLAKY;
 		}
 
+		const char *result_str = TC_RESULT_TO_STR(tc_result);
+
 		if (tc_result == TC_FLAKY) {
 			TC_SUMMARY_PRINT(
 				" - %s - [%s.%s] - (Failed %d of %d attempts)"
 				" - duration = %u.%03u seconds\n",
-				TC_RESULT_TO_STR(tc_result), test->test_suite_name, test->name,
+				result_str, test->test_suite_name, test->name,
 				test->stats->run_count - test->stats->pass_count,
 				test->stats->run_count, test->stats->duration_worst_ms / 1000,
 				test->stats->duration_worst_ms % 1000);
 		} else {
 			TC_SUMMARY_PRINT(" - %s - [%s.%s] duration = %u.%03u seconds\n",
-					 TC_RESULT_TO_STR(tc_result), test->test_suite_name,
+					 result_str, test->test_suite_name,
 					 test->name, test->stats->duration_worst_ms / 1000,
 					 test->stats->duration_worst_ms % 1000);
 		}
