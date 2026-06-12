@@ -408,7 +408,7 @@ void ztest_skip_failed_assumption(void);
 
 #define Z_TEST_P(suite, fn, t_options) \
 	struct ztest_unit_test_stats z_ztest_unit_test_stats_##suite##_##fn; \
-	static void _##suite##_##fn##_wrapper(void *data); \
+	static void _##suite##_##fn##_wrapper(void *wrapper_data); \
 	static void suite##_##fn(void *data); \
 	static STRUCT_SECTION_ITERABLE(ztest_unit_test, z_ztest_unit_test__##suite##__##fn) = { \
 		.test_suite_name = STRINGIFY(suite), \
@@ -428,7 +428,7 @@ void ztest_skip_failed_assumption(void);
 
 #define Z_TEST(suite, fn, t_options, use_fixture)                                                  \
 	struct ztest_unit_test_stats z_ztest_unit_test_stats_##suite##_##fn;                       \
-	static void _##suite##_##fn##_wrapper(void *data);                                         \
+	static void _##suite##_##fn##_wrapper(void *wrapper_data);                                 \
 	static void suite##_##fn(                                                                  \
 		COND_CODE_1(use_fixture, (struct suite##_fixture *fixture), (void)));              \
 	static STRUCT_SECTION_ITERABLE(ztest_unit_test, z_ztest_unit_test__##suite##__##fn) = {    \
