@@ -36,7 +36,7 @@ int x86_nr_memmap_exclusions = sizeof(x86_memmap_exclusions) /
 __weak enum x86_memmap_source x86_memmap_source = X86_MEMMAP_SOURCE_DEFAULT;
 
 __weak struct x86_memmap_entry x86_memmap[CONFIG_X86_MEMMAP_ENTRIES] = {
-	{
+	[0] = {
 		DT_REG_ADDR(DT_CHOSEN(zephyr_sram)),
 		DT_REG_SIZE(DT_CHOSEN(zephyr_sram)),
 		X86_MEMMAP_ENTRY_RAM
