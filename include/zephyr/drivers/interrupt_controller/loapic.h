@@ -173,7 +173,7 @@ static inline void z_loapic_ipi(uint8_t apic_id, uint32_t ipi, uint8_t vector)
 	while (x86_read_xapic(LOAPIC_ICRLO) & LOAPIC_ICR_BUSY) {
 	}
 
-	x86_write_xapic(LOAPIC_ICRHI, apic_id << 24);
+	x86_write_xapic(LOAPIC_ICRHI, (uint32_t)apic_id << 24);
 	x86_write_xapic(LOAPIC_ICRLO, ipi);
 #else
 	/*

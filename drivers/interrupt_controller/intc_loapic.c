@@ -129,7 +129,7 @@ void z_loapic_enable(unsigned char cpu_number)
 
 #ifndef CONFIG_X2APIC
 	/* Flat model */
-	x86_write_loapic(LOAPIC_DFR, 0xffffffff);  /* no DFR in x2APIC mode */
+	x86_write_loapic(LOAPIC_DFR, 0xffffffffU);  /* no DFR in x2APIC mode */
 #endif
 
 	x86_write_loapic(LOAPIC_TPR, 0x0);
