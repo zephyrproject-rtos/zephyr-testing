@@ -64,6 +64,15 @@ directive is disapplied."
 -config=MC3A2.D4.6,reports+={disapplied,"any()"}
 -doc_end
 
+-doc_begin="Directive 4.8 is advisory and is not adopted by the project. Public
+headers deliberately define the layout of types that are part of the API even
+though a given translation unit that includes the header may only handle
+pointers to them. Hiding such a definition is a per-unit property that cannot be
+satisfied for a shared header without splitting the API, so the directive is
+disapplied."
+-config=MC3A2.D4.8,reports+={disapplied,"any()"}
+-doc_end
+
 -doc_begin="Files that are intended to be included more than once do not need to
 conform to the directive."
 -config=MC3A2.D4.10,reports+={safe, "first_area(text(^/\\* This file is intended to be included multiple times\\. \\*/$, begin-4))"}
@@ -496,6 +505,18 @@ of this macro do not lead to developer confusion, and can thus be deviated."
 on purpose, to be able to test function-like macros. Given the specialized and limited
 use of this macro, it is deemed ok to deviate them."
 -config=MC3A2.R20.7,reports+={deliberate, "any_area(any_loc(any_exp(macro(^(COMPILE_CHECK|RUNTIME_CHECK)$))))"}
+-doc_end
+
+-doc_begin="The argument of the Z_IS_ENABLED3 macro (part of the IS_ENABLED()
+machinery) is token-pasted to test whether a configuration option expands to 1,
+so it cannot be parenthesized without breaking the macro."
+-config=MC3A2.R20.7,reports+={safe, "any_area(any_loc(any_exp(macro(^Z_IS_ENABLED3$))))"}
+-doc_end
+
+-doc_begin="The FOR_EACH() family of macros invokes its function-like argument on
+each element (and forwards the fixed arguments to it), so those macro parameters
+are used in a call context and cannot be parenthesized."
+-config=MC3A2.R20.7,reports+={safe, "any_area(any_loc(any_exp(macro(^(FOR_EACH|Z_FOR_EACH|Z_FOR_LOOP)[A-Z0-9_]*$))))"}
 -doc_end
 
 -doc_begin="Problems related to operator precedence can not occur if the expansion of the macro argument is surrounded by tokens '{', '}' and ';'."
