@@ -15,10 +15,15 @@ DNM_LABELS = ["DNM", "DNM (manifest)", "TSC", "Architecture Review", "dev-review
 
 
 def print_rate_limit(gh, org):
-    response = gh.get_organization(org)
-    for header, value in response.raw_headers.items():
-        if header.startswith("x-ratelimit"):
-            print(f"{header}: {value}")
+    # Diagnostics only - never let it abort the gate (e.g. when 'org' is a user
+    # account, as in local testing against a fork, get_organization 404s).
+    try:
+        response = gh.get_organization(org)
+        for header, value in response.raw_headers.items():
+            if header.startswith("x-ratelimit"):
+                print(f"{header}: {value}")
+    except github.GithubException as e:
+        print(f"WARNING: could not read rate limit for '{org}': {e}")
 
 
 def parse_args(argv):
