@@ -43,6 +43,36 @@ def parse_args(argv):
 WAIT_FOR_WORKFLOWS = set({"Manifest"})
 WAIT_FOR_DELAY_S = 60
 
+# Context name for the commit status that surfaces *why* merging is blocked.
+# A commit status (vs a check run) is used because its short description renders
+# in the PR-list hovercard and the merge box, so reviewers can tell an
+# intentional gate from a genuine CI failure without opening the PR.
+STATUS_CONTEXT = "Merge gate"
+
+
+def publish_status(repo, pr, reasons):
+    if reasons:
+        state = "failure"
+        # Lead with a marker so the gate is recognizable at a glance on hover.
+        description = ("Gated (not a CI failure): " + "; ".join(reasons))[:140]
+    else:
+        state = "success"
+        description = "No merge blockers"
+
+    print(f"publishing status '{STATUS_CONTEXT}': {state} - {description}")
+    try:
+        repo.get_commit(pr.head.sha).create_status(
+            state=state,
+            context=STATUS_CONTEXT,
+            description=description,
+            target_url=pr.html_url,
+        )
+    except github.GithubException as e:
+        # Never let a status-publishing problem mask the gate; the exit code in
+        # main() is the authoritative block. The token is read-only for pull
+        # requests from forks, where this is expected to fail.
+        print(f"WARNING: could not publish '{STATUS_CONTEXT}' status: {e}")
+
 
 def workflow_delay(repo, pr):
     print(f"PR is at {pr.head.sha}")
@@ -79,20 +109,22 @@ def main(argv):
 
     print(f"pr: {pr.html_url}")
 
-    fail = False
+    reasons = []
 
     for label in pr.get_labels():
         print(f"label: {label.name}")
 
         if label.name in DNM_LABELS or label.name.startswith("block:"):
             print(f"Pull request is labeled as \"{label.name}\".")
-            fail = True
+            reasons.append(f'label "{label.name}"')
 
     if not pr.body:
-        print("Pull request is description is empty.")
-        fail = True
+        print("Pull request description is empty.")
+        reasons.append("empty PR description")
 
-    if fail:
+    publish_status(repo, pr, reasons)
+
+    if reasons:
         print("This workflow fails so that the pull request cannot be merged.")
         sys.exit(1)
 
