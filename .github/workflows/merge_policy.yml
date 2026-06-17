@@ -1,0 +1,37 @@
+name: Merge policy
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, labeled, unlabeled, ready_for_review, converted_to_draft]
+
+permissions:
+  statuses: write
+  pull-requests: read
+  contents: read
+
+jobs:
+  merge-policy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set merge-policy status
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labels = context.payload.pull_request.labels.map(l => l.name);
+            const sha = context.payload.pull_request.head.sha;
+
+            const blocked =
+              labels.includes("do-not-merge") ||
+              context.payload.pull_request.draft;
+
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha,
+              context: "merge-policy",
+              state: blocked ? "pending" : "success",
+              description: blocked
+                ? "Blocked by project policy"
+                : "Merge policy passed",
+              target_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
+            });
