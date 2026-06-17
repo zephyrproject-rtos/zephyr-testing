@@ -3,6 +3,8 @@ name: Merge policy
 on:
   pull_request_target:
     types: [opened, reopened, synchronize, labeled, unlabeled, edited, ready_for_review, converted_to_draft]
+  pull_request_review:
+    types: [submitted, edited, dismissed]
 
 permissions:
   statuses: write
@@ -34,6 +36,32 @@ jobs:
 
             if (!pr.body || !pr.body.trim()) {
               reasons.push("Pull request description is empty");
+            }
+
+            if (labels.includes("Approved-by-all")) {
+              const assignees = (pr.assignees || []).map(a => a.login);
+              if (assignees.length === 0) {
+                reasons.push("Approved-by-all set but PR has no assignees");
+              } else {
+                const reviews = await github.paginate(github.rest.pulls.listReviews, {
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: pr.number,
+                });
+
+                // Track each reviewer's latest decisive review state. COMMENTED
+                // reviews don't change the effective approval state on GitHub.
+                const latestState = {};
+                for (const review of reviews) {
+                  if (!review.user || review.state === "COMMENTED") continue;
+                  latestState[review.user.login] = review.state;
+                }
+
+                const notApproved = assignees.filter(a => latestState[a] !== "APPROVED");
+                if (notApproved.length) {
+                  reasons.push(`Not approved by assignee(s): ${notApproved.join(", ")}`);
+                }
+              }
             }
 
             const blocked = reasons.length > 0;
