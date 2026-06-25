@@ -10,6 +10,7 @@ on:
     tags:
     - v*
   pull_request:
+  workflow_call:
 
 permissions:
   contents: read
@@ -20,42 +21,8 @@ env:
   JOB_COUNT: 8
 
 jobs:
-  doc-file-check:
-    name: Check for doc changes
-    runs-on: ubuntu-24.04
-    outputs:
-      file_check: ${{ steps.check-doc-files.outputs.any_modified }}
-    steps:
-    - name: checkout
-      uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      with:
-        ref: ${{ github.event.pull_request.head.sha }}
-        fetch-depth: 0
-    - name: Check if Documentation related files changed
-      uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96 # v47.0.6
-      id: check-doc-files
-      with:
-        files: |
-          doc/
-          boards/**/doc/
-          **.rst
-          include/
-          kernel/include/kernel_arch_interface.h
-          lib/libc/**
-          subsys/testsuite/ztest/include/**
-          **/Kconfig*
-          west.yml
-          scripts/dts/
-          doc/requirements.txt
-          .github/workflows/doc-build.yml
-          scripts/pylib/pytest-twister-harness/src/twister_harness/device/device_adapter.py
-          scripts/pylib/pytest-twister-harness/src/twister_harness/helpers/shell.py
-
   doc-build-html:
     name: "Documentation Build (HTML)"
-    needs: [doc-file-check]
-    if: >
-      needs.doc-file-check.outputs.file_check == 'true' || github.event_name != 'pull_request'
     runs-on:
       group: zephyr-runner-v2-linux-x64-4xlarge
     container:
@@ -68,9 +35,7 @@ jobs:
     env:
       BASE_REF: ${{ github.base_ref }}
 
-
     steps:
-
     - name: Print cloud service information
       run: |
         echo "ZEPHYR_RUNNER_CLOUD_PROVIDER = ${ZEPHYR_RUNNER_CLOUD_PROVIDER}"
@@ -298,7 +263,6 @@ jobs:
 
   doc-build-pdf:
     name: "Documentation Build (PDF)"
-    needs: [doc-file-check]
     if: |
       github.event_name != 'pull_request'
     runs-on: ubuntu-24.04
@@ -379,7 +343,6 @@ jobs:
     name: "Documentation Build Status"
     needs:
     - doc-build-pdf
-    - doc-file-check
     - doc-build-html
     uses: ./.github/workflows/ready-to-merge.yml
     with:

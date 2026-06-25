@@ -30,6 +30,7 @@ jobs:
       subset: ${{ steps.output-services.outputs.subset }}
       size: ${{ steps.output-services.outputs.size }}
       fullrun: ${{ steps.output-services.outputs.fullrun }}
+      docbuild_needed: ${{ steps.output-services.outputs.docbuild_needed }}
     env:
       MATRIX_SIZE: 10
       PUSH_MATRIX_SIZE: 25
@@ -122,6 +123,12 @@ jobs:
           echo "subset=${subset}" >> $GITHUB_OUTPUT
           echo "size=${size}" >> $GITHUB_OUTPUT
           echo "fullrun=${TWISTER_FULL}" >> $GITHUB_OUTPUT
+          echo "docbuild_needed=${DOC_BUILD}" >> $GITHUB_OUTPUT
+
+  documentation-build:
+    if: needs.twister-build-prep.outputs.docbuild_needed != 0
+    needs: twister-build-prep
+    uses: ./.github/workflows/doc-build.yml
 
   twister-build:
     runs-on:
