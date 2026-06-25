@@ -11,6 +11,8 @@ on:
 
 permissions:
   contents: read
+  statuses: write     # publish the "Merge gate" commit status (reason shown on hover)
+  pull-requests: read # read PR labels and description
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.head_ref || github.ref }}
