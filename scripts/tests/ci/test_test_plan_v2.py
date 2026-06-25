@@ -313,6 +313,93 @@ class TestWriteDotplan:
         out = Path(".testplan").read_text()
         assert "TWISTER_FULL=False" in out
 
+    def test_doc_build_false_without_context(self, tmp_path):
+        out = self._write(10, tmp_path=tmp_path)
+        assert "DOC_BUILD=false" in out
+        assert "DOC_FILES=0" in out
+
+    def test_doc_build_true_from_context(self, tmp_path):
+        ctx = tp.PipelineContext()
+        ctx.doc_build_needed = True
+        ctx.doc_files = ["doc/foo.rst", "include/zephyr/kernel.h"]
+        orch = tp.Orchestrator(strategies=[], executor=None, context=ctx)
+        os.chdir(tmp_path)
+        orch._write_dotplan(0, full=False)
+        out = Path(".testplan").read_text()
+        assert "DOC_BUILD=true" in out
+        assert "DOC_FILES=2" in out
+
+
+# ---------------------------------------------------------------------------
+# DocStrategy
+# ---------------------------------------------------------------------------
+
+
+class TestDocStrategy:
+    """Unit tests for documentation-change detection."""
+
+    def _strategy(self):
+        return tp.DocStrategy(context=tp.PipelineContext())
+
+    @pytest.mark.parametrize(
+        "path",
+        [
+            "doc/develop/index.rst",          # doc/ subtree
+            "subsys/foo/README.rst",          # any *.rst anywhere
+            "include/zephyr/kernel.h",        # public header → Doxygen
+            "lib/libc/minimal/string.h",      # libc subtree
+            "subsys/testsuite/ztest/include/zephyr/ztest.h",
+            "scripts/dts/gen_defines.py",     # dts doc generators
+            "drivers/gpio/Kconfig",           # bare Kconfig
+            "drivers/gpio/Kconfig.nrfx",      # Kconfig.<suffix>
+            "boards/arm/foo_board/doc/index.rst",  # board docs
+            "boards/vendor/board/doc/img.png",     # board docs (non-rst)
+            "west.yml",
+            "kernel/include/kernel_arch_interface.h",
+            ".github/workflows/doc-build.yml",
+        ],
+    )
+    def test_doc_relevant_paths_detected(self, path):
+        assert tp.DocStrategy.is_doc_file(path) is True
+
+    @pytest.mark.parametrize(
+        "path",
+        [
+            "drivers/gpio/gpio_nrfx.c",
+            "kernel/sched.c",
+            "tests/kernel/sleep/src/main.c",
+            "boards/arm/foo_board/foo_board.dts",  # board file, not under doc/
+            "scripts/ci/test_plan_v2.py",
+            "Makefile",
+        ],
+    )
+    def test_code_paths_not_detected(self, path):
+        assert tp.DocStrategy.is_doc_file(path) is False
+
+    def test_analyze_sets_context_and_consumes_nothing(self):
+        ctx = tp.PipelineContext()
+        strat = tp.DocStrategy(context=ctx)
+        calls, handled = strat.analyze(
+            ["include/zephyr/kernel.h", "kernel/sched.c", "doc/index.rst"]
+        )
+        # Test-less and additive: no twister calls, nothing consumed.
+        assert calls == []
+        assert handled == set()
+        assert ctx.doc_build_needed is True
+        assert ctx.doc_files == ["doc/index.rst", "include/zephyr/kernel.h"]
+
+    def test_analyze_no_doc_files_leaves_context_clean(self):
+        ctx = tp.PipelineContext()
+        strat = tp.DocStrategy(context=ctx)
+        calls, handled = strat.analyze(["kernel/sched.c", "drivers/gpio/gpio_nrfx.c"])
+        assert calls == []
+        assert handled == set()
+        assert ctx.doc_build_needed is False
+        assert ctx.doc_files == []
+
+    def test_does_not_consume(self):
+        assert tp.DocStrategy.consumes is False
+
 
 # ---------------------------------------------------------------------------
 # MaintainerAreaStrategy

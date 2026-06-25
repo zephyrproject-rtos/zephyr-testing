@@ -77,13 +77,22 @@ Current strategies (execution order)
 11. :class:`MaintainerAreaStrategy` - catch-all: matches any remaining
     changed files against ``MAINTAINERS.yml`` areas and uses the ``tests:``
     list from each matching area to build ``--test-pattern`` arguments.
+12. :class:`DocStrategy` - selects no tests; instead it detects whether the
+    change touches any documentation-relevant surface (``*.rst``, public
+    headers consumed by Doxygen, Kconfig, board docs, the manifest, …) and
+    records the result in the shared context so the orchestrator can emit a
+    ``DOC_BUILD=`` signal.  Runs early (before :class:`IgnoreStrategy`) so the
+    doc/rst files are still in the pool when it inspects them.
 
 Output
 ======
 * ``<output_file>`` (default ``testplan.json``) - passed to twister via
   ``twister --load-tests``.
-* ``.testplan`` - plain env-var file (``TWISTER_TESTS=``, ``TWISTER_NODES=``,
-  ``TWISTER_FULL=``) consumed by CI orchestration scripts.
+* ``.testplan`` - plain env-var file consumed by CI orchestration:
+  ``TWISTER_TESTS=``, ``TWISTER_NODES=``, ``TWISTER_FULL=`` drive the twister
+  build matrix, while ``DOC_BUILD=`` (``true``/``false``) and ``DOC_FILES=``
+  (count) let CI launch the documentation-build workflow only when a
+  doc-relevant file changed.
 """
 
 from __future__ import annotations
@@ -147,10 +156,21 @@ class PipelineContext:
     file_metrics:
         Per-file mapping of ``{relative_path: ComplexityMetrics}``.  Provides
         method-level detail for logging and downstream decision-making.
+    doc_build_needed:
+        Set to *True* by :class:`DocStrategy` when at least one changed file
+        feeds the documentation / Doxygen API build (``*.rst``, public
+        headers, Kconfig, board docs, …).  The orchestrator forwards this as
+        ``DOC_BUILD=`` in ``.testplan`` so CI can launch the documentation
+        workflow only when something doc-relevant actually changed.
+    doc_files:
+        The subset of changed files that triggered ``doc_build_needed`` -
+        kept for logging and for emitting ``DOC_FILES=`` in ``.testplan``.
     """
 
     complexity_score: float = 0.0
     file_metrics: dict = field(default_factory=dict)  # path → ComplexityMetrics
+    doc_build_needed: bool = False
+    doc_files: list = field(default_factory=list)
 
 
 @dataclass
@@ -540,12 +560,17 @@ class Orchestrator:
         A :class:`TwisterExecutor` used to materialise :class:`TwisterCall`s.
     tests_per_builder:
         Node count divisor for the ``.testplan`` env-var file.
+    context:
+        Shared :class:`PipelineContext`.  Read when writing ``.testplan`` so
+        strategy-level signals (e.g. :class:`DocStrategy`'s ``doc_build_needed``)
+        are forwarded to CI.  ``None`` is treated as an empty context.
     """
 
-    def __init__(self, strategies, executor, tests_per_builder=900):
+    def __init__(self, strategies, executor, tests_per_builder=900, context=None):
         self._strategies = strategies
         self._executor = executor
         self._tests_per_builder = tests_per_builder
+        self._context = context
 
     def run(self, changed_files, output_file):
         """Run all strategies for *changed_files* and write *output_file*.
@@ -742,11 +767,24 @@ class Orchestrator:
             import math  # noqa: PLC0415
 
             nodes = math.ceil(total / self._tests_per_builder)
+        doc_build = bool(self._context and self._context.doc_build_needed)
+        doc_files = list(self._context.doc_files) if self._context else []
         with open(".testplan", "w", encoding="utf-8") as fh:
             fh.write(f"TWISTER_TESTS={total}\n")
             fh.write(f"TWISTER_NODES={nodes}\n")
             fh.write(f"TWISTER_FULL={full}\n")
-        log.info(".testplan written (tests=%d, nodes=%d, full=%s)", total, nodes, full)
+            # Lowercase true/false so GitHub Actions `if:` expressions can
+            # compare against the string 'true' (matching doc-build.yml).
+            fh.write(f"DOC_BUILD={str(doc_build).lower()}\n")
+            fh.write(f"DOC_FILES={len(doc_files)}\n")
+        log.info(
+            ".testplan written (tests=%d, nodes=%d, full=%s, doc_build=%s, doc_files=%d)",
+            total,
+            nodes,
+            full,
+            doc_build,
+            len(doc_files),
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -3669,6 +3707,105 @@ class DirectTestStrategy(SelectionStrategy):
 
 
 # ---------------------------------------------------------------------------
+# Strategy 12 - Documentation build detection
+# ---------------------------------------------------------------------------
+
+
+class DocStrategy(SelectionStrategy):
+    """Detect changes that require a documentation / Doxygen API rebuild.
+
+    Unlike the other strategies this one selects **no** twister tests.  Its
+    sole job is to decide whether the change set touches anything that the
+    documentation build cares about - reStructuredText sources, public
+    headers consumed by Doxygen, Kconfig (whose symbols are rendered into the
+    docs), board documentation, the manifest, and the handful of scripts that
+    the doc toolchain imports.  When it does, it records the fact in the
+    shared :class:`PipelineContext` so the orchestrator can emit a
+    ``DOC_BUILD=true`` signal into ``.testplan``.  CI can then launch the
+    documentation-build workflow on demand - or skip it entirely when a patch
+    is purely code with no doc-relevant surface.
+
+    The trigger set is kept in sync with the ``files:`` filter of the
+    ``doc-file-check`` job in ``.github/workflows/doc-build.yml``.
+
+    This strategy is **additive** (``consumes = False``): a changed public
+    header both triggers a doc build *and* must still reach
+    :class:`HeaderImpactStrategy` for test selection, and changed ``*.rst`` /
+    ``doc/`` files are left in the pool for :class:`IgnoreStrategy` to consume
+    for test-selection purposes.  For that reason ``DocStrategy`` must run
+    **before** :class:`IgnoreStrategy` in :func:`build_strategies`.
+    """
+
+    consumes: bool = False
+
+    # Directory prefixes whose entire subtree feeds the documentation build.
+    _DOC_DIR_PREFIXES = (
+        "doc/",                                  # documentation sources
+        "include/",                              # public headers → Doxygen API
+        "lib/libc/",                             # libc headers documented in API
+        "subsys/testsuite/ztest/include/",       # ztest API headers
+        "scripts/dts/",                          # devicetree docs generators
+    )
+
+    # Exact files that the documentation toolchain reads or imports.
+    _DOC_EXACT_FILES = frozenset(
+        {
+            "west.yml",                          # module list rendered in docs
+            "kernel/include/kernel_arch_interface.h",
+            ".github/workflows/doc-build.yml",
+            "scripts/pylib/pytest-twister-harness/src/twister_harness/"
+            "device/device_adapter.py",
+            "scripts/pylib/pytest-twister-harness/src/twister_harness/"
+            "helpers/shell.py",
+        }
+    )
+
+    # Board documentation lives at boards/<vendor>/<board>/doc/...
+    _BOARD_DOC_RE = re.compile(r"^boards/.+/doc/")
+
+    def __init__(self, context, zephyr_base=None):
+        self._context = context
+        self._zephyr_base = Path(zephyr_base) if zephyr_base else ZEPHYR_BASE
+
+    @property
+    def name(self):
+        return "DocBuild"
+
+    @classmethod
+    def is_doc_file(cls, path):
+        """Return *True* if *path* is relevant to the documentation build."""
+        if path.startswith(cls._DOC_DIR_PREFIXES):
+            return True
+        if path.endswith(".rst"):
+            return True
+        # Any Kconfig file: "Kconfig", "Kconfig.foo", "drivers/.../Kconfig.bar".
+        if path.rsplit("/", 1)[-1].startswith("Kconfig"):
+            return True
+        if cls._BOARD_DOC_RE.match(path):
+            return True
+        return path in cls._DOC_EXACT_FILES
+
+    # ------------------------------------------------------------------
+    # SelectionStrategy interface
+    # ------------------------------------------------------------------
+
+    def analyze(self, changed_files):
+        doc_files = sorted(f for f in changed_files if self.is_doc_file(f))
+        if doc_files:
+            self._context.doc_build_needed = True
+            self._context.doc_files = doc_files
+            log.info(
+                "  Documentation build required - %d doc-relevant file(s):\n    %s",
+                len(doc_files),
+                "\n    ".join(doc_files),
+            )
+        else:
+            log.info("  No documentation-relevant files changed.")
+        # Additive and test-less: never produce twister calls, never consume.
+        return [], set()
+
+
+# ---------------------------------------------------------------------------
 # Strategy registry
 # ---------------------------------------------------------------------------
 
@@ -3724,6 +3861,16 @@ def build_strategies(
         #     platform_filter=platform_filter,
         #     context=ctx,
         # ),
+        # 0c. Documentation detector: flag whether the change touches any
+        #     doc-relevant surface (rst, public headers, Kconfig, board docs …)
+        #     and record it in the shared context for the .testplan DOC_BUILD
+        #     signal.  Non-consuming and test-less; MUST run before
+        #     IgnoreStrategy, which would otherwise consume the *.rst / doc/
+        #     files before this strategy can see them.
+        DocStrategy(
+            context=ctx,
+            zephyr_base=base,
+        ),
         # 1. Ignore list: consume files that never affect tests (docs, tooling,
         #    CI workflows …) so they don't reach downstream strategies.
         IgnoreStrategy(
@@ -3922,7 +4069,7 @@ def parse_args():
         help=(
             "Disable the named strategy (repeatable, case-insensitive). "
             "Available names: RiskClassifier, DirectTest, DriverCompat, "
-            "KconfigImpact, HeaderImpact, MaintainerArea."
+            "KconfigImpact, HeaderImpact, MaintainerArea, DocBuild."
         ),
     )
 
@@ -3990,6 +4137,7 @@ def main():
         strategies=strategies,
         executor=executor,
         tests_per_builder=args.tests_per_builder,
+        context=context,
     )
 
     return orchestrator.run(changed_files, args.output_file)
