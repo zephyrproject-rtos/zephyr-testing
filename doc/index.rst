@@ -4,7 +4,7 @@
 .. _zephyr-home:
 
 Zephyr Project Documentation
-############################
+#############################
 
 .. raw:: html
 
