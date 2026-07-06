@@ -368,7 +368,7 @@ jobs:
 
       - name: Merge Test Results
         run: |
-          python ./scripts/ci/merge_junit.py junit.xml 'artifacts/*/twister.xml' 'artifacts/*/*/twister.xml'
+          python3 ./scripts/ci/merge_junit.py junit.xml 'artifacts/*/twister.xml' 'artifacts/*/*/twister.xml'
           junit2html junit.xml junit.html
 
       - name: Upload Unit Test Results
