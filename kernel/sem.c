@@ -26,8 +26,8 @@
 #include <ksched.h>
 #include <zephyr/init.h>
 #include <zephyr/internal/syscall_handler.h>
-#include <zephyr/tracing/tracing.h>
 #include <zephyr/sys/check.h>
+#include <zephyr/tracing/tracing.h>
 
 /* We use a system-wide lock to synchronize semaphores, which has
  * unfortunate performance impact vs. using a per-object lock
