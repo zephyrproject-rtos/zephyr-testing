@@ -147,7 +147,7 @@ config FLASH_LOAD_SIZE
 	default $(dt_chosen_reg_size_hex,$(DT_CHOSEN_Z_CODE_PARTITION)) if USE_DT_CODE_PARTITION
 	default 0
 	help
-	  If non-zero, this option specifies the size, in bytes, of the flash
+	  If non 0, this option specifies the size, in bytes, of the flash
 	  area that the Zephyr image will be allowed to occupy.  If zero, the
 	  image will be able to occupy from the FLASH_LOAD_OFFSET to the end of
 	  the device.
