@@ -16,8 +16,7 @@ jobs:
     concurrency:
       group: backport-issue-check-${{ github.event.pull_request.number }}
       cancel-in-progress: true
-    runs-on: ubuntu-22.04
-    if: github.repository == 'zephyrproject-rtos/zephyr'
+    runs-on: ubuntu-24.04
     permissions:
       issues: read # to check if an associated issue exists for the backport
       # to comment on pull requests. GitHub only grants this for pull requests from a
