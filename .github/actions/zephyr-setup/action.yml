@@ -1,20 +1,29 @@
 # SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
 # SPDX-License-Identifier: Apache-2.0
 
-name: 'Twister Zephyr setup'
+name: 'Zephyr CI setup'
 description: >-
-  Rebase the pull request, initialise the west workspace, update modules from
-  the repo cache and print the toolchain/environment state. Must run after the
-  repository has been checked out.
+  Rebase the pull request, initialise the west workspace and update modules
+  from the repo cache. Optionally print the toolchain/environment state. Must
+  run after the repository has been checked out.
 
 inputs:
   group-filter:
-    description: 'Value passed to "west config manifest.group-filter".'
-    required: true
+    description: >-
+      Value passed to "west config manifest.group-filter". When empty the
+      manifest group filter is left unchanged.
+    required: false
+    default: ''
   base-ref:
     description: 'Base ref to rebase pull requests onto (github.base_ref).'
     required: false
     default: ''
+  run-checks:
+    description: >-
+      When "true", print the CMake/toolchain versions and git refs after the
+      workspace has been set up.
+    required: false
+    default: 'false'
 
 runs:
   using: composite
@@ -38,7 +47,9 @@ runs:
         echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
         west init -l . || true
-        west config manifest.group-filter -- ${GROUP_FILTER}
+        if [ -n "${GROUP_FILTER}" ]; then
+          west config manifest.group-filter -- ${GROUP_FILTER}
+        fi
         west config --global update.narrow true
         west update --path-cache /repo-cache/zephyrproject 2>&1 1> west.update.log || west update --path-cache /repo-cache/zephyrproject 2>&1 1> west.update.log || ( rm -rf ../modules ../bootloader ../tools && west update --path-cache /repo-cache/zephyrproject)
         west forall -c 'git reset --hard HEAD'
@@ -46,6 +57,7 @@ runs:
         echo "ZEPHYR_SDK_INSTALL_DIR=/opt/toolchains/zephyr-sdk-$( cat SDK_VERSION )" >> $GITHUB_ENV
 
     - name: Check Environment
+      if: inputs.run-checks == 'true'
       shell: bash
       run: |
         cmake --version

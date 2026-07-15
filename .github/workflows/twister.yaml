@@ -87,10 +87,11 @@ jobs:
       # On push/schedule the matrix size is fixed and needs no west workspace.
       - name: Set up Zephyr environment
         if: github.event_name == 'pull_request'
-        uses: ./.github/actions/twister-setup
+        uses: ./.github/actions/zephyr-setup
         with:
           group-filter: '+ci,'
           base-ref: ${{ github.base_ref }}
+          run-checks: 'true'
 
       - name: Generate Test Plan with Twister
         if: github.event_name == 'pull_request'
@@ -201,10 +202,11 @@ jobs:
           persist-credentials: false
 
       - name: Set up Zephyr environment
-        uses: ./.github/actions/twister-setup
+        uses: ./.github/actions/zephyr-setup
         with:
           group-filter: '+ci,+optional,+testing'
           base-ref: ${{ github.base_ref }}
+          run-checks: 'true'
 
       - name: Install Python packages
         run: |
