@@ -368,7 +368,151 @@ class TestDeprecationCheck:
         assert checks.check_deprecation("HEAD~1..HEAD", repo) == []
 
 
+from api_compat.history import Age, Release, age_of  # noqa: E402
+from api_compat.propose import (  # noqa: E402
+    Evidence,
+    Kind,
+    classify,
+)
 from api_compat.report import ReportMeta, format_html  # noqa: E402
+
+
+def _release(major, minor, stamp):
+    return Release(f"v{major}.{minor}.0", major, minor, stamp)
+
+
+class TestReleaseAge:
+    RELEASES = [_release(3, 0, 100), _release(3, 1, 200), _release(3, 2, 300), _release(4, 0, 400)]
+
+    def test_added_before_a_release_counts_from_it(self):
+        age = age_of(self.RELEASES, 150)
+        assert age.first.short == "3.1"
+        assert age.releases == 3
+
+    def test_added_before_everything_counts_all(self):
+        assert age_of(self.RELEASES, 1).releases == 4
+
+    def test_added_after_the_last_release_has_not_shipped(self):
+        age = age_of(self.RELEASES, 500)
+        assert age == Age(None, 0)
+        assert not age.shipped
+
+    def test_unknown_add_time_is_not_guessed(self):
+        assert age_of(self.RELEASES, None).releases == 0
+
+    def test_exactly_on_a_release_counts_that_release(self):
+        assert age_of(self.RELEASES, 300).first.short == "3.2"
+
+
+def _evidence(kind=Kind.PERIPHERAL, releases=5, impls=3, users=50, version=None):
+    group = apidoc.Group(name="g", title="G", file="include/zephyr/x.h", line=1)
+    group.version_raw = version
+    return Evidence(
+        group=group,
+        header="include/zephyr/x.h",
+        kind=kind,
+        releases=releases,
+        first_release="3.0",
+        implementations=impls,
+        users=users,
+    )
+
+
+class TestExtensionHeaders:
+    """Per-vendor and emulator headers extend an API; they are not APIs.
+
+    Left in, they collect the SoC files that include them as "users" and get
+    proposed stable, which they are not.
+    """
+
+    @pytest.mark.parametrize(
+        "header",
+        [
+            "include/zephyr/drivers/clock_control/stm32_clock_control.h",
+            "include/zephyr/drivers/clock_control/renesas_ra_cgc.h",
+            "include/zephyr/drivers/sensor/ccs811.h",
+            "include/zephyr/drivers/emul.h",
+            "include/zephyr/drivers/i2c_emul.h",
+            "include/zephyr/drivers/emul_sensor.h",
+        ],
+    )
+    def test_extensions_are_recognized(self, header):
+        from api_compat.evidence import is_extension_header
+
+        assert is_extension_header(header)
+
+    @pytest.mark.parametrize(
+        "header",
+        [
+            "include/zephyr/drivers/gpio.h",
+            "include/zephyr/drivers/uart.h",
+            "include/zephyr/drivers/clock_control.h",
+            "include/zephyr/net/rtp.h",
+            "include/zephyr/sys/util.h",
+        ],
+    )
+    def test_real_apis_are_kept(self, header):
+        from api_compat.evidence import is_extension_header
+
+        assert not is_extension_header(header)
+
+
+class TestClassify:
+    """The promotion criteria from doc/develop/api/api_lifecycle.rst."""
+
+    def test_unreleased_is_experimental(self):
+        assert classify(_evidence(releases=0)).state is Lifecycle.EXPERIMENTAL
+
+    def test_peripheral_with_one_implementation_is_experimental(self):
+        # "at least two implementations on different hardware platforms"
+        proposal = classify(_evidence(impls=1, releases=20, users=500))
+        assert proposal.state is Lifecycle.EXPERIMENTAL
+        assert any("two implementations" in r or "2 implementations" in r for r in proposal.reasons)
+
+    def test_peripheral_with_one_release_is_experimental(self):
+        assert classify(_evidence(releases=1, impls=9)).state is Lifecycle.EXPERIMENTAL
+
+    def test_peripheral_meeting_both_bars_is_unstable(self):
+        # Two implementations and two releases clears experimental, but few
+        # users keeps it short of stable.
+        assert classify(_evidence(releases=2, impls=2, users=3)).state is Lifecycle.UNSTABLE
+
+    def test_widely_used_mature_peripheral_is_stable(self):
+        proposal = classify(_evidence(releases=11, impls=20, users=400))
+        assert proposal.state is Lifecycle.STABLE
+        # Stable needs criteria this tool cannot measure.
+        assert proposal.needs_review
+
+    def test_niche_peripheral_stays_unstable(self):
+        # The w1 shape: long-lived and multi-vendor, but barely consumed.
+        assert classify(_evidence(releases=11, impls=2, users=5)).state is Lifecycle.UNSTABLE
+
+    def test_agnostic_api_ignores_implementation_count(self):
+        # Classes with no vtable report zero implementations; judging them by
+        # that would mark long-stable APIs experimental.
+        proposal = classify(_evidence(kind=Kind.AGNOSTIC, releases=20, impls=0, users=600))
+        assert proposal.state is Lifecycle.STABLE
+
+    def test_agnostic_api_with_one_release_is_experimental(self):
+        assert (
+            classify(_evidence(kind=Kind.AGNOSTIC, releases=1, impls=0, users=600)).state
+            is Lifecycle.EXPERIMENTAL
+        )
+
+    def test_agnostic_api_with_few_users_is_unstable(self):
+        assert (
+            classify(_evidence(kind=Kind.AGNOSTIC, releases=9, impls=0, users=2)).state
+            is Lifecycle.UNSTABLE
+        )
+
+    def test_every_proposal_explains_itself(self):
+        for evidence in (
+            _evidence(releases=0),
+            _evidence(impls=1),
+            _evidence(releases=11, impls=20, users=400),
+            _evidence(kind=Kind.AGNOSTIC, releases=9, users=2),
+        ):
+            assert classify(evidence).reasons
 
 
 def _finding(**kwargs):

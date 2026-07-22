@@ -14,6 +14,7 @@ from pathlib import Path
 from . import checks, gitutil
 from .apidoc import Lifecycle
 from .findings import FORMAT_CHOICES, FORMATTERS, Finding, Severity
+from .propose import SUBSTANTIAL_USERS
 
 _THRESHOLDS = {
     "error": (Severity.ERROR,),
@@ -129,6 +130,44 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     )
     _add_unversioned(signature)
 
+    propose = sub.add_parser(
+        "propose",
+        help="propose a lifecycle state for API groups from tree evidence",
+    )
+    _add_common(propose)
+    propose.add_argument(
+        "paths",
+        nargs="*",
+        default=None,
+        help="paths to inspect, e.g. include/zephyr/drivers/ (default: all of include/zephyr)",
+    )
+    propose.add_argument(
+        "--include-extensions",
+        action="store_true",
+        help=(
+            "also examine per-vendor and emulator headers nested under a driver "
+            "class, which extend an API rather than declaring one"
+        ),
+    )
+    propose.add_argument(
+        "--include-versioned",
+        action="store_true",
+        help="also examine groups that already declare a @version",
+    )
+    propose.add_argument(
+        "--min-users",
+        type=int,
+        default=None,
+        help=f"in-tree users required for a stable proposal (default: {SUBSTANTIAL_USERS})",
+    )
+    propose.add_argument(
+        "-j",
+        "--jobs",
+        type=int,
+        default=8,
+        help="parallel git workers (default: 8)",
+    )
+
     revs = sub.add_parser(
         "compare-revs",
         help="build Doxygen snapshots of two revisions and compare them",
@@ -203,6 +242,60 @@ def _cmd_compare_revs(args: argparse.Namespace) -> list[Finding]:
         return run(args.xml_dir)
     with tempfile.TemporaryDirectory(prefix="api-compat-xml-") as tmp:
         return run(Path(tmp))
+
+
+def _cmd_propose(args: argparse.Namespace) -> list[Finding]:
+    """Propose lifecycle states for the groups under the given paths."""
+    from . import propose as proposals
+    from .evidence import gather_all
+    from .history import release_tags
+
+    repo = _resolve_repo(args.repo)
+
+    if args.min_users is not None:
+        proposals.SUBSTANTIAL_USERS = args.min_users
+
+    roots = args.paths or ["include/zephyr"]
+    headers = sorted(
+        {
+            str(path.relative_to(repo))
+            for root in roots
+            for path in sorted(
+                (repo / root).rglob("*.h") if (repo / root).is_dir() else [repo / root]
+            )
+            if path.is_file()
+        }
+    )
+    if not headers:
+        raise SystemExit(f"no headers found under: {', '.join(roots)}")
+
+    from .evidence import is_extension_header
+
+    skipped = []
+    if not args.include_extensions:
+        skipped = [h for h in headers if is_extension_header(h)]
+        headers = [h for h in headers if not is_extension_header(h)]
+
+    releases = release_tags(repo)
+    print(
+        f"examining {len(headers)} headers against {len(releases)} releases ...",
+        file=sys.stderr,
+    )
+    if skipped:
+        # Never drop input silently: say what was left out and how to get it.
+        print(
+            f"skipping {len(skipped)} per-vendor or emulator headers that extend "
+            "an API rather than declaring one; pass --include-extensions to "
+            "examine them too",
+            file=sys.stderr,
+        )
+
+    findings = []
+    for evidence in gather_all(repo, headers, releases, workers=args.jobs):
+        if evidence.declared is not Lifecycle.UNVERSIONED and not args.include_versioned:
+            continue
+        findings.append(proposals.to_finding(evidence, proposals.classify(evidence)))
+    return findings
 
 
 def _cmd_check(args: argparse.Namespace) -> list[Finding]:
@@ -301,6 +394,8 @@ def main(argv: list[str] | None = None) -> int:
             args.base_root,
             args.head_root,
         )
+    elif args.command == "propose":
+        findings = _cmd_propose(args)
     elif args.command == "compare-revs":
         findings = _cmd_compare_revs(args)
     else:

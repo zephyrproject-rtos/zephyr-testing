@@ -80,6 +80,90 @@ Size scales with the finding count: roughly 5 MB for 6000 findings. Large but
 workable; `--fail-on never` keeps the exit status clean when generating a report
 for review rather than gating on it.
 
+## Proposing a lifecycle state
+
+78% of groups declare no `@version`, which is the backlog everything else in
+this package has to work around. `propose` narrows it by gathering the evidence
+`api_lifecycle.rst` asks for and suggesting a state per group.
+
+```console
+$ ./scripts/ci/check_api_compat.py propose include/zephyr/drivers/
+$ ./scripts/ci/check_api_compat.py propose include/zephyr/net include/zephyr/fs
+$ ./scripts/ci/check_api_compat.py propose -f html -o proposals.html
+```
+
+Each proposal shows its evidence and the tags to paste onto the `@defgroup`:
+
+```
+include/zephyr/drivers/w1.h:257: NOTE: proposes unstable for 'w1_data_link'
+    Evidence (peripheral):
+      - shipped in 11 releases since 3.2
+      - 2 in-tree implementations
+      - only 5 in-tree users, below the bar for stable
+    Suggested tags on the @defgroup:
+        @since 3.2
+        @version 0.8.0
+```
+
+### The rules
+
+An API is judged **peripheral** when its implementations can actually be
+counted, and **hardware-agnostic** otherwise.
+
+| Evidence | Proposal |
+| --- | --- |
+| not in any release yet | experimental |
+| peripheral, <2 releases or <2 implementations | experimental |
+| peripheral, ≥2 releases and ≥2 implementations | unstable |
+| peripheral, ≥3 releases, ≥2 implementations, ≥10 users | **stable (candidate)** |
+| agnostic, <2 releases | experimental |
+| agnostic, ≥2 releases | unstable |
+| agnostic, ≥3 releases and ≥10 users | **stable (candidate)** |
+
+`--min-users` moves the last bar; `--include-versioned` also re-examines groups
+that already declare a version, which surfaces disagreements.
+
+### What the evidence is, and where it lies
+
+**Releases** come from git, following renames. Without `--follow` every header
+looks 3.0-era, because that is when headers moved under `include/zephyr/`.
+Release tags are the `vX.Y.0` tags whose timestamps increase in version order —
+this clone carries a stray `v5.0.0` pointing at an unrelated commit, and real
+LTS releases are tagged on branches that are not ancestors of main, so neither
+plain sorting nor reachability alone is safe. Validated against the groups that
+do declare `@since`: gpio resolves to 1.0, w1 to 3.2, nvmem to 4.3.
+
+**Implementations** come from `DEVICE_API(<class>, …) = {`, where the class is
+read from the header's `struct <class>_driver_api` rather than guessed from the
+filename — `watchdog.h` declares class `wdt`, and `uart.h` keeps its vtable in a
+nested `_internal.h`. Where a devicetree binding directory exists, the count is
+capped by the number of distinct non-Zephyr vendor prefixes in its
+`compatible:` values, which counts hardware rather than files. Test and
+emulated drivers are excluded.
+
+> About eighteen driver classes have **no vtable at all** — pinctrl, hwinfo,
+> cache, timer, input — because they dispatch directly or through syscalls. For
+> those the implementation count is *unknown*, not zero, and the API falls back
+> to the hardware-agnostic rule. Treating it as zero would mark long-stable
+> APIs experimental.
+
+**Users** are files outside `include/` that include the header, excluding the
+API's own implementation directories. That exclusion matters: `w1.h` has 18
+includes, but 15 are its own drivers, so counting them made a niche API look
+widely adopted enough to propose as stable.
+
+### Limits
+
+A **stable** proposal is a candidate, never a verdict. `api_lifecycle.rst` also
+requires 100% test coverage, complete in-code documentation, and review at the
+Architecture WG — none of which this measures.
+
+Evidence is gathered per header, so several groups declared in one header share
+it and receive the same proposal. Judge them individually.
+
+The run costs two `git grep`s and a rename-following log per header, spread over
+`-j` workers: roughly 90 seconds for `include/zephyr/drivers/`.
+
 ## The checks
 
 `group-metadata` and `deprecation-version` need only the headers and the diff.
