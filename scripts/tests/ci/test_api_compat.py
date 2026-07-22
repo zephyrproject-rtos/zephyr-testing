@@ -438,6 +438,35 @@ class TestSignatureComparison:
         assert found[0].severity is Severity.ERROR
         assert "was removed" in found[0].title
 
+    def test_removal_advice_matches_the_lifecycle(self):
+        """The advice must not contradict the severity of the same finding.
+
+        Only stable APIs owe a deprecation period; saying so about an
+        experimental one is wrong.
+        """
+        for version, expected in (
+            ("0.1.0", "no\ndeprecation period is required"),
+            ("0.8.0", "without a deprecation"),
+            ("1.0.0", "at least\ntwo releases"),
+        ):
+            found = compare(_snapshot(version, _fn("gone")), _snapshot(version))
+            assert expected in found[0].detail, version
+
+        experimental = compare(_snapshot("0.1.0", _fn("gone")), _snapshot("0.1.0"))
+        assert "requires a deprecation period" not in experimental[0].detail
+
+    def test_unversioned_removal_names_the_assumption(self):
+        found = compare(_snapshot(None, _fn("gone")), _snapshot(None))
+        assert "declares no @version" in found[0].detail
+        # Relaxing the policy must relax the advice with it.
+        relaxed = compare(
+            _snapshot(None, _fn("gone")),
+            _snapshot(None),
+            unversioned_is=Lifecycle.EXPERIMENTAL,
+        )
+        assert "no\ndeprecation period is required" in relaxed[0].detail
+        assert relaxed[0].lifecycle == "unversioned"
+
     def test_parameter_count_change_is_loud(self):
         base = _snapshot("1.0.0", _fn("f", params=("int",)))
         head = _snapshot("1.0.0", _fn("f", params=("int", "int")))

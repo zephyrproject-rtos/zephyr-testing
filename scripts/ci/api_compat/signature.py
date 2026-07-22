@@ -474,6 +474,40 @@ def _diff_symbol(base: Symbol, head: Symbol) -> list[Change]:
     return changes
 
 
+def _removal_detail(effective: Lifecycle, declared: Lifecycle) -> str:
+    """Explain what a removal means for the lifecycle state that applies.
+
+    api_lifecycle.rst only imposes a deprecation period on stable APIs;
+    experimental and unstable ones may be removed outright. Saying otherwise
+    would contradict the severity assigned to the same finding.
+    """
+    gone = "The symbol is gone from the public API.\n"
+
+    if effective is Lifecycle.EXPERIMENTAL:
+        return gone + (
+            "This API is experimental, so it may be removed at any time and no\n"
+            "deprecation period is required. Reported for visibility only."
+        )
+
+    if effective is Lifecycle.UNSTABLE:
+        return gone + (
+            "This API is unstable, so it may be removed without a deprecation\n"
+            "period, and such changes are not announced. Downstream users will\n"
+            "nonetheless discover it at build time."
+        )
+
+    detail = gone + (
+        "Removing a stable symbol requires a deprecation period of at least\n"
+        "two releases; see doc/develop/api/api_lifecycle.rst."
+    )
+    if declared is Lifecycle.UNVERSIONED:
+        detail += (
+            "\nThe owning group declares no @version and is therefore treated as\n"
+            "stable; pass --unversioned-is to change that assumption."
+        )
+    return detail
+
+
 def _severity(lifecycle: Lifecycle, unversioned_is: Lifecycle) -> Severity:
     if lifecycle is Lifecycle.UNVERSIONED:
         lifecycle = unversioned_is
@@ -499,6 +533,9 @@ def compare(
 
     for key, base_symbol in sorted(base.symbols.items()):
         lifecycle = lifecycle_of(base_symbol)
+        # An unversioned group is judged as whatever policy says it is, but the
+        # finding keeps reporting the state actually declared in the tree.
+        effective = unversioned_is if lifecycle is Lifecycle.UNVERSIONED else lifecycle
         severity = _severity(lifecycle, unversioned_is)
         common = {
             "check": check,
@@ -519,11 +556,7 @@ def compare(
                 Finding(
                     severity=severity,
                     title=f"{base_symbol.kind} '{base_symbol.display}' was removed",
-                    detail=(
-                        "The symbol is gone from the public API.\n"
-                        "Removing a stable symbol requires a deprecation period of at "
-                        "least two releases;\nsee doc/develop/api/api_lifecycle.rst."
-                    ),
+                    detail=_removal_detail(effective, lifecycle),
                     **common,
                 )
             )
