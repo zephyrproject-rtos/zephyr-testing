@@ -124,8 +124,13 @@ def format_json(findings: list[Finding]) -> str:
     return json.dumps(payload, indent=2)
 
 
+#: "html" is handled separately by report.py: it takes report metadata that the
+#: other formatters have no use for, so it is not a plain callable here.
 FORMATTERS = {
     "text": format_text,
     "github": format_github,
     "json": format_json,
 }
+
+#: Every value accepted by --format.
+FORMAT_CHOICES = (*sorted(FORMATTERS), "html")

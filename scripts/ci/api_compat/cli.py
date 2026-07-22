@@ -8,11 +8,12 @@ from __future__ import annotations
 import argparse
 import collections
 import sys
+from datetime import datetime
 from pathlib import Path
 
 from . import checks, gitutil
 from .apidoc import Lifecycle
-from .findings import FORMATTERS, Finding, Severity
+from .findings import FORMAT_CHOICES, FORMATTERS, Finding, Severity
 
 _THRESHOLDS = {
     "error": (Severity.ERROR,),
@@ -36,7 +37,7 @@ def _add_common(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "-f",
         "--format",
-        choices=sorted(FORMATTERS),
+        choices=FORMAT_CHOICES,
         default="text",
         help="output format (default: text)",
     )
@@ -45,6 +46,13 @@ def _add_common(parser: argparse.ArgumentParser) -> None:
         choices=sorted(_THRESHOLDS),
         default="error",
         help="lowest severity that makes the run fail (default: error)",
+    )
+    parser.add_argument(
+        "-o",
+        "--output",
+        type=Path,
+        default=None,
+        help="write the report to a file instead of stdout",
     )
 
 
@@ -255,6 +263,30 @@ def _cmd_audit(args: argparse.Namespace) -> int:
     return 0
 
 
+def _emit(findings: list[Finding], args: argparse.Namespace) -> None:
+    """Render the findings and send them to a file or to stdout."""
+    if args.format == "html":
+        from .report import ReportMeta, format_html
+
+        meta = ReportMeta(
+            base=getattr(args, "base", None) or getattr(args, "commits", None),
+            head=getattr(args, "head", None),
+            unversioned_is=getattr(args, "unversioned_is", None),
+            generated=datetime.now().astimezone().strftime("%Y-%m-%d %H:%M %Z"),
+            command=" ".join(["check_api_compat.py", *sys.argv[1:]]),
+        )
+        text = format_html(findings, meta)
+    else:
+        text = FORMATTERS[args.format](findings)
+
+    if args.output:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(text, encoding="utf-8")
+        print(f"wrote {len(findings)} findings to {args.output}", file=sys.stderr)
+    else:
+        print(text)
+
+
 def main(argv: list[str] | None = None) -> int:
     args = _parse_args(argv)
 
@@ -274,7 +306,7 @@ def main(argv: list[str] | None = None) -> int:
     else:
         findings = _cmd_check(args)
 
-    print(FORMATTERS[args.format](findings))
+    _emit(findings, args)
 
     failing = _THRESHOLDS[args.fail_on]
     return 1 if any(f.severity in failing for f in findings) else 0

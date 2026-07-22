@@ -11,9 +11,11 @@ Run from the zephyr root::
 
 from __future__ import annotations
 
+import re
 import subprocess
 import sys
 import textwrap
+from html.parser import HTMLParser
 from pathlib import Path
 
 import pytest
@@ -364,6 +366,123 @@ class TestDeprecationCheck:
             HEADER.format(version="1.0.0", extra="int demo_new(void);"),
         )
         assert checks.check_deprecation("HEAD~1..HEAD", repo) == []
+
+
+from api_compat.report import ReportMeta, format_html  # noqa: E402
+
+
+def _finding(**kwargs):
+    from api_compat.findings import Finding
+
+    base = {
+        "check": "signature",
+        "severity": Severity.ERROR,
+        "title": "t",
+        "detail": "d",
+        "file": "include/zephyr/x.h",
+        "line": 1,
+    }
+    return Finding(**{**base, **kwargs})
+
+
+class TestHtmlReport:
+    def test_every_finding_is_reachable_by_the_filters(self):
+        """A facet value with no checkbox is hidden by the page permanently.
+
+        Findings that resolve to no group carry no lifecycle, so the filter
+        list must be built from the values actually present.
+        """
+        from api_compat.findings import Severity as S
+
+        page = format_html(
+            [
+                _finding(severity=S.WARNING, group=None, lifecycle=None),
+                _finding(group="g", lifecycle="stable"),
+                _finding(severity=S.NOTE, group="h", lifecycle="experimental"),
+            ]
+        )
+        offered = {
+            (m.group(1), m.group(2))
+            for m in re.finditer(r'data-facet="(\w+)" value="([^"]*)"', page)
+        }
+        for match in re.finditer(
+            r'data-sev="([^"]*)" data-life="([^"]*)" data-check="([^"]*)"', page
+        ):
+            for facet, value in zip(("sev", "life", "check"), match.groups(), strict=True):
+                assert (facet, value) in offered, f"{facet}={value} has no filter"
+
+    def test_markup_is_balanced(self):
+        page = format_html([_finding(group="g", lifecycle="stable")])
+
+        class Checker(HTMLParser):
+            def __init__(self):
+                super().__init__()
+                self.stack, self.bad = [], []
+
+            def handle_starttag(self, tag, attrs):
+                if tag not in ("meta", "br", "input", "img", "hr"):
+                    self.stack.append(tag)
+
+            def handle_endtag(self, tag):
+                if self.stack and self.stack[-1] == tag:
+                    self.stack.pop()
+                else:
+                    self.bad.append(tag)
+
+        checker = Checker()
+        checker.feed(page)
+        assert not checker.bad and not checker.stack
+
+    def test_hostile_content_is_inert(self):
+        page = format_html(
+            [
+                _finding(
+                    title="<img src=x onerror=alert(1)>",
+                    detail='a < b && c > d "quoted"',
+                    symbol="op<T>",
+                    group="g&g",
+                    lifecycle="stable",
+                )
+            ]
+        )
+        assert "<img" not in page
+        assert "&lt;img src=x onerror=alert(1)&gt;" in page
+        assert "&amp;&amp;" in page
+
+    def test_page_is_self_contained(self):
+        page = format_html([_finding(group="g", lifecycle="stable")])
+        # No CDN, font, or script host: the file must open straight from disk.
+        assert "http://" not in page and "https://" not in page
+        assert "<style>" in page and "<script>" in page
+
+    def test_silent_changes_are_counted_and_labelled(self):
+        page = format_html(
+            [
+                _finding(
+                    title="silently changes behavior: x changed", group="g", lifecycle="stable"
+                ),
+                _finding(title="y was removed", group="g", lifecycle="stable"),
+            ]
+        )
+        assert "Silent behavior change" in page
+        assert '<div class="n">1</div><div class="k">Silent changes</div>' in page
+
+    def test_ids_referenced_by_the_script_exist(self):
+        page = format_html([_finding(group="g", lifecycle="stable")])
+        for element_id in ("q", "shown", "empty", "expand", "reset"):
+            assert f'id="{element_id}"' in page
+
+    def test_metadata_is_rendered(self):
+        page = format_html(
+            [_finding(group="g", lifecycle="stable")],
+            ReportMeta(base="v4.4.0", head="HEAD", unversioned_is="stable"),
+        )
+        assert "v4.4.0" in page and "stable" in page
+
+    def test_empty_report_still_renders(self):
+        page = format_html([])
+        assert "<title>" in page
+        assert '<div class="n">0</div><div class="k">Findings</div>' in page
 
 
 pytest.importorskip("doxmlparser", reason="doxmlparser is needed for signature comparison")

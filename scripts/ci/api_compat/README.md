@@ -57,6 +57,29 @@ $ ./scripts/ci/check_api_compat.py signature base/xml head/xml
 `--format github` emits workflow annotations, `--format json` feeds other
 tooling, and `--fail-on {error,warning,never}` sets the exit status.
 
+## HTML report
+
+`--format html` writes a standalone page, which is the practical way to read a
+release-to-release comparison: those run to thousands of findings.
+
+```console
+$ ./scripts/ci/check_api_compat.py compare-revs v4.4.0 HEAD -f html -o api-report.html
+```
+
+Findings are grouped by file and collapsed, with client-side filters for
+severity, lifecycle state and check, plus a search box over symbol, group, file
+and message. Summary tiles count errors, warnings, notes and — most usefully —
+**silent behaviour changes**, the ones that still compile.
+
+The page has no external references at all: no CDN, no fonts, no remote scripts.
+It opens straight from disk and can be attached to a CI job as an artifact. It
+follows the viewer's light or dark theme, and every severity is labelled in text
+as well as colour.
+
+Size scales with the finding count: roughly 5 MB for 6000 findings. Large but
+workable; `--fail-on never` keeps the exit status clean when generating a report
+for review rather than gating on it.
+
 ## The checks
 
 `group-metadata` and `deprecation-version` need only the headers and the diff.
