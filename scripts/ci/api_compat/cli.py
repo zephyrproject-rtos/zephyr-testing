@@ -276,6 +276,13 @@ def _cmd_propose(args: argparse.Namespace) -> list[Finding]:
         skipped = [h for h in headers if is_extension_header(h)]
         headers = [h for h in headers if not is_extension_header(h)]
 
+    # Inheritance is resolved over the whole tree, not just the selected
+    # paths: @ingroup routinely names a parent declared in another header.
+    from . import apidoc
+    from .checks import select_headers
+
+    index = apidoc.index_headers(repo, select_headers(None, repo, all_files=True))
+
     releases = release_tags(repo)
     print(
         f"examining {len(headers)} headers against {len(releases)} releases ...",
@@ -291,10 +298,22 @@ def _cmd_propose(args: argparse.Namespace) -> list[Finding]:
         )
 
     findings = []
+    inherited = 0
     for evidence in gather_all(repo, headers, releases, workers=args.jobs):
+        resolution = index.resolve(evidence.group.name)
+        if resolution.inherited and not args.include_versioned:
+            # Already covered by an enclosing group; nothing to propose.
+            inherited += 1
+            continue
         if evidence.declared is not Lifecycle.UNVERSIONED and not args.include_versioned:
             continue
         findings.append(proposals.to_finding(evidence, proposals.classify(evidence)))
+
+    if inherited:
+        print(
+            f"skipping {inherited} groups that inherit a version from an enclosing group",
+            file=sys.stderr,
+        )
     return findings
 
 
@@ -323,36 +342,54 @@ def _cmd_audit(args: argparse.Namespace) -> int:
     repo = _resolve_repo(args.repo)
     from . import apidoc
 
-    rows = []
-    counts: collections.Counter = collections.Counter()
-    for path in checks.select_headers(None, repo, all_files=True):
-        info = apidoc.scan_file(repo / path, path)
-        for group in info.groups.values():
-            counts[group.lifecycle] += 1
-            if args.untagged_only and group.version_raw is not None:
-                continue
-            rows.append(
-                (
-                    group.name,
-                    group.lifecycle.value,
-                    group.version_raw or "-",
-                    group.since or "-",
-                    f"{path}:{group.line}",
-                )
-            )
+    headers = checks.select_headers(None, repo, all_files=True)
+    index = apidoc.index_headers(repo, headers)
 
-    total = sum(counts.values())
+    rows = []
+    declared: collections.Counter = collections.Counter()
+    effective: collections.Counter = collections.Counter()
+    inherited = 0
+
+    for name, group in index.groups.items():
+        resolution = index.resolve(name)
+        declared[group.lifecycle] += 1
+        effective[resolution.lifecycle] += 1
+        if resolution.inherited:
+            inherited += 1
+
+        if args.untagged_only and (group.version_raw or resolution.inherited):
+            continue
+
+        source = ""
+        if resolution.inherited:
+            source = f"<- {resolution.source}"
+        rows.append(
+            (
+                name,
+                resolution.lifecycle.value,
+                group.version_raw or "-",
+                group.since or "-",
+                source,
+                f"{group.file}:{group.line}",
+            )
+        )
+
+    total = sum(declared.values())
     if not args.summary:
         width = max((len(r[0]) for r in rows), default=4)
-        for name, state, version, since, where in sorted(rows):
-            print(f"{name:<{width}}  {state:<12}  {version:<8}  {since:<6}  {where}")
+        for name, state, version, since, source, where in sorted(rows):
+            print(f"{name:<{width}}  {state:<12}  {version:<8}  {since:<6}  {source:<28}  {where}")
         print()
 
     print(f"{total} API groups")
-    for state in Lifecycle:
-        count = counts[state]
-        if count:
-            print(f"  {state.value:<14} {count:5d}  ({100 * count / total:.1f}%)")
+    print(f"{'':2}{'state':<14} {'declared':>9} {'effective':>10}")
+    for state in apidoc.Lifecycle:
+        if declared[state] or effective[state]:
+            print(f"{'':2}{state.value:<14} {declared[state]:>9} {effective[state]:>10}")
+    print(
+        f"\n{inherited} groups inherit their state from an enclosing group "
+        f"({100 * inherited / total:.0f}% of all groups)."
+    )
     return 0
 
 

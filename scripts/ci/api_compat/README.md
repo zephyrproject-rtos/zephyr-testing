@@ -30,6 +30,14 @@ Zephyr encodes as a semantic version on the owning Doxygen group.
 | `0.y.z, y>1`  | unstable     | allowed, explicitly unannounced  |
 | `x.y.z, x>=1` | stable       | a contract violation             |
 
+A group with no `@version` of its own **inherits the nearest versioned
+ancestor's**: the subgroups of a stable API are part of that API and carry the
+same promise. `@ingroup` names the parent and wins over lexical nesting inside
+another group's `@{ ... @}`; where neither leads to a versioned ancestor the
+group is genuinely unversioned. This resolves 438 of the 967 untagged groups —
+`thread_apis`, `timer_apis` and `clock_apis` all inherit `1.0.0` from
+`kernel_apis`, and `gpio_interface_ext` inherits from `gpio_interface`.
+
 See `doc/develop/api/api_lifecycle.rst` and `doc/develop/api/overview.rst`.
 
 ## Commands
@@ -37,11 +45,14 @@ See `doc/develop/api/api_lifecycle.rst` and `doc/develop/api/overview.rst`.
 ```console
 # What lifecycle state is every API group in?
 $ ./scripts/ci/check_api_compat.py audit --summary
-1244 API groups
-  experimental      85  (6.8%)
-  unstable         117  (9.4%)
-  stable            67  (5.4%)
-  unversioned      975  (78.4%)
+1236 API groups
+  state           declared  effective
+  experimental          85        136
+  unstable             118        219
+  stable                66        352
+  unversioned          967        529
+
+438 groups inherit their state from an enclosing group (35% of all groups).
 
 # Cheap checks on a branch: no Doxygen, no compiler.
 $ ./scripts/ci/check_api_compat.py check -c origin/main..
@@ -82,9 +93,10 @@ for review rather than gating on it.
 
 ## Proposing a lifecycle state
 
-78% of groups declare no `@version`, which is the backlog everything else in
-this package has to work around. `propose` narrows it by gathering the evidence
-`api_lifecycle.rst` asks for and suggesting a state per group.
+529 groups declare no `@version` and inherit none, which is the backlog
+everything else in this package has to work around. `propose` narrows it by
+gathering the evidence `api_lifecycle.rst` asks for and suggesting a state per
+group.
 
 ```console
 $ ./scripts/ci/check_api_compat.py propose include/zephyr/drivers/
@@ -121,7 +133,9 @@ counted, and **hardware-agnostic** otherwise.
 | agnostic, ≥3 releases and ≥10 users | **stable (candidate)** |
 
 `--min-users` moves the last bar; `--include-versioned` also re-examines groups
-that already declare a version, which surfaces disagreements.
+that already declare a version — or inherit one — which surfaces disagreements.
+Groups covered by an enclosing group are skipped by default and the number is
+reported.
 
 ### What the evidence is, and where it lies
 
@@ -218,14 +232,31 @@ never be added there.
 
 ## Unversioned groups
 
-About 78% of groups carry no `@version`. Those are treated as **stable** by
+About 78% of groups declare no `@version`, but 45% of those inherit one from an
+enclosing group, leaving 529 of 1236 genuinely unversioned. `audit` reports both
+columns:
+
+```console
+$ ./scripts/ci/check_api_compat.py audit --summary
+1236 API groups
+  state           declared  effective
+  experimental          85        136
+  unstable             118        219
+  stable                66        352
+  unversioned          967        529
+
+438 groups inherit their state from an enclosing group (35% of all groups).
+```
+
+What remains genuinely unversioned is treated as **stable** by
 default, which fails closed: most untagged headers are long-lived core APIs
 with the strongest de facto guarantees, so assuming "experimental" would exempt
 exactly the wrong APIs. Override with `--unversioned-is` when triaging.
 
 This does mean the signature check is noisy against today's tree. That is why
-`group-metadata` only looks at newly added groups: it stops the gap from
-growing while the backlog is worked down. `audit --untagged-only` lists it.
+`group-metadata` only looks at newly added groups, and only those that do not
+inherit a version: it stops the gap from growing while the backlog is worked
+down. `audit --untagged-only` lists what is left.
 
 ## Wiring into check_compliance.py
 

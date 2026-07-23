@@ -58,9 +58,16 @@ def check_group_metadata(
     the groups already in the tree carry no version at all, so checking every
     group would bury the signal; use all_files=True to produce that backlog
     report deliberately.
+
+    A group nested inside a versioned group is not required to declare its own
+    version: it is part of that API and inherits its state. Resolving that
+    needs the whole tree, since @ingroup routinely names a parent declared in
+    another header.
     """
     findings: list[Finding] = []
     check = "group-metadata"
+
+    index = apidoc.index_headers(repo, select_headers(None, repo, all_files=True))
 
     for path in select_headers(commit_range, repo, all_files):
         full = repo / path
@@ -78,27 +85,33 @@ def check_group_metadata(
             if new_lines is not None and group.line not in new_lines:
                 continue
 
+            resolution = index.resolve(group.name)
+
             common = {
                 "check": check,
                 "file": path,
                 "line": group.line,
                 "group": group.name,
-                "lifecycle": group.lifecycle.value,
+                "lifecycle": resolution.lifecycle.value,
             }
 
             if group.version_raw is None:
-                findings.append(
-                    Finding(
-                        severity=Severity.ERROR,
-                        title=f"new API group '{group.name}' has no @version",
-                        detail=(
-                            "Every API group must declare its maturity with @version.\n"
-                            "Use 0.1.0 for a new experimental API. See "
-                            "doc/develop/api/api_lifecycle.rst."
-                        ),
-                        **common,
+                # Inheriting a version from an enclosing group is enough: the
+                # subgroup is part of that API and shares its promise.
+                if not resolution.inherited:
+                    findings.append(
+                        Finding(
+                            severity=Severity.ERROR,
+                            title=f"new API group '{group.name}' has no @version",
+                            detail=(
+                                "Every API group must declare its maturity with @version,\n"
+                                "or sit inside a group that does.\n"
+                                "Use 0.1.0 for a new experimental API. See "
+                                "doc/develop/api/api_lifecycle.rst."
+                            ),
+                            **common,
+                        )
                     )
-                )
             elif group.version is None:
                 findings.append(
                     Finding(
@@ -126,17 +139,19 @@ def check_group_metadata(
                 )
 
             if group.since is None:
-                findings.append(
-                    Finding(
-                        severity=Severity.ERROR,
-                        title=f"new API group '{group.name}' has no @since",
-                        detail=(
-                            "Declare the Zephyr release that introduces the API, "
-                            "for example '@since 4.3'."
-                        ),
-                        **common,
+                if not resolution.inherited:
+                    findings.append(
+                        Finding(
+                            severity=Severity.ERROR,
+                            title=f"new API group '{group.name}' has no @since",
+                            detail=(
+                                "Declare the Zephyr release that introduces the API, "
+                                "for example '@since 4.3',\nor nest the group inside "
+                                "one that already declares its lifecycle."
+                            ),
+                            **common,
+                        )
                     )
-                )
             elif not apidoc.is_valid_since(group.since):
                 findings.append(
                     Finding(

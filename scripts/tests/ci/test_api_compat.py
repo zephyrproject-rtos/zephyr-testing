@@ -243,6 +243,191 @@ class TestScanHeader:
         assert info.scopes == []
 
 
+class TestVersionInheritance:
+    """A group inside a versioned group is part of that API.
+
+    Its subgroups carry the same promise, so a group with no @version of its
+    own takes the nearest versioned ancestor's.
+    """
+
+    def _index(self, *sources):
+        from api_compat.apidoc import GroupIndex
+
+        index = GroupIndex()
+        for number, source in enumerate(sources):
+            index.add(scan_header(textwrap.dedent(source), f"h{number}.h"))
+        return index
+
+    def test_child_inherits_through_ingroup(self):
+        index = self._index("""
+            /**
+             * @defgroup parent Parent
+             * @version 1.0.0
+             * @{
+             */
+            /** @} */
+            /**
+             * @defgroup child Child
+             * @ingroup parent
+             * @{
+             */
+            /** @} */
+        """)
+        resolution = index.resolve("child")
+        assert resolution.lifecycle is Lifecycle.STABLE
+        assert resolution.source == "parent"
+        assert resolution.inherited
+
+    def test_child_inherits_across_headers(self):
+        # @ingroup routinely names a parent declared in a different header.
+        index = self._index(
+            """
+            /**
+             * @defgroup parent Parent
+             * @version 0.8.0
+             * @{
+             */
+            /** @} */
+            """,
+            """
+            /**
+             * @defgroup child Child
+             * @ingroup parent
+             * @{
+             */
+            /** @} */
+            """,
+        )
+        assert index.resolve("child").lifecycle is Lifecycle.UNSTABLE
+
+    def test_child_inherits_through_lexical_nesting(self):
+        # The gpio.h shape: a subgroup declared inside the parent's @{ ... @}
+        # with no @ingroup of its own.
+        index = self._index("""
+            /**
+             * @defgroup outer Outer
+             * @version 1.0.0
+             * @{
+             *
+             * @defgroup inner Inner
+             *
+             * @{
+             * @}
+             */
+            /** @} */
+        """)
+        assert index.resolve("inner").lifecycle is Lifecycle.STABLE
+
+    def test_own_version_wins_over_parent(self):
+        index = self._index("""
+            /**
+             * @defgroup parent Parent
+             * @version 1.0.0
+             * @{
+             */
+            /** @} */
+            /**
+             * @defgroup child Child
+             * @ingroup parent
+             * @version 0.1.0
+             * @{
+             */
+            /** @} */
+        """)
+        resolution = index.resolve("child")
+        assert resolution.lifecycle is Lifecycle.EXPERIMENTAL
+        assert not resolution.inherited
+
+    def test_inheritance_walks_past_unversioned_ancestors(self):
+        index = self._index("""
+            /**
+             * @defgroup top Top
+             * @version 1.0.0
+             * @{
+             */
+            /** @} */
+            /**
+             * @defgroup middle Middle
+             * @ingroup top
+             * @{
+             */
+            /** @} */
+            /**
+             * @defgroup leaf Leaf
+             * @ingroup middle
+             * @{
+             */
+            /** @} */
+        """)
+        resolution = index.resolve("leaf")
+        assert resolution.lifecycle is Lifecycle.STABLE
+        assert resolution.source == "top"
+        assert resolution.chain == ("middle", "top")
+
+    def test_ingroup_wins_over_lexical_parent(self):
+        index = self._index("""
+            /**
+             * @defgroup lexical Lexical
+             * @version 1.0.0
+             * @{
+             *
+             * @defgroup child Child
+             * @ingroup elsewhere
+             *
+             * @{
+             * @}
+             */
+            /** @} */
+            /**
+             * @defgroup elsewhere Elsewhere
+             * @version 0.1.0
+             * @{
+             */
+            /** @} */
+        """)
+        # The explicit @ingroup names the real parent, not the enclosing scope.
+        assert index.resolve("child").lifecycle is Lifecycle.EXPERIMENTAL
+
+    def test_unversioned_chain_stays_unversioned(self):
+        index = self._index("""
+            /**
+             * @defgroup parent Parent
+             * @{
+             */
+            /** @} */
+            /**
+             * @defgroup child Child
+             * @ingroup parent
+             * @{
+             */
+            /** @} */
+        """)
+        resolution = index.resolve("child")
+        assert resolution.lifecycle is Lifecycle.UNVERSIONED
+        assert not resolution.inherited
+
+    def test_cycles_do_not_hang(self):
+        # Nothing stops an author writing a loop of @ingroup tags.
+        index = self._index("""
+            /**
+             * @defgroup a A
+             * @ingroup b
+             * @{
+             */
+            /** @} */
+            /**
+             * @defgroup b B
+             * @ingroup a
+             * @{
+             */
+            /** @} */
+        """)
+        assert index.resolve("a").lifecycle is Lifecycle.UNVERSIONED
+
+    def test_unknown_group_resolves_to_nothing(self):
+        assert self._index("").resolve("nope").lifecycle is Lifecycle.UNVERSIONED
+
+
 HEADER = textwrap.dedent("""\
     /**
      * @defgroup demo_api Demo
@@ -307,6 +492,26 @@ class TestGroupMetadataCheck:
         # different file must not drag every group in the tree into the report.
         _commit(repo, "include/zephyr/other.h", "int unrelated(void);\n")
         assert checks.check_group_metadata("HEAD~1..HEAD", repo) == []
+
+    def test_group_inheriting_a_version_needs_no_tags_of_its_own(self, repo):
+        # A subgroup of a versioned API is part of that API.
+        _commit(
+            repo,
+            "include/zephyr/new.h",
+            "/**\n * @defgroup child Child\n * @ingroup demo_api\n * @{\n */\n"
+            "int f(void);\n/** @} */\n",
+        )
+        assert checks.check_group_metadata("HEAD~1..HEAD", repo) == []
+
+    def test_group_inheriting_from_an_unversioned_parent_is_still_reported(self, repo):
+        _commit(
+            repo,
+            "include/zephyr/new.h",
+            "/**\n * @defgroup orphan Orphan\n * @ingroup nowhere\n * @{\n */\n"
+            "int f(void);\n/** @} */\n",
+        )
+        found = checks.check_group_metadata("HEAD~1..HEAD", repo)
+        assert any("no @version" in f.title for f in found)
 
     def test_malformed_version_is_reported(self, repo):
         _commit(
@@ -801,6 +1006,46 @@ class TestSignatureComparison:
         assert compare(base, head)[0].severity is Severity.ERROR
         relaxed = compare(base, head, unversioned_is=Lifecycle.EXPERIMENTAL)
         assert relaxed[0].severity is Severity.NOTE
+
+    def test_symbol_in_a_nested_group_inherits_the_parent_severity(self):
+        """The clock_apis case: a subgroup of a stable API is stable.
+
+        Without inheritance this graded as unversioned and leaned on the
+        --unversioned-is policy instead of the tree's own statement.
+        """
+        base = ApiSnapshot(
+            groups={
+                "parent": GroupStatus(name="parent", version_raw="1.0.0"),
+                "child": GroupStatus(name="child", parent="parent"),
+            }
+        )
+        base.symbols = {"function:f": _fn("f")}
+        base.symbols["function:f"] = Symbol(
+            key="function:f", kind="function", name="f", group="child", ret="int"
+        )
+        head = ApiSnapshot(groups=dict(base.groups))
+
+        found = compare(base, head)
+        assert len(found) == 1
+        assert found[0].severity is Severity.ERROR
+        # The facet value stays a plain state name for the HTML filter.
+        assert found[0].lifecycle == "stable"
+        assert "covered by 'parent'" in found[0].detail
+
+    def test_inherited_experimental_downgrades_severity(self):
+        base = ApiSnapshot(
+            groups={
+                "parent": GroupStatus(name="parent", version_raw="0.1.0"),
+                "child": GroupStatus(name="child", parent="parent"),
+            }
+        )
+        base.symbols = {
+            "function:f": Symbol(
+                key="function:f", kind="function", name="f", group="child", ret="int"
+            )
+        }
+        found = compare(base, ApiSnapshot(groups=dict(base.groups)))
+        assert found[0].severity is Severity.NOTE
 
     def test_added_symbols_are_not_reported(self):
         found = compare(_snapshot("1.0.0"), _snapshot("1.0.0", _fn("brand_new")))

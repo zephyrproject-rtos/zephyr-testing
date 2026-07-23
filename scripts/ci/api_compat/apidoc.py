@@ -112,7 +112,10 @@ class Group:
     version_raw: str | None = None
     #: True for @defgroup, False for @addtogroup (which only reopens a group).
     defines: bool = True
+    #: Parent named by @ingroup, which may live in another header.
     parent: str | None = None
+    #: Group whose @{ ... @} scope this declaration sits inside, if any.
+    lexical_parent: str | None = None
 
     @property
     def version(self) -> Version | None:
@@ -120,8 +123,23 @@ class Group:
 
     @property
     def lifecycle(self) -> Lifecycle:
+        """The state this group declares itself.
+
+        Says nothing about a version inherited from a parent; use GroupIndex
+        for that.
+        """
         version = self.version
         return version.lifecycle if version else Lifecycle.UNVERSIONED
+
+    @property
+    def effective_parent(self) -> str | None:
+        """The parent a version should be inherited from.
+
+        @ingroup wins over lexical containment: it is the explicit statement of
+        where the group belongs, and where the two disagree it names the more
+        specific parent.
+        """
+        return self.parent or self.lexical_parent
 
 
 @dataclass
@@ -197,6 +215,9 @@ def scan_header(text: str, path: str = "<stdin>") -> HeaderInfo:
                     title=token.group("rest").strip(),
                     file=path,
                     line=line,
+                    # Whatever scope is open at this point encloses the
+                    # declaration, so it is a candidate parent to inherit from.
+                    lexical_parent=stack[-1][0] if stack else None,
                 )
                 # A group may be declared once and reopened elsewhere; prefer
                 # whichever declaration actually carries the version metadata.
@@ -240,3 +261,89 @@ def scan_file(path, display_path: str | None = None) -> HeaderInfo:
     """Scan a header from disk."""
     with open(path, encoding="utf-8", errors="replace") as handle:
         return scan_header(handle.read(), display_path or str(path))
+
+
+@dataclass(frozen=True)
+class Resolution:
+    """The version that applies to a group, and where it came from."""
+
+    version: Version | None
+    #: Group the version was declared on. None when nothing declares one; equal
+    #: to the group's own name when it declares its own.
+    source: str | None
+    #: Groups walked to reach the source, nearest first.
+    chain: tuple[str, ...] = ()
+
+    @property
+    def inherited(self) -> bool:
+        return bool(self.chain)
+
+    @property
+    def lifecycle(self) -> Lifecycle:
+        return self.version.lifecycle if self.version else Lifecycle.UNVERSIONED
+
+
+class GroupIndex:
+    """Groups from many headers, with inheritance resolved across them.
+
+    A group nested inside a versioned group is covered by that version: the
+    subgroups of a stable API are part of the same API and carry the same
+    promise. Since @ingroup routinely names a parent declared in a different
+    header, resolving that requires an index over the whole tree rather than
+    one file.
+    """
+
+    def __init__(self) -> None:
+        self.groups: dict[str, Group] = {}
+
+    def add(self, info: HeaderInfo) -> None:
+        for group in info.groups.values():
+            existing = self.groups.get(group.name)
+            # A group reopened in several headers is declared once; keep
+            # whichever declaration carries the metadata.
+            if existing is None or (existing.version_raw is None and group.version_raw):
+                self.groups[group.name] = group
+
+    def add_all(self, infos) -> None:
+        for info in infos:
+            self.add(info)
+
+    def resolve(self, name: str) -> Resolution:
+        """Return the version that applies to a group, inherited if needed."""
+        group = self.groups.get(name)
+        if group is None:
+            return Resolution(None, None)
+        if group.version is not None:
+            return Resolution(group.version, name)
+
+        # Walk up until a parent declares a version. The visited set guards
+        # against @ingroup cycles, which nothing prevents authors from writing.
+        chain: list[str] = []
+        visited = {name}
+        current = group.effective_parent
+        while current and current not in visited:
+            visited.add(current)
+            chain.append(current)
+            parent = self.groups.get(current)
+            if parent is None:
+                break
+            if parent.version is not None:
+                return Resolution(parent.version, current, tuple(chain))
+            current = parent.effective_parent
+
+        return Resolution(None, None, ())
+
+    def lifecycle(self, name: str) -> Lifecycle:
+        return self.resolve(name).lifecycle
+
+
+def index_headers(repo, paths) -> GroupIndex:
+    """Build an index from a set of header paths."""
+    from pathlib import Path
+
+    index = GroupIndex()
+    for path in paths:
+        full = Path(repo) / path
+        if full.exists():
+            index.add(scan_file(full, str(path)))
+    return index

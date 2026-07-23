@@ -72,9 +72,12 @@ class GroupStatus:
     title: str = ""
     since: str | None = None
     version_raw: str | None = None
+    #: Enclosing group, from Doxygen's <innergroup>.
+    parent: str | None = None
 
     @property
     def lifecycle(self) -> Lifecycle:
+        """The state this group declares itself, ignoring any parent."""
         version = parse_version(self.version_raw)
         return version.lifecycle if version else Lifecycle.UNVERSIONED
 
@@ -83,6 +86,38 @@ class GroupStatus:
 class ApiSnapshot:
     symbols: dict[str, Symbol] = field(default_factory=dict)
     groups: dict[str, GroupStatus] = field(default_factory=dict)
+
+    def effective_lifecycle(self, name: str | None) -> tuple[Lifecycle, str | None]:
+        """The state that applies to a group, inherited from a parent if needed.
+
+        A subgroup of a stable API is part of that API and carries the same
+        promise, so a group with no @version of its own takes the nearest
+        versioned ancestor's. Returns the state and, when inherited, the group
+        it came from.
+        """
+        if not name:
+            return (Lifecycle.UNVERSIONED, None)
+
+        status = self.groups.get(name)
+        if status is None:
+            return (Lifecycle.UNVERSIONED, None)
+        if status.lifecycle is not Lifecycle.UNVERSIONED:
+            return (status.lifecycle, None)
+
+        # Walk up to the nearest ancestor that declares a version. The visited
+        # set guards against cycles, which nothing stops an author writing.
+        visited = {name}
+        current = status.parent
+        while current and current not in visited:
+            visited.add(current)
+            parent = self.groups.get(current)
+            if parent is None:
+                break
+            if parent.lifecycle is not Lifecycle.UNVERSIONED:
+                return (parent.lifecycle, current)
+            current = parent.parent
+
+        return (Lifecycle.UNVERSIONED, None)
 
 
 def _text(node) -> str:
@@ -337,6 +372,10 @@ def load_snapshot(xml_dir: Path, root: Path | None = None) -> ApiSnapshot:
 
     # Groups first, so that structs can inherit the group that lists them.
     refid_to_group: dict[str, str] = {}
+    #: child group refid -> parent group name, from <innergroup>.
+    parent_refids: dict[str, str] = {}
+    group_names: dict[str, str] = {}
+
     for compound in groups:
         path = xml_dir / f"{compound.get_refid()}.xml"
         if not path.exists():
@@ -344,9 +383,19 @@ def load_snapshot(xml_dir: Path, root: Path | None = None) -> ApiSnapshot:
         for compounddef in doxmlparser.compound.parse(str(path), True).get_compounddef():
             status = _group_status(compounddef)
             snapshot.groups[status.name] = status
+            group_names[compounddef.get_id()] = status.name
             for inner in compounddef.get_innerclass():
                 refid_to_group[inner.get_refid()] = status.name
+            for inner in compounddef.get_innergroup():
+                parent_refids[inner.get_refid()] = status.name
             _add_members(snapshot, compounddef, status.name, root)
+
+    # <innergroup> is Doxygen's own resolution of the group tree, so use it
+    # rather than re-deriving nesting from the headers.
+    for refid, parent in parent_refids.items():
+        name = group_names.get(refid)
+        if name and name in snapshot.groups:
+            snapshot.groups[name].parent = parent
 
     for compound in others:
         path = xml_dir / f"{compound.get_refid()}.xml"
@@ -527,16 +576,22 @@ def compare(
     findings: list[Finding] = []
     check = "signature"
 
-    def lifecycle_of(symbol: Symbol) -> Lifecycle:
-        status = base.groups.get(symbol.group) if symbol.group else None
-        return status.lifecycle if status else Lifecycle.UNVERSIONED
-
     for key, base_symbol in sorted(base.symbols.items()):
-        lifecycle = lifecycle_of(base_symbol)
-        # An unversioned group is judged as whatever policy says it is, but the
-        # finding keeps reporting the state actually declared in the tree.
+        # A group with no @version of its own is covered by the nearest
+        # versioned ancestor: a subgroup of a stable API is part of that API.
+        lifecycle, inherited_from = base.effective_lifecycle(base_symbol.group)
+        # Still unversioned after that walk means policy decides, but the
+        # finding keeps reporting the state the tree actually declares.
         effective = unversioned_is if lifecycle is Lifecycle.UNVERSIONED else lifecycle
         severity = _severity(lifecycle, unversioned_is)
+        # lifecycle stays one of the four state names: the HTML report uses it
+        # as a filter facet, so the inheritance note belongs in the detail.
+        inherit_note = (
+            f"\n'{base_symbol.group}' declares no @version of its own and is "
+            f"covered by '{inherited_from}'."
+            if inherited_from
+            else ""
+        )
         common = {
             "check": check,
             "symbol": base_symbol.display,
@@ -556,7 +611,7 @@ def compare(
                 Finding(
                     severity=severity,
                     title=f"{base_symbol.kind} '{base_symbol.display}' was removed",
-                    detail=_removal_detail(effective, lifecycle),
+                    detail=_removal_detail(effective, lifecycle) + inherit_note,
                     **common,
                 )
             )
@@ -568,7 +623,7 @@ def compare(
                 Finding(
                     severity=severity,
                     title=prefix + change.title,
-                    detail=change.detail,
+                    detail=change.detail + inherit_note,
                     **common,
                 )
             )
