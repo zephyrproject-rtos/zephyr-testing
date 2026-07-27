@@ -70,6 +70,21 @@ def changed_files(
     return [line for line in git(*args, cwd=cwd).splitlines() if line]
 
 
+def touched_files(
+    base: str,
+    head: str,
+    cwd: str | Path | None = None,
+) -> set[str]:
+    """Every path the change touches, deletions included.
+
+    Used to keep the signature comparison to files the change actually
+    modified. Deletions matter here, unlike in changed_files(): a removed
+    header is exactly where removed symbols are reported.
+    """
+    out = git("diff", "--name-only", f"{base}...{head}", cwd=cwd)
+    return {line for line in out.splitlines() if line}
+
+
 _HUNK_RE = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@")
 
 

@@ -95,6 +95,22 @@ def format_text(findings: list[Finding], color: bool = False) -> str:
     return "\n".join(lines)
 
 
+def _escape_data(text: str) -> str:
+    """Escape an annotation message, which is a single line."""
+    return text.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+
+
+def _escape_property(text: str) -> str:
+    """Escape an annotation property such as title or file.
+
+    Properties are separated by commas and terminated by "::", so a value
+    containing either has to be escaped or the annotation is silently
+    truncated. Struct members are displayed as "parent::member", which is
+    exactly the case that breaks it.
+    """
+    return _escape_data(text).replace(":", "%3A").replace(",", "%2C")
+
+
 def format_github(findings: list[Finding]) -> str:
     """Render findings as GitHub Actions workflow annotations."""
     out = []
@@ -103,13 +119,12 @@ def format_github(findings: list[Finding]) -> str:
         level = "notice" if finding.severity is Severity.NOTE else finding.severity.value
         attrs = []
         if finding.file:
-            attrs.append(f"file={finding.file}")
+            attrs.append(f"file={_escape_property(finding.file)}")
         if finding.line:
             attrs.append(f"line={finding.line}")
-        attrs.append(f"title={finding.title}")
+        attrs.append(f"title={_escape_property(finding.title)}")
 
-        # Annotation bodies are single-line; newlines must be escaped.
-        body = finding.detail.replace("\n", "%0A") or finding.title
+        body = _escape_data(finding.detail) or _escape_data(finding.title)
         out.append(f"::{level} {','.join(attrs)}::{body}")
     return "\n".join(out)
 

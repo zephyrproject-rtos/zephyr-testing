@@ -734,6 +734,72 @@ def _finding(**kwargs):
     return Finding(**{**base, **kwargs})
 
 
+class TestGithubAnnotations:
+    """GitHub parses "::" and "," as annotation syntax, not as text."""
+
+    def test_colons_in_a_title_are_escaped(self):
+        from api_compat.findings import format_github
+
+        line = format_github(
+            [_finding(title="member 'led_fake::arg0' was removed", group="led_fake")]
+        )
+        # Exactly two "::": the level prefix and the message separator. A third
+        # would truncate the annotation at the wrong place.
+        assert line.count("::") == 2
+        assert "%3A%3A" in line
+
+    def test_commas_in_a_title_are_escaped(self):
+        from api_compat.findings import format_github
+
+        line = format_github([_finding(title="a, b changed")])
+        assert "a%2C b changed" in line
+
+    def test_newlines_and_percent_in_the_body_are_escaped(self):
+        from api_compat.findings import format_github
+
+        line = format_github([_finding(detail="one\ntwo 50% done")])
+        assert "%0A" in line
+        assert "50%25 done" in line
+        assert "\n" not in line
+
+    def test_severity_maps_to_a_level_github_knows(self):
+        from api_compat.findings import Severity, format_github
+
+        for sev, level in (
+            (Severity.ERROR, "::error"),
+            (Severity.WARNING, "::warning"),
+            (Severity.NOTE, "::notice"),
+        ):
+            assert format_github([_finding(severity=sev)]).startswith(level)
+
+
+class TestLimitToFiles:
+    """Doxygen expands macro-generated headers inconsistently between runs.
+
+    A header built from Fake Function Framework macros can expand in one
+    snapshot and not the next, and every symbol it generates then looks
+    removed. Those phantoms are always in files the change never touched.
+    """
+
+    def test_untouched_files_are_dropped(self):
+        from api_compat.signature import limit_to_files
+
+        kept = _finding(file="include/zephyr/kernel.h")
+        phantom = _finding(file="include/zephyr/drivers/led/led_fake.h")
+        out = limit_to_files([kept, phantom], {"include/zephyr/kernel.h"})
+        assert [f.file for f in out] == ["include/zephyr/kernel.h"]
+
+    def test_a_finding_with_no_file_is_dropped(self):
+        from api_compat.signature import limit_to_files
+
+        assert limit_to_files([_finding(file=None)], {"include/zephyr/kernel.h"}) == []
+
+    def test_empty_allowed_set_drops_everything(self):
+        from api_compat.signature import limit_to_files
+
+        assert limit_to_files([_finding(file="include/zephyr/kernel.h")], set()) == []
+
+
 class TestHtmlReport:
     def test_every_finding_is_reachable_by_the_filters(self):
         """A facet value with no checkbox is hidden by the page permanently.

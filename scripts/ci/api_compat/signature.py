@@ -681,6 +681,23 @@ def compare(
     return findings
 
 
+def limit_to_files(findings: list[Finding], allowed: set[str]) -> list[Finding]:
+    """Drop findings whose declaration site the change never touched.
+
+    Doxygen's macro expansion is not reproducible across runs: a header full of
+    generated declarations, such as one built out of Fake Function Framework
+    macros, can expand in one snapshot and not in the next, and every symbol it
+    generates then looks removed. Those phantom findings always land in files
+    the change did not touch, so intersecting with the change's own paths
+    removes them.
+
+    The cost is a blind spot: a change that alters a macro in one header can
+    legitimately change what another header expands to, and that would now go
+    unreported. That is rarer than the noise it removes.
+    """
+    return [f for f in findings if f.file and f.file in allowed]
+
+
 def compare_xml_dirs(
     base_xml: Path,
     head_xml: Path,

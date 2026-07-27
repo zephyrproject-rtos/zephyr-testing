@@ -128,6 +128,13 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         default=None,
         help="source root the head XML was generated from",
     )
+    signature.add_argument(
+        "--changed-in",
+        default=None,
+        metavar="BASE..HEAD",
+        help="limit findings to the files this commit range touches",
+    )
+    _add_scope(signature)
     _add_unversioned(signature)
 
     propose = sub.add_parser(
@@ -181,9 +188,22 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         default=None,
         help="keep the generated Doxygen output under this directory",
     )
+    _add_scope(revs)
     _add_unversioned(revs)
 
     return parser.parse_args(argv)
+
+
+def _add_scope(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--all-files",
+        action="store_true",
+        help=(
+            "report findings in every header, not only the ones the change "
+            "touched. Doxygen expands macro-generated declarations "
+            "inconsistently between runs, so this is noisy"
+        ),
+    )
 
 
 def _add_unversioned(parser: argparse.ArgumentParser) -> None:
@@ -209,17 +229,21 @@ def _run_signature(
     unversioned: str,
     base_root: Path | None = None,
     head_root: Path | None = None,
+    touched: set[str] | None = None,
 ) -> list[Finding]:
     # Imported lazily: it needs doxmlparser, which the cheap checks do not.
-    from .signature import compare_xml_dirs
+    from .signature import compare_xml_dirs, limit_to_files
 
-    return compare_xml_dirs(
+    findings = compare_xml_dirs(
         base_xml,
         head_xml,
         unversioned_is=Lifecycle(unversioned),
         base_root=base_root,
         head_root=head_root,
     )
+    if touched is not None:
+        findings = limit_to_files(findings, touched)
+    return findings
 
 
 def _cmd_compare_revs(args: argparse.Namespace) -> list[Finding]:
@@ -237,7 +261,11 @@ def _cmd_compare_revs(args: argparse.Namespace) -> list[Finding]:
         head_xml, _ = snapshot_rev(repo, args.head, destination / "head")
         # Resolve declaration paths against the repository rather than the
         # snapshot worktrees, which snapshot_rev has already removed.
-        return _run_signature(base_xml, head_xml, args.unversioned_is, repo, repo)
+        touched = None
+        if not args.all_files:
+            touched = gitutil.touched_files(args.base, args.head, cwd=repo)
+            print(f"limiting to the {len(touched)} files this change touches", file=sys.stderr)
+        return _run_signature(base_xml, head_xml, args.unversioned_is, repo, repo, touched)
 
     if args.xml_dir:
         args.xml_dir.mkdir(parents=True, exist_ok=True)
@@ -426,12 +454,17 @@ def main(argv: list[str] | None = None) -> int:
         return _cmd_audit(args)
 
     if args.command == "signature":
+        touched = None
+        if args.changed_in and not args.all_files:
+            base, head = gitutil.split_range(args.changed_in)
+            touched = gitutil.touched_files(base, head, cwd=_resolve_repo(args.repo))
         findings = _run_signature(
             args.base_xml,
             args.head_xml,
             args.unversioned_is,
             args.base_root,
             args.head_root,
+            touched,
         )
     elif args.command == "propose":
         findings = _cmd_propose(args)
