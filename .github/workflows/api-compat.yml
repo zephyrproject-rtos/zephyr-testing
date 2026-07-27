@@ -76,25 +76,41 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
+      # doc/requirements.txt is what carries doxmlparser, which the signature
+      # comparison reads the Doxygen XML with.
       - name: Install Python packages
         run: |
           pip install -r scripts/requirements-actions.txt --require-hashes
+          pip install -r doc/requirements.txt --require-hashes
 
       # The base revision is needed as a local ref: the signature comparison builds a Doxygen tree
       # from it in a temporary worktree. No west workspace is required, because every INPUT in
       # doc/zephyr.doxyfile.in is relative to the Zephyr repository itself.
-      - name: Fetch the base branch
+      #
+      # The cached clone plus a full checkout usually leaves the base ref in place already, so it
+      # is only fetched when missing.
+      #
+      # Everything below compares against the merge base rather than the tip of the target branch.
+      # The two differ whenever the target has moved on since the pull request branched, and
+      # comparing against the tip would report every API change made by everyone else in the
+      # meantime as though this pull request had made it.
+      - name: Resolve the base revision
         run: |
-          git fetch --no-tags --depth=0 origin \
-            "+refs/heads/${BASE_REF}:refs/remotes/origin/${BASE_REF}"
-          echo "Base: $(git rev-parse --short origin/${BASE_REF})"
-          echo "Head: $(git rev-parse --short HEAD)"
+          if ! git rev-parse --verify --quiet "origin/${BASE_REF}^{commit}" >/dev/null; then
+            git fetch --no-tags origin \
+              "+refs/heads/${BASE_REF}:refs/remotes/origin/${BASE_REF}"
+          fi
+          BASE_SHA="$(git merge-base "origin/${BASE_REF}" HEAD)"
+          echo "BASE_SHA=${BASE_SHA}" >> "${GITHUB_ENV}"
+          echo "Target branch: ${BASE_REF} ($(git rev-parse --short "origin/${BASE_REF}"))"
+          echo "Merge base:    $(git rev-parse --short "${BASE_SHA}")"
+          echo "Head:          $(git rev-parse --short HEAD)"
 
       # Fast, and precise enough to gate on: it only looks at groups the pull request itself adds.
       - name: Check API lifecycle metadata
         run: |
           ./scripts/ci/check_api_compat.py check \
-            --commits "origin/${BASE_REF}..HEAD" \
+            --commits "${BASE_SHA}..HEAD" \
             --format github \
             --fail-on error
 
@@ -110,7 +126,7 @@ jobs:
         if: ${{ !cancelled() }}
         run: |
           ./scripts/ci/check_api_compat.py compare-revs \
-            "origin/${BASE_REF}" HEAD \
+            "${BASE_SHA}" HEAD \
             --xml-dir api-xml \
             --unversioned-is unstable \
             --format github \
