@@ -217,6 +217,53 @@ def _params_of(memberdef) -> tuple[str, ...]:
     return tuple(types)
 
 
+#: Include roots the Zephyr Doxyfile lists in STRIP_FROM_PATH and
+#: STRIP_FROM_INC_PATH. Doxygen removes these prefixes from the locations it
+#: records, so "include/zephyr/drivers/gpio.h" is reported as
+#: "zephyr/drivers/gpio.h". Putting the prefix back matters: a reviewer follows
+#: these paths, and GitHub only anchors an annotation to a line when the path
+#: it is given actually exists in the repository.
+_STRIPPED_ROOTS = (
+    "include",
+    "kernel/include",
+    "lib/libc/minimal/include",
+    "subsys/testsuite/include",
+    "subsys/testsuite/ztest/include",
+    "subsys/secure_storage/include",
+    "subsys/secure_storage/include/internal",
+)
+
+
+def _repo_relative(path: str, root: Path) -> str:
+    """Undo Doxygen's prefix stripping, so the path names a real file.
+
+    ``root`` is any checkout of the tree; it is only read to test which prefix
+    puts the file back. It need not be the revision the snapshot came from,
+    which matters because compare-revs discards its worktrees before comparing.
+    """
+    candidate = Path(path)
+    if candidate.is_absolute():
+        # Nothing was stripped; make it relative to the tree if we can.
+        with contextlib.suppress(ValueError):
+            return str(candidate.resolve().relative_to(root))
+        return path
+
+    if (root / candidate).exists():
+        return path
+    for prefix in _STRIPPED_ROOTS:
+        if (root / prefix / candidate).exists():
+            return str(Path(prefix) / candidate)
+
+    # A header removed by the change under test exists in no checkout, so the
+    # probe above cannot place it. Everything under zephyr/ comes from the
+    # public include root, which is enough to name it.
+    if candidate.parts and candidate.parts[0] == "zephyr":
+        return str(Path("include") / candidate)
+
+    # Outside the tree (a module, or a generated header): keep what Doxygen said.
+    return path
+
+
 def _location_of(memberdef, root: Path | None) -> tuple[str | None, int | None]:
     """Return the declaration site, made repo-relative where possible."""
     location = memberdef.get_location()
@@ -224,10 +271,7 @@ def _location_of(memberdef, root: Path | None) -> tuple[str | None, int | None]:
         return (None, None)
     path, line = location.get_file(), location.get_line()
     if path and root is not None:
-        # A path outside the tree (a module, or an installed header) is kept
-        # as-is rather than dropped.
-        with contextlib.suppress(ValueError):
-            path = str(Path(path).resolve().relative_to(root))
+        path = _repo_relative(path, root)
     return (path, int(line) if line else None)
 
 
@@ -604,6 +648,12 @@ def compare(
         }
 
         head_symbol = head.symbols.get(key)
+        if head_symbol is not None and head_symbol.file:
+            # Point at where the symbol is now, so a review annotation lands on
+            # the line the change actually touched. A removed symbol has no
+            # such line, and keeps the location it had in the base revision.
+            common["file"] = head_symbol.file
+            common["line"] = head_symbol.line
         if head_symbol is None:
             # A struct member vanishing with its whole struct is reported once,
             # via the struct's other members; that redundancy is acceptable.

@@ -1047,6 +1047,88 @@ class TestSignatureComparison:
         found = compare(base, ApiSnapshot(groups=dict(base.groups)))
         assert found[0].severity is Severity.NOTE
 
+    def test_declaration_paths_are_repo_relative(self, tmp_path):
+        """Doxygen strips include/ from the locations it records.
+
+        A GitHub annotation only anchors to a line when the path it is given
+        exists in the repository, so the prefix has to be put back.
+        """
+        from api_compat.signature import _repo_relative
+
+        (tmp_path / "include" / "zephyr" / "drivers").mkdir(parents=True)
+        (tmp_path / "include" / "zephyr" / "drivers" / "gpio.h").touch()
+        (tmp_path / "kernel" / "include").mkdir(parents=True)
+        (tmp_path / "kernel" / "include" / "ksched.h").touch()
+
+        assert _repo_relative("zephyr/drivers/gpio.h", tmp_path) == "include/zephyr/drivers/gpio.h"
+        assert _repo_relative("ksched.h", tmp_path) == "kernel/include/ksched.h"
+
+    def test_path_already_repo_relative_is_untouched(self, tmp_path):
+        from api_compat.signature import _repo_relative
+
+        (tmp_path / "include").mkdir()
+        (tmp_path / "include" / "top.h").touch()
+        assert _repo_relative("include/top.h", tmp_path) == "include/top.h"
+
+    def test_removed_header_still_gets_a_usable_path(self, tmp_path):
+        """A header deleted by the change exists in no checkout to probe."""
+        from api_compat.signature import _repo_relative
+
+        assert _repo_relative("zephyr/drivers/gone.h", tmp_path) == "include/zephyr/drivers/gone.h"
+
+    def test_unknown_path_is_left_alone(self, tmp_path):
+        from api_compat.signature import _repo_relative
+
+        assert _repo_relative("modules/foo/bar.h", tmp_path) == "modules/foo/bar.h"
+
+    def test_changed_symbol_is_located_in_the_head_revision(self):
+        """A review annotation should land on the line that changed."""
+        base = ApiSnapshot(groups={"g": GroupStatus(name="g", version_raw="1.0.0")})
+        base.symbols = {
+            "function:f": Symbol(
+                key="function:f",
+                kind="function",
+                name="f",
+                group="g",
+                ret="int",
+                params=("int",),
+                file="include/zephyr/x.h",
+                line=10,
+            )
+        }
+        head = ApiSnapshot(groups=dict(base.groups))
+        head.symbols = {
+            "function:f": Symbol(
+                key="function:f",
+                kind="function",
+                name="f",
+                group="g",
+                ret="int",
+                params=("long",),
+                file="include/zephyr/x.h",
+                line=42,
+            )
+        }
+        found = compare(base, head)
+        assert (found[0].file, found[0].line) == ("include/zephyr/x.h", 42)
+
+    def test_removed_symbol_keeps_its_base_location(self):
+        # The symbol is gone from head, so head has no line to point at.
+        base = ApiSnapshot(groups={"g": GroupStatus(name="g", version_raw="1.0.0")})
+        base.symbols = {
+            "function:f": Symbol(
+                key="function:f",
+                kind="function",
+                name="f",
+                group="g",
+                ret="int",
+                file="include/zephyr/x.h",
+                line=10,
+            )
+        }
+        found = compare(base, ApiSnapshot(groups=dict(base.groups)))
+        assert (found[0].file, found[0].line) == ("include/zephyr/x.h", 10)
+
     def test_added_symbols_are_not_reported(self):
         found = compare(_snapshot("1.0.0"), _snapshot("1.0.0", _fn("brand_new")))
         assert found == []

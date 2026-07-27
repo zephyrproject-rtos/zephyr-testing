@@ -258,6 +258,27 @@ This does mean the signature check is noisy against today's tree. That is why
 inherit a version: it stops the gap from growing while the backlog is worked
 down. `audit --untagged-only` lists what is left.
 
+## Running it in CI
+
+`.github/workflows/api-compat.yml` runs both halves on a pull request and
+reports findings as annotations. It builds one Doxygen tree per revision and
+reuses that pair for the annotations, the job summary and an HTML artifact,
+rather than paying for the builds three times.
+
+Two notes on how it is configured.
+
+It passes `--unversioned-is unstable`, which is deliberately weaker than this
+package's fail-closed default. A large part of the tree is still untagged, and
+grading all of it as stable would fail pull requests over APIs that never
+promised anything; with this flag only an API that explicitly declares itself
+stable can fail the job. Drop the flag once the untagged backlog is small
+enough to gate on.
+
+It needs no west workspace: every `INPUT` in `doc/zephyr.doxyfile.in` is
+relative to the Zephyr repository, so a bare checkout is enough to build the
+snapshots. That is why it is a good deal cheaper to set up than the
+documentation workflows.
+
 ## Wiring into check_compliance.py
 
 The package has no dependency on `check_compliance.py`, so a wrapper is small.

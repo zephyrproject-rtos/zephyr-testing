@@ -232,10 +232,12 @@ def _cmd_compare_revs(args: argparse.Namespace) -> list[Finding]:
 
     def run(destination: Path) -> list[Finding]:
         print(f"building Doxygen snapshot of {args.base} ...", file=sys.stderr)
-        base_xml, base_root = snapshot_rev(repo, args.base, destination / "base")
+        base_xml, _ = snapshot_rev(repo, args.base, destination / "base")
         print(f"building Doxygen snapshot of {args.head} ...", file=sys.stderr)
-        head_xml, head_root = snapshot_rev(repo, args.head, destination / "head")
-        return _run_signature(base_xml, head_xml, args.unversioned_is, base_root, head_root)
+        head_xml, _ = snapshot_rev(repo, args.head, destination / "head")
+        # Resolve declaration paths against the repository rather than the
+        # snapshot worktrees, which snapshot_rev has already removed.
+        return _run_signature(base_xml, head_xml, args.unversioned_is, repo, repo)
 
     if args.xml_dir:
         args.xml_dir.mkdir(parents=True, exist_ok=True)
