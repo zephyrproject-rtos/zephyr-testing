@@ -1,0 +1,43 @@
+# SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+name: "Zephyr C/C++ CodeQL config"
+
+# A Zephyr build is never a build of Zephyr alone: twister drives CMake over
+# the whole west workspace, so the extractor also sees the modules checked out
+# next to this repository (../modules, ../bootloader, ../tools) and the SDK
+# headers under /opt/toolchains. Code outside the checkout is dropped when the
+# SARIF is uploaded because it lies outside the source root, but in-tree
+# scaffolding still has to be filtered here.
+#
+# Note that for compiled languages these filters apply to the *results*, not to
+# extraction: excluding a directory makes the alert list relevant, it does not
+# make the build any shorter.
+paths:
+  - arch
+  - boards
+  - drivers
+  - include
+  - kernel
+  - lib
+  - modules
+  - soc
+  - subsys
+
+paths-ignore:
+  # Test scaffolding and the harnesses built on top of it. These are compiled
+  # by every profile below, and they are not part of what ships to a device.
+  - subsys/testsuite
+  - tests
+  - samples
+
+  # Thin wrappers around toolchain-provided libc implementations; the code that
+  # matters lives in the toolchain, which is out of scope for this repository.
+  - lib/libc/arcmwdt
+  - lib/libc/armstdc
+  - lib/libc/iar
+  - lib/libc/newlib
+  - lib/libc/picolibc
+
+queries:
+  - uses: security-extended

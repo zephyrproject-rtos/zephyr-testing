@@ -1,0 +1,166 @@
+# SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+# CodeQL security analysis of the C/C++ tree.
+#
+# The existing "CodeQL" workflow only covers the interpreted languages
+# (Python, Actions, JavaScript) with build-mode 'none'. C and C++ are the bulk
+# of Zephyr and cannot be scanned that way: CodeQL only sees a translation unit
+# if it observes the compiler being invoked on it. This workflow therefore uses
+# build-mode 'manual' and drives real twister builds under the CodeQL tracer,
+# the same approach used at
+# https://github.com/HubbleNetwork/hubble-device-sdk/commit/7435b94.
+#
+# Consequences worth knowing before editing the matrix below:
+#
+#   * Coverage equals what is compiled. Code guarded by a Kconfig no profile
+#     enables is invisible to the scan, not "clean".
+#   * Cost scales with build volume, and the same source recompiled for N
+#     boards lands in the database N times. The profiles are deliberately
+#     scoped to security-relevant subsystems rather than "build everything".
+#   * ccache must stay off (USE_CCACHE=0): a cache hit means no compiler
+#     process, which means no extraction.
+
+name: CodeQL (C/C++)
+
+on:
+  schedule:
+    # Run at 03:00 UTC on every Monday.
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: Analyze C/C++ (${{ matrix.profile }})
+    if: github.repository_owner == 'zephyrproject-rtos'
+    runs-on:
+      group: zephyr-runner-v2-linux-x64-4xlarge
+    container:
+      image: ghcr.io/zephyrproject-rtos/ci-repo-cache:v0.29.3.20260727
+      options: '--entrypoint /bin/bash'
+    timeout-minutes: 720
+    permissions:
+      contents: read
+      actions: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Kernel, architecture ports and the in-tree libraries, built for one
+          # 64-bit and one 32-bit target so that both pointer widths are seen.
+          - profile: kernel
+            twister-args: >-
+              -p qemu_x86_64 -p qemu_cortex_m3
+              -T tests/kernel -T tests/lib -T tests/arch
+
+          # The attacker-reachable parsers: networking and the Bluetooth host.
+          # native_sim keeps these on the host compiler, which gives the
+          # extractor the best fidelity.
+          - profile: connectivity
+            twister-args: >-
+              -p native_sim/native/64
+              -T tests/net -T tests/bluetooth
+
+          # Remaining subsystems (filesystems, MCUmgr, USB, shell, settings,
+          # storage) plus the driver model.
+          - profile: subsys
+            twister-args: >-
+              -p native_sim -p qemu_x86
+              -T tests/subsys -T tests/drivers
+
+    env:
+      ZEPHYR_TOOLCHAIN_VARIANT: zephyr
+      # See the header comment: ccache hits would silently starve the extractor.
+      USE_CCACHE: "0"
+      BSIM_OUT_PATH: /opt/bsim/
+      BSIM_COMPONENTS_PATH: /opt/bsim/components
+
+    steps:
+      - name: Apply container owner mismatch workaround
+        run: |
+          # FIXME: The owner UID of the GITHUB_WORKSPACE directory may not
+          #        match the container user UID because of the way GitHub
+          #        Actions runner is implemented. Remove this workaround when
+          #        GitHub comes up with a fundamental fix for this problem.
+          git config --global --add safe.directory ${GITHUB_WORKSPACE}
+
+      - name: Clone cached Zephyr repository
+        continue-on-error: true
+        run: |
+          git clone --shared /repo-cache/zephyrproject/zephyr .
+          git remote set-url origin ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}
+
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Zephyr environment
+        uses: ./.github/actions/zephyr-ci-env
+        with:
+          group-filter: '+ci,+optional,+testing'
+          run-checks: 'true'
+
+      - name: Install Python packages
+        run: |
+          pip install -r scripts/requirements-actions.txt --require-hashes
+          west packages pip --install
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@99df26d4f13ea111d4ec1a7dddef6063f76b97e9 # v4.37.0
+        with:
+          languages: c-cpp
+          build-mode: manual
+          config-file: ./.github/codeql/codeql-cpp-config.yml
+
+      - name: Build with twister
+        id: build
+        run: |
+          export ZEPHYR_BASE=${PWD}
+
+          # A scan is worth running on a partially built tree: a single board
+          # that fails to configure must not cost us the results for everything
+          # that did compile. Record the failure as an annotation instead.
+          set +e
+          ./scripts/twister \
+            --build-only \
+            --inline-logs --force-color -v \
+            --outdir twister-out-codeql \
+            -j 16 \
+            ${{ matrix.twister-args }}
+          status=$?
+          set -e
+
+          if [ ${status} -ne 0 ]; then
+            echo "::warning title=Incomplete CodeQL build::twister exited ${status} for" \
+                 "profile '${{ matrix.profile }}'; analysing the translation units that" \
+                 "did compile. Coverage for this profile is incomplete."
+          fi
+
+      - name: Upload twister logs
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: twister-logs-${{ matrix.profile }}
+          if-no-files-found: ignore
+          retention-days: 7
+          path: |
+            twister-out-codeql/twister.log
+            twister-out-codeql/twister.json
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@99df26d4f13ea111d4ec1a7dddef6063f76b97e9 # v4.37.0
+        with:
+          # Each profile produces its own database and its own SARIF upload.
+          # The categories must stay distinct, otherwise the last profile to
+          # finish overwrites the results of the others.
+          category: "/language:c-cpp/build:${{ matrix.profile }}"
