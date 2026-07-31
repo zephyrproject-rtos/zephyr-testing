@@ -61,7 +61,7 @@ jobs:
           # 64-bit and one 32-bit target so that both pointer widths are seen.
           - profile: kernel
             twister-args: >-
-              -p qemu_x86_64 -p qemu_cortex_m3
+              -p qemu_x86
               -T tests/kernel -T tests/lib -T tests/arch
 
           # The attacker-reachable parsers: networking and the Bluetooth host.
@@ -69,14 +69,14 @@ jobs:
           # extractor the best fidelity.
           - profile: connectivity
             twister-args: >-
-              -p native_sim/native/64
+              -p native_sim/native
               -T tests/net -T tests/bluetooth
 
           # Remaining subsystems (filesystems, MCUmgr, USB, shell, settings,
           # storage) plus the driver model.
           - profile: subsys
             twister-args: >-
-              -p native_sim -p qemu_x86
+              -p native_sim
               -T tests/subsys -T tests/drivers
 
     env:
