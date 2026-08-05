@@ -88,7 +88,6 @@ jobs:
       - name: Install Python packages
         run: |
           pip install -r scripts/requirements-actions.txt --require-hashes
-          west packages pip --install
 
       - name: Check toolchain supports SARIF diagnostics
         run: |

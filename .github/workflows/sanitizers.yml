@@ -85,7 +85,6 @@ jobs:
       - name: Install Python packages
         run: |
           pip install -r scripts/requirements-actions.txt --require-hashes
-          west packages pip --install
 
       - name: Run tests under ${{ matrix.name }}
         run: |
