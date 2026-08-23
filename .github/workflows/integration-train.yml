@@ -1,0 +1,159 @@
+name: Integration Train
+
+# Build a branch containing every pull request the merge list reports as
+# ready for a target branch, push it, and open (or refresh) a draft PR so the
+# full CI suite runs on the combined result before the PRs are merged
+# individually.
+#
+# The PRs and the target branch are fetched from `source_repo`; the train
+# branch and the draft PR are created in the repository running this
+# workflow. That lets the workflow run from a staging repository such as
+# zephyr-testing against the PR queue of zephyrproject-rtos/zephyr. The
+# draft PR is opened against this repository's own `<target>` branch, which
+# is assumed to be kept in sync with the source repository.
+
+on:
+  schedule:
+    # Daily, before the European working day starts (UTC).
+    - cron: '30 5 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Target branch to build the train for
+        type: string
+        default: main
+      source_repo:
+        description: Repository (owner/name) the PRs and target branch come from
+        type: string
+        default: zephyrproject-rtos/zephyr
+      max_prs:
+        description: Cap on the number of PRs in the train (0 = no cap)
+        type: number
+        default: 0
+      prs:
+        description: Explicit PR numbers (space separated) instead of the merge list
+        type: string
+        default: ''
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: integration-train-${{ inputs.target || 'main' }}
+  cancel-in-progress: false
+
+jobs:
+  build-train:
+    name: Build integration branch
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      TARGET: ${{ inputs.target || 'main' }}
+      SOURCE_REPO: ${{ inputs.source_repo || 'zephyrproject-rtos/zephyr' }}
+      # A PR opened with the default GITHUB_TOKEN does not trigger CI on
+      # itself. Use a token with contents+pull-requests write from a bot
+      # account or GitHub App so the draft PR gets a real CI verdict.
+      GH_TOKEN: ${{ secrets.INTEGRATION_TRAIN_TOKEN || secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          token: ${{ secrets.INTEGRATION_TRAIN_TOKEN || secrets.GITHUB_TOKEN }}
+          persist-credentials: true
+
+      - name: Configure git
+        run: |
+          git config user.name "Zephyr Integration Train"
+          git config user.email "integration-train@users.noreply.github.com"
+
+      - name: Build the integration branch
+        id: train
+        run: |
+          BRANCH="integration/${TARGET}"
+          EXTRA=()
+          if [ -n "${{ inputs.prs }}" ]; then
+            EXTRA+=(--prs ${{ inputs.prs }})
+          fi
+          python3 scripts/ci/integration_train.py \
+            --target "${TARGET}" \
+            --remote "${{ github.server_url }}/${SOURCE_REPO}.git" \
+            --repo "${SOURCE_REPO}" \
+            --branch "${BRANCH}" \
+            --max-prs "${{ inputs.max_prs || 0 }}" \
+            --report integration-report.json \
+            --body integration-body.md \
+            "${EXTRA[@]}"
+          {
+            echo "branch=${BRANCH}"
+            python3 - <<'PY'
+          import json
+          r = json.load(open("integration-report.json"))
+          print(f"empty={str(r.get('empty', False)).lower()}")
+          print(f"base={r.get('base', '')}")
+          print(f"merged={len(r.get('merged', []))}")
+          print(f"failed={len(r.get('failed', []))}")
+          PY
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Upload report
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: integration-train-${{ env.TARGET }}
+          path: |
+            integration-report.json
+            integration-body.md
+
+      - name: Push the train branch
+        if: steps.train.outputs.empty != 'true'
+        run: |
+          git push --force origin "HEAD:refs/heads/${{ steps.train.outputs.branch }}"
+
+      - name: Open or refresh the draft PR
+        if: steps.train.outputs.empty != 'true'
+        env:
+          BRANCH: ${{ steps.train.outputs.branch }}
+          REPO: ${{ github.repository }}
+        run: |
+          BASE="${TARGET}"
+          DATE=$(date -u +%Y-%m-%d)
+          TITLE="[DNM] integration: ${TARGET} ${DATE} (${{ steps.train.outputs.merged }} PRs)"
+          {
+            cat integration-body.md
+            echo
+            echo "_Source: ${SOURCE_REPO} \`${TARGET}\` at \`${{ steps.train.outputs.base }}\`. Built by [${{ github.workflow }} #${{ github.run_number }}](${{ github.server_url }}/${REPO}/actions/runs/${{ github.run_id }})._"
+          } > body.md
+
+          EXISTING=$(gh pr list --repo "$REPO" --head "$BRANCH" --base "$BASE" \
+                       --state open --json number --jq '.[0].number // empty')
+          if [ -n "$EXISTING" ]; then
+            echo "refreshing draft PR #$EXISTING"
+            gh pr edit "$EXISTING" --repo "$REPO" --title "$TITLE" --body-file body.md
+            gh pr comment "$EXISTING" --repo "$REPO" \
+              --body "Train rebuilt: ${{ steps.train.outputs.merged }} merged, ${{ steps.train.outputs.failed }} skipped. See the updated description."
+          else
+            if gh label list --repo "$REPO" --search DNM --json name --jq '.[].name' | grep -qx DNM; then
+              LABEL=(--label DNM)
+            else
+              LABEL=()
+            fi
+            gh pr create --repo "$REPO" --draft \
+              --base "$BASE" --head "$BRANCH" \
+              --title "$TITLE" --body-file body.md "${LABEL[@]}"
+          fi
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "## Integration train: ${SOURCE_REPO} ${TARGET}"
+            if [ "${{ steps.train.outputs.empty }}" = "true" ]; then
+              echo "No ready PRs; nothing built."
+            else
+              echo "- merged: ${{ steps.train.outputs.merged }}"
+              echo "- could not merge: ${{ steps.train.outputs.failed }}"
+              echo
+              cat integration-body.md
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
