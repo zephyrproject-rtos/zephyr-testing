@@ -13,9 +13,6 @@ name: Integration Train
 # is assumed to be kept in sync with the source repository.
 
 on:
-  schedule:
-    # Daily, before the European working day starts (UTC).
-    - cron: '30 5 * * 1-5'
   workflow_dispatch:
     inputs:
       target:
