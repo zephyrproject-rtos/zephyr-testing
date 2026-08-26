@@ -65,7 +65,7 @@ jobs:
           git remote set-url origin ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}
 
       - name: Checkout
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && github.head_ref != 'integration/main'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.pull_request.head.sha }}
@@ -85,7 +85,7 @@ jobs:
           run-checks: 'true'
 
       - name: Set up Python
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && github.head_ref != 'integration/main'
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: 3.12
@@ -93,12 +93,12 @@ jobs:
           cache-dependency-path: scripts/requirements-actions.txt
 
       - name: install-packages
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && github.head_ref != 'integration/main'
         run: |
           pip install -r scripts/requirements-actions.txt --require-hashes
 
       - name: Generate Test Plan with Twister
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && github.head_ref != 'integration/main'
         id: test-plan
         run: |
           export ZEPHYR_BASE=${PWD}
@@ -129,7 +129,7 @@ jobs:
       - name: Determine matrix size
         id: output-services
         run: |
-          if [ "${{github.event_name}}" = "push" ]; then
+          if [ "${{github.event_name}}" = "push" || github.head_ref = 'integration/main' ]; then
             subset="[$(seq -s',' 1 ${PUSH_MATRIX_SIZE})]"
             size=${MATRIX_SIZE}
           elif [ "${{github.event_name}}" = "pull_request" ]; then
@@ -258,14 +258,18 @@ jobs:
               OPTIONS="${WEEKLY_OPTIONS}"
               ;;
             pull_request)
-              OPTIONS="${PR_OPTIONS}"
-              # testplan.json is only present when targeted tests were
-              # selected; without it there is nothing to run.
-              if [ ! -f testplan.json ]; then
-                echo "No testplan.json - nothing to run."
-                exit 0
+              if [ "${{ github.head_ref }}" = "integration/main" ]; then
+                OPTIONS="${PUSH_OPTIONS}"
+              else
+                OPTIONS="${PR_OPTIONS}"
+                # testplan.json is only present when targeted tests were
+                # selected; without it there is nothing to run.
+                if [ ! -f testplan.json ]; then
+                  echo "No testplan.json - nothing to run."
+                  exit 0
+                fi
+                LOAD_TESTS="--load-tests testplan.json"
               fi
-              LOAD_TESTS="--load-tests testplan.json"
               ;;
           esac
 
@@ -275,7 +279,7 @@ jobs:
           # only run for a full run.
           if [ "${{matrix.subset}}" = "1" ]; then
             run_modules=true
-            if [ "${{ github.event_name }}" = "pull_request" ] && \
+            if [ "${{ github.event_name }}" = "pull_request" && "${{ github.head_ref }}" != 'integration/main' ] && \
                [ "${{ needs.twister-build-prep.outputs.fullrun }}" != "True" ]; then
               run_modules=false
             fi
