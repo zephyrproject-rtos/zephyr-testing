@@ -129,7 +129,7 @@ jobs:
       - name: Determine matrix size
         id: output-services
         run: |
-          if [ "${{github.event_name}}" = "push" || github.head_ref = 'integration/main' ]; then
+          if [ "${{github.event_name}}" = "push" || "${{github.head_ref}}" = "integration/main" ]; then
             subset="[$(seq -s',' 1 ${PUSH_MATRIX_SIZE})]"
             size=${MATRIX_SIZE}
           elif [ "${{github.event_name}}" = "pull_request" ]; then
