@@ -199,7 +199,8 @@ def render_body(rep):
     repo = rep["repo"]
 
     def link(n):
-        return f"[#{n}](https://github.com/{repo}/pull/{n})"
+        return f"{n}"
+        #return f"[#{n}](https://github.com/{repo}/pull/{n})"
 
     def cell(text):
         return text.replace("|", "\\|")
@@ -222,7 +223,9 @@ def render_body(rep):
         "|---|---|---|---|",
     ]
     for p in rep["merged"]:
-        author = f"@{p['author']}" if p.get("author") else ""
+        #author = f"@{p['author']}" if p.get("author") else ""
+        author = f"{p['author']}" if p.get("author") else ""
+
         out.append(
             f"| {link(p['number'])} | {cell(p['title'])} | {author} | "
             f"`{p['head_sha'][:10]}` |"
