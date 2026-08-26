@@ -129,7 +129,7 @@ jobs:
       - name: Determine matrix size
         id: output-services
         run: |
-          if [ "${{github.event_name}}" = "push" || "${{github.head_ref}}" = "integration/main" ]; then
+          if [ "${{github.event_name}}" = "push" -o "${{github.head_ref}}" = "integration/main" ]; then
             subset="[$(seq -s',' 1 ${PUSH_MATRIX_SIZE})]"
             size=${MATRIX_SIZE}
           elif [ "${{github.event_name}}" = "pull_request" ]; then
@@ -279,7 +279,7 @@ jobs:
           # only run for a full run.
           if [ "${{matrix.subset}}" = "1" ]; then
             run_modules=true
-            if [ "${{ github.event_name }}" = "pull_request" && "${{ github.head_ref }}" != 'integration/main' ] && \
+            if [ "${{ github.event_name }}" = "pull_request" -a "${{ github.head_ref }}" != 'integration/main' ] && \
                [ "${{ needs.twister-build-prep.outputs.fullrun }}" != "True" ]; then
               run_modules=false
             fi
