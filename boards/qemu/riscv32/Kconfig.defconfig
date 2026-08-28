@@ -16,4 +16,13 @@ config HAS_COVERAGE_SUPPORT
 config QEMU_ICOUNT_SHIFT
 	default 6 if QEMU_ICOUNT
 
+configdefault ETH_DRIVER
+	default y
+
+configdefault NET_QEMU_DEVICE_EXTRA_ARGS
+	default "bus=virtio-mmio-bus.0"
+
+configdefault TEST_RANDOM_GENERATOR
+	default y if NETWORKING
+
 endif # BOARD_QEMU_RISCV32
