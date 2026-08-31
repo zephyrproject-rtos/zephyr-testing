@@ -6,7 +6,7 @@ on:
       - main
       - v*-branch
       - collab-*
-      - integreation/*
+      - integration/*
   pull_request:
     branches:
       - main
