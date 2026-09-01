@@ -32,8 +32,13 @@ DWMAC_ASSERT_BUFFER_ALIGNMENT(DATA_BUS_WIDTH);
 
 #if DT_INST_ENUM_HAS_VALUE(0, phy_connection_type, mii)
 #define PHY_MODE 0U
+#define PHY_INTERNAL 0U
 #elif DT_INST_ENUM_HAS_VALUE(0, phy_connection_type, rmii)
 #define PHY_MODE 1U
+#define PHY_INTERNAL 0U
+#elif DT_INST_ENUM_HAS_VALUE(0, phy_connection_type, internal) && defined(CONFIG_SOC_FAMILY_MCXA)
+#define PHY_MODE 0U
+#define PHY_INTERNAL 1U
 #else
 #error "Unsupported PHY connection type"
 #endif
@@ -59,8 +64,10 @@ static const struct pinctrl_dev_config *eth0_pcfg = PINCTRL_DT_INST_DEV_CONFIG_G
 	(clock_control_subsys_t)DT_INST_CLOCKS_CELL_BY_NAME(0, clk, name)
 
 static const clock_control_subsys_t eth0_clocks[] = {
+#if defined(CONFIG_SOC_SERIES_MCXE31X)
 	NXP_ETH_CLOCK_SUBSYS(tx),
 	NXP_ETH_CLOCK_SUBSYS(rx),
+#endif
 	NXP_ETH_CLOCK_SUBSYS(ptp),
 	NXP_ETH_CLOCK_SUBSYS(mac),
 };
@@ -78,8 +85,19 @@ int dwmac_bus_init(const struct device *dev)
 	}
 
 	/* Select the PHY interface. */
+#if defined(CONFIG_SOC_SERIES_MCXE31X)
 	DCM_GPR->DCMRWF1 = (DCM_GPR->DCMRWF1 & ~DCM_GPR_DCMRWF1_RMII_MII_SEL_MASK) |
 			   DCM_GPR_DCMRWF1_RMII_MII_SEL(PHY_MODE);
+#elif defined(CONFIG_SOC_FAMILY_MCXN)
+	SYSCON->ENET_PHY_INTF_SEL =
+		(SYSCON->ENET_PHY_INTF_SEL & ~SYSCON_ENET_PHY_INTF_SEL_PHY_SEL_MASK) |
+		SYSCON_ENET_PHY_INTF_SEL_PHY_SEL(PHY_MODE);
+#elif defined(CONFIG_SOC_FAMILY_MCXA)
+	SYSCON->ENET_CTRL =
+		(SYSCON->ENET_CTRL &
+		 ~(SYSCON_ENET_CTRL_PHY_INTF_MASK | SYSCON_ENET_CTRL_PHY_SEL_MASK)) |
+		SYSCON_ENET_CTRL_PHY_INTF(PHY_MODE) | SYSCON_ENET_CTRL_PHY_SEL(PHY_INTERNAL);
+#endif
 
 	/*
 	 * The transmit, receive and timestamp clocks are derived from clocks the
@@ -186,9 +204,13 @@ int dwmac_platform_init(const struct device *dev)
 	 * completion on the dedicated tx/rx lines and everything else on the
 	 * common line, so all three share the same handler.
 	 */
+#if defined(CONFIG_SOC_SERIES_MCXE31X)
 	NXP_ETH_IRQ_CONNECT(common);
 	NXP_ETH_IRQ_CONNECT(tx);
 	NXP_ETH_IRQ_CONNECT(rx);
+#elif defined(CONFIG_SOC_FAMILY_MCXN) || defined(CONFIG_SOC_FAMILY_MCXA)
+	NXP_ETH_IRQ_CONNECT(mac);
+#endif
 
 	return nxp_load_mac_addr(&mac_cfg, p->mac_addr);
 }
