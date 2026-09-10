@@ -304,9 +304,9 @@ h11==0.16.0 \
     # via
     #   uvicorn
     #   wsproto
-html2pdf4doc==0.0.33 \
-    --hash=sha256:5eee7f3f1fec69c46dae376f9a57c2c162da2ac37a38be60098be8e883fec759 \
-    --hash=sha256:f2c540cc367c7b441928fc686a128493a552dabf0fe8c3024ac2e247e3bba833
+html2pdf4doc==0.0.34 \
+    --hash=sha256:aa2fabbcaecdcae86d847d7ea8c148efd9462704672ebff9edcfce81441e98dd \
+    --hash=sha256:f44da9468e1c9da75a0a066bc9120fad1faf827b57c37e29c1f333122d5cb98b
     # via strictdoc
 html5lib==1.1 \
     --hash=sha256:0d78f8fde1c230e99fe37986a60526d7049ed4bf8a9fadbad5f00e22e58e041d \
@@ -1254,9 +1254,9 @@ sphinxcontrib-jsmath==1.0.1 \
     --hash=sha256:2ec2eaebfb78f3f2078e73666b1415417a116cc848b72e5172e596c871103178 \
     --hash=sha256:a9925e4a4587247ed2191a22df5f6970656cb8ca2bd6284309578f2153e0c4b8
     # via sphinx
-sphinxcontrib-mermaid==2.1.0 \
-    --hash=sha256:13c5f9ac395cb6abf403eca34e228dc9fb3a30c9d960dbf3e40e9a8cef969549 \
-    --hash=sha256:417cd144ec4b28852f46ba653f02ce8e538881c812111671a4c30344e87f2112
+sphinxcontrib-mermaid==2.1.1 \
+    --hash=sha256:3b9ac1a8e0b5154dec3c0acf9b5c54dd9ba58540e416f20858c300814c25648f \
+    --hash=sha256:f8d7f1b2f0ad69b7ebdd5cbf532fb4ee107893b5373bc2d0e9634089c0b2cfee
     # via -r requirements.in
 sphinxcontrib-programoutput==0.20 \
     --hash=sha256:5c4282c1c7fc9b5a23febe16ae038b6392d7ce068d186ad4870ba22e74db0711 \
@@ -1280,9 +1280,9 @@ starlette==1.4.1 \
     # via
     #   fastapi
     #   sphinx-autobuild
-strictdoc==0.28.1 \
-    --hash=sha256:88e42cad04db7d5f946de390926da8db1e868034b29998392611eab7c64204e4 \
-    --hash=sha256:f33b4fb98b69cbc3ce6774b4e70493062e3d635e599c0f6bc727740e18ef2426
+strictdoc==0.29.0 \
+    --hash=sha256:1819af53bf3e8f0869239fe0d9172e7c8f9a4f1fd67c457a67ea31de85051130 \
+    --hash=sha256:fae511b228952ee5e1ff765650ac2701526ce39e32a6686f53ef384621486a90
     # via -r requirements.in
 textx==4.4.0 \
     --hash=sha256:a7b15a4698b503edde631d5227c0d0f6024898a86a7924b5fc741973305f9286 \
@@ -1399,6 +1399,7 @@ typing-extensions==4.16.0 \
     #   python-datauri
     #   selenium
     #   starlette
+    #   strictdoc
     #   typing-inspection
 typing-inspection==0.4.2 \
     --hash=sha256:4ed1cacbdc298c220f1bd249ed5287caa16f34d44ef4e9c3d0cbad5b521545e7 \
