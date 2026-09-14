@@ -1,0 +1,111 @@
+name: Merge Criteria
+
+# Reports the "Merge Criteria" check run on the pull request head: in progress
+# until every criterion in scripts/ci/merge_criteria.py is met, completed
+# successfully afterwards. Its output lists every criterion and what is still
+# needed. Mark that check run, not this job, as required in branch protection.
+#
+# All triggers run the workflow and script from the base branch with a token
+# that can write check runs, also for pull requests from forks. Pull request
+# code is never checked out. Review events only reach this workflow through
+# the "Merge Criteria Review" workflow, because pull_request_review runs get a
+# read-only token for forks. The schedule re-evaluates all open non-draft pull
+# requests so that ended review periods are reported without another event.
+# Draft pull requests are skipped by every trigger.
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - assigned
+      - unassigned
+      - labeled
+      - unlabeled
+      - ready_for_review
+  workflow_run:
+    workflows:
+      - Merge Criteria Review
+    types:
+      - completed
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+permissions:
+  checks: write
+  contents: read
+  pull-requests: read
+
+concurrency:
+  # Serialize runs for the same head commit so the check run written last is
+  # computed from the latest reviews, labels and assignees. Scheduled and
+  # manual runs share one group.
+  group: >-
+    ${{ github.workflow }}-${{ github.event.pull_request.head.sha ||
+    github.event.workflow_run.head_sha || 'all' }}
+  cancel-in-progress: false
+
+jobs:
+  update-check:
+    name: Update check run
+    if: >-
+      (github.event_name == 'pull_request_target' && !github.event.pull_request.draft) ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      (github.repository_owner == 'zephyrproject-rtos' &&
+      (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            scripts/ci/merge_criteria.py
+            scripts/requirements-actions-basic.txt
+          sparse-checkout-cone-mode: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: 3.12
+          cache: pip
+          cache-dependency-path: scripts/requirements-actions-basic.txt
+
+      - name: Install Python dependencies
+        run: |
+          pip install -r scripts/requirements-actions-basic.txt --require-hashes
+
+      - name: Update check run for pull request event
+        if: github.event_name == 'pull_request_target'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          ORG: ${{ github.event.repository.owner.login }}
+          REPO: ${{ github.event.repository.name }}
+        run: |
+          python -u scripts/ci/merge_criteria.py -p "$PR_NUMBER" -o "$ORG" -r "$REPO"
+
+      - name: Update check run for review event
+        if: github.event_name == 'workflow_run'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD_OWNER: ${{ github.event.workflow_run.head_repository.owner.login }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          ORG: ${{ github.event.repository.owner.login }}
+          REPO: ${{ github.event.repository.name }}
+        run: |
+          python -u scripts/ci/merge_criteria.py \
+          --head "$HEAD_OWNER:$HEAD_BRANCH" --sha "$HEAD_SHA" -o "$ORG" -r "$REPO"
+
+      - name: Update check runs for all open pull requests
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          python -u scripts/ci/merge_criteria.py --all \
+          -o "${REPOSITORY%%/*}" -r "${REPOSITORY#*/}"
