@@ -140,6 +140,15 @@
 #         This is the single place where meta-areas are declared; add the key
 #         to an area to classify it as one.
 #
+#     requires-maintainer-approval:
+#         Boolean (default false). Set to true for areas whose maintainers must
+#         approve every pull request that changes files in the area, also when
+#         the pull request is assigned to the maintainer of another area. The
+#         requirement is met when one of the area's maintainers approves, is
+#         an assignee or is the author of the pull request. An area that covers
+#         a file only through a file group with defer-to-other-areas: true does
+#         not require the approval for that file when another area covers it.
+#
 #
 # All areas must have a 'files' and/or 'files-regex' key. The other keys are
 # optional.
