@@ -21,8 +21,22 @@ change-requesting review of each user with write access counts.
 
 Review period: a pull request with the Hotfix label always meets it.
 Otherwise the period starts when the pull request was last marked ready for
-review, or when it was created. It lasts 4 hours with the Trivial label and
-2 business days (48 hours not counting Saturdays and Sundays, UTC) without it.
+review, or when it was created. It lasts --system-wide-review-days business
+days with the System Wide Change label, 4 hours with the Trivial label and
+2 business days without either. Business days do not count Saturdays and
+Sundays (UTC).
+
+The following needs --maintainer-file, which maps the changed files to areas.
+Meta areas and areas that cover a file only through a deferring file group
+while another area covers it too are not counted as changed.
+
+System wide change: a pull request changing more than --system-wide-areas
+areas gets the System Wide Change label.
+
+Area approvals: every changed area marked requires-maintainer-approval needs
+the approval of one of its maintainers, unless one of them is an assignee or
+the author. See the description of the key in MAINTAINERS.yml. The changed
+files of an area still waiting for the approval are annotated.
 
 With --all, every open non-draft pull request is evaluated and the check run
 is only written where its output changes; this picks up review periods that
@@ -32,10 +46,12 @@ have ended.
 import argparse
 import dataclasses
 import datetime
+import functools
 import hashlib
 import json
 import os
 import sys
+from pathlib import Path
 
 import github
 
@@ -46,10 +62,14 @@ HOTFIX_LABEL = "Hotfix"
 TRIVIAL_LABEL = "Trivial"
 TRIVIAL_REVIEW_PERIOD = datetime.timedelta(hours=4)
 REVIEW_PERIOD_BUSINESS_DAYS = 2
+SYSTEM_WIDE_LABEL = "System Wide Change"
+SYSTEM_WIDE_AREAS = 5
+SYSTEM_WIDE_REVIEW_BUSINESS_DAYS = 5
 
-# Check run API limits on the output text sizes.
+# Check run API limits: output text sizes and annotations per request.
 OUTPUT_TITLE_LIMIT = 1000
 OUTPUT_TEXT_LIMIT = 65535
+ANNOTATIONS_PER_REQUEST = 50
 
 PR_FRAGMENT = """
 fragment pr on PullRequest {
@@ -79,12 +99,16 @@ fragment pr on PullRequest {
       }
     }
   }
+  files(first: 100) @include(if: $withFiles) {
+    pageInfo { hasNextPage endCursor }
+    nodes { path }
+  }
 }
 """
 
 PR_QUERY = (
     """
-query($owner: String!, $name: String!, $number: Int!) {
+query($owner: String!, $name: String!, $number: Int!, $withFiles: Boolean!) {
   repository(owner: $owner, name: $name) {
     pullRequest(number: $number) { ...pr }
   }
@@ -95,7 +119,7 @@ query($owner: String!, $name: String!, $number: Int!) {
 
 HEAD_QUERY = (
     """
-query($owner: String!, $name: String!, $branch: String!) {
+query($owner: String!, $name: String!, $branch: String!, $withFiles: Boolean!) {
   repository(owner: $owner, name: $name) {
     pullRequests(states: OPEN, headRefName: $branch, first: 20) { nodes { ...pr } }
   }
@@ -106,7 +130,7 @@ query($owner: String!, $name: String!, $branch: String!) {
 
 SEARCH_QUERY = (
     """
-query($search: String!, $cursor: String) {
+query($search: String!, $cursor: String, $withFiles: Boolean!) {
   search(query: $search, type: ISSUE, first: 50, after: $cursor) {
     issueCount
     pageInfo { hasNextPage endCursor }
@@ -116,6 +140,19 @@ query($search: String!, $cursor: String) {
 """
     + PR_FRAGMENT
 )
+
+FILES_QUERY = """
+query($owner: String!, $name: String!, $number: Int!, $cursor: String) {
+  repository(owner: $owner, name: $name) {
+    pullRequest(number: $number) {
+      files(first: 100, after: $cursor) {
+        pageInfo { hasNextPage endCursor }
+        nodes { path }
+      }
+    }
+  }
+}
+"""
 
 # GitHub search returns at most this many results for one query.
 SEARCH_RESULT_LIMIT = 1000
@@ -139,10 +176,29 @@ def parse_args(argv):
     parser.add_argument("-o", "--org", default="zephyrproject-rtos", help="Github organization")
     parser.add_argument("-r", "--repo", default="zephyr", help="Github repository")
     parser.add_argument(
+        "-M",
+        "--maintainer-file",
+        help="Maintainers file; enables the system wide change and area approvals criteria",
+    )
+    parser.add_argument(
+        "--system-wide-areas",
+        type=int,
+        default=SYSTEM_WIDE_AREAS,
+        help="Changed areas above which a PR is a system wide change "
+        f"(default {SYSTEM_WIDE_AREAS})",
+    )
+    parser.add_argument(
+        "--system-wide-review-days",
+        type=int,
+        default=SYSTEM_WIDE_REVIEW_BUSINESS_DAYS,
+        help="Review period of a system wide change in business days "
+        f"(default {SYSTEM_WIDE_REVIEW_BUSINESS_DAYS})",
+    )
+    parser.add_argument(
         "-n",
         "--dry-run",
         action="store_true",
-        help="Print the check run instead of writing it",
+        help="Print the check run and labels instead of writing them",
     )
     parser.add_argument(
         "--now",
@@ -212,6 +268,8 @@ class Result:
     details: list
     # Short description of what is missing, used in the check run title.
     missing: str = ""
+    # Check run annotations pointing at the files concerned.
+    annotations: list = dataclasses.field(default_factory=list)
 
 
 def blocking_labels(pr, now):
@@ -262,7 +320,7 @@ def approvals(pr, now):
     return Result("Approvals", len(missing) == 0, details, ", ".join(missing))
 
 
-def review_period(pr, now):
+def review_period(pr, now, system_wide_days=SYSTEM_WIDE_REVIEW_BUSINESS_DAYS):
     labels = label_names(pr)
     if HOTFIX_LABEL in labels:
         return Result("Review period", True, [f"No review period with the {HOTFIX_LABEL} label"])
@@ -275,7 +333,10 @@ def review_period(pr, now):
         start = parse_time(pr["createdAt"])
         since = "created"
 
-    if TRIVIAL_LABEL in labels:
+    if SYSTEM_WIDE_LABEL in labels:
+        end = add_business_days(start, system_wide_days)
+        period = f"{system_wide_days} business days with the {SYSTEM_WIDE_LABEL} label"
+    elif TRIVIAL_LABEL in labels:
         end = start + TRIVIAL_REVIEW_PERIOD
         hours = int(TRIVIAL_REVIEW_PERIOD.total_seconds() // 3600)
         period = f"{hours} hours with the {TRIVIAL_LABEL} label"
@@ -292,6 +353,70 @@ def review_period(pr, now):
     return Result("Review period", True, details)
 
 
+def system_wide_change(pr, now, areas=SYSTEM_WIDE_AREAS):
+    count = len(pr["areas"])
+    changed = f"{count} area{'s' if count != 1 else ''} changed"
+    details = [f"{changed}, a system wide change above {areas}"]
+    if SYSTEM_WIDE_LABEL in label_names(pr):
+        details.append(f"Labeled {SYSTEM_WIDE_LABEL}, which extends the review period")
+
+    return Result("System wide change", True, details)
+
+
+def area_approvals(pr, now):
+    assignees = {node["login"].lower() for node in pr["assignees"]["nodes"]}
+    approved = {user.lower() for user, state in review_states(pr).items() if state == "APPROVED"}
+    author = author_login(pr)
+    author = author.lower() if author is not None else None
+
+    details = []
+    missing = []
+    annotations = []
+    for name, (area, paths) in pr["areas"].items():
+        if not area.requires_maintainer_approval:
+            continue
+
+        maintainers = area.maintainers
+        assigned = [m for m in maintainers if m.lower() in assignees]
+        approving = [m for m in maintainers if m.lower() in approved]
+        if author in {m.lower() for m in maintainers}:
+            details.append(f"{name}: the author is a maintainer")
+        elif len(assigned) > 0:
+            if len(assigned) > 1:
+                details.append(f"{name}: maintainers {', '.join(assigned)} are assignees")
+            else:
+                details.append(f"{name}: maintainer {assigned[0]} is an assignee")
+        elif len(approving) > 0:
+            details.append(f"{name}: approved by maintainer {', '.join(approving)}")
+        else:
+            missing.append(name)
+            listed = ", ".join(maintainers) if len(maintainers) > 0 else "none listed"
+            details.append(f"{name}: needs an approval by a maintainer ({listed})")
+            annotations.extend(
+                {
+                    "path": path,
+                    "start_line": 1,
+                    "end_line": 1,
+                    "annotation_level": "warning",
+                    "title": f"{name} maintainer approval required",
+                    "message": f"Changes to the {name} area need the approval of one of "
+                    f"its maintainers: {listed}",
+                }
+                for path in paths
+            )
+
+    if len(details) == 0:
+        details.append("No changed area requires maintainer approval")
+
+    return Result(
+        "Area approvals",
+        len(missing) == 0,
+        details,
+        f"waiting for approval by a maintainer of {', '.join(missing)}",
+        annotations,
+    )
+
+
 # Each criterion returns a Result for a pull request at a given time.
 CRITERIA = [blocking_labels, approvals, review_period]
 
@@ -303,10 +428,12 @@ class Evaluation:
     met: bool
     title: str
     summary: str
+    text: str
+    annotations: list
 
     @property
     def fingerprint(self):
-        output = [self.met, self.title, self.summary]
+        output = [self.met, self.title, self.summary, self.text, self.annotations]
         return hashlib.sha256(json.dumps(output, sort_keys=True).encode()).hexdigest()
 
     @property
@@ -331,8 +458,17 @@ def evaluate(pr, now, criteria=CRITERIA):
         state = "Met" if result.met else "Pending"
         rows.append(f"| {result.name} | {state} | {'<br>'.join(result.details)} |")
 
+    text = ""
+    if "areas" in pr:
+        lines = [f"- {name}: {len(paths)} files" for name, (_, paths) in pr["areas"].items()]
+        text = "Changed areas:\n\n" + "\n".join(lines) if len(lines) > 0 else "No changed areas"
+
     return Evaluation(
-        len(unmet) == 0, title[:OUTPUT_TITLE_LIMIT], "\n".join(rows)[:OUTPUT_TEXT_LIMIT]
+        len(unmet) == 0,
+        title[:OUTPUT_TITLE_LIMIT],
+        "\n".join(rows)[:OUTPUT_TEXT_LIMIT],
+        text[:OUTPUT_TEXT_LIMIT],
+        [annotation for result in results for annotation in result.annotations],
     )
 
 
@@ -353,6 +489,36 @@ def current_check(pr):
     return run["status"].lower(), conclusion, run["externalId"]
 
 
+class ChangedAreas:
+    """Maps changed files to the areas of a maintainers file."""
+
+    def __init__(self, filename):
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+        from get_maintainer import Maintainers
+
+        self.maintainers = Maintainers(filename)
+        self.toplevel = self.maintainers.filename.parent
+
+    def __call__(self, paths):
+        """Return a dict mapping area names to (Area, changed paths)."""
+        changed = {}
+        for path in paths:
+            # path2areas() takes paths relative to the current directory.
+            areas = self.maintainers.path2areas(os.path.relpath(self.toplevel / path))
+
+            # As in scripts/ci/set_assignees.py, an area covering the file only
+            # through a deferring file group yields to the other areas.
+            non_deferred = [area for area in areas if not area.is_deferred_for_path(path)]
+            if len(non_deferred) > 0:
+                areas = non_deferred
+
+            for area in areas:
+                if not area.meta:
+                    changed.setdefault(area.name, (area, []))[1].append(path)
+
+        return {name: changed[name] for name in sorted(changed)}
+
+
 class MergeCriteria:
     def __init__(self, args):
         self.args = args
@@ -360,7 +526,19 @@ class MergeCriteria:
         if self.now.tzinfo is None:
             self.now = self.now.replace(tzinfo=datetime.UTC)
 
-        self.criteria = list(CRITERIA)
+        self.criteria = [
+            blocking_labels,
+            approvals,
+            functools.partial(review_period, system_wide_days=args.system_wide_review_days),
+        ]
+
+        self.changed_areas = None
+        if args.maintainer_file is not None:
+            self.changed_areas = ChangedAreas(args.maintainer_file)
+            self.criteria.append(
+                functools.partial(system_wide_change, areas=args.system_wide_areas)
+            )
+            self.criteria.append(area_approvals)
 
         auth = github.Auth.Token(os.environ.get('GITHUB_TOKEN', None))
         self.gh = github.Github(auth=auth)
@@ -369,6 +547,10 @@ class MergeCriteria:
         _, data = self.gh.requester.graphql_query(query, variables)
         return data["data"]
 
+    def query_pr(self, query, **variables):
+        with_files = self.changed_areas is not None
+        return self.query(query, withFiles=with_files, **variables)
+
     def api(self, method, path, body):
         _, data = self.gh.requester.requestJsonAndCheck(
             method, f"/repos/{self.args.org}/{self.args.repo}/{path}", input=body
@@ -376,12 +558,12 @@ class MergeCriteria:
         return data
 
     def get_pull_request(self, number):
-        data = self.query(PR_QUERY, owner=self.args.org, name=self.args.repo, number=number)
+        data = self.query_pr(PR_QUERY, owner=self.args.org, name=self.args.repo, number=number)
         return data["repository"]["pullRequest"]
 
     def find_pull_request(self, head, sha):
         owner, branch = head.split(":", 1)
-        data = self.query(HEAD_QUERY, owner=self.args.org, name=self.args.repo, branch=branch)
+        data = self.query_pr(HEAD_QUERY, owner=self.args.org, name=self.args.repo, branch=branch)
         for pr in data["repository"]["pullRequests"]["nodes"]:
             if pr["headRepositoryOwner"]["login"] == owner and pr["headRefOid"] == sha:
                 return pr
@@ -402,7 +584,7 @@ class MergeCriteria:
             new = 0
 
             while True:
-                page = self.query(SEARCH_QUERY, search=search, cursor=cursor)["search"]
+                page = self.query_pr(SEARCH_QUERY, search=search, cursor=cursor)["search"]
                 for pr in page["nodes"]:
                     since = pr["createdAt"]
                     if pr["number"] in seen:
@@ -418,9 +600,49 @@ class MergeCriteria:
             if page["issueCount"] <= SEARCH_RESULT_LIMIT or new == 0:
                 return
 
+    def prepare(self, pr):
+        """Map the changed files of *pr* to areas and label a system wide
+        change, when a maintainers file is used."""
+        if self.changed_areas is None:
+            return
+
+        files = pr["files"]
+        while files["pageInfo"]["hasNextPage"]:
+            data = self.query(
+                FILES_QUERY,
+                owner=self.args.org,
+                name=self.args.repo,
+                number=pr["number"],
+                cursor=files["pageInfo"]["endCursor"],
+            )
+            page = data["repository"]["pullRequest"]["files"]
+            files["nodes"].extend(page["nodes"])
+            files["pageInfo"] = page["pageInfo"]
+
+        pr["areas"] = self.changed_areas([node["path"] for node in files["nodes"]])
+
+        if len(pr["areas"]) <= self.args.system_wide_areas or SYSTEM_WIDE_LABEL in label_names(pr):
+            return
+
+        print(f"pr: {pr['url']} changes {len(pr['areas'])} areas, adding {SYSTEM_WIDE_LABEL}")
+        if not self.args.dry_run:
+            self.api("POST", f"issues/{pr['number']}/labels", {"labels": [SYSTEM_WIDE_LABEL]})
+        pr["labels"]["nodes"].append({"name": SYSTEM_WIDE_LABEL})
+
     def write_check(self, pr, evaluation):
         status, conclusion, external_id = evaluation.check
         now = datetime.datetime.now(datetime.UTC).isoformat()
+        annotations = evaluation.annotations
+
+        def output(batch):
+            result = {
+                "title": evaluation.title,
+                "summary": evaluation.summary,
+                "annotations": batch,
+            }
+            if evaluation.text != "":
+                result["text"] = evaluation.text
+            return result
 
         body = {
             "name": CHECK_NAME,
@@ -428,7 +650,7 @@ class MergeCriteria:
             "external_id": external_id,
             "status": status,
             "started_at": now,
-            "output": {"title": evaluation.title, "summary": evaluation.summary},
+            "output": output(annotations[:ANNOTATIONS_PER_REQUEST]),
         }
         if conclusion is not None:
             body["conclusion"] = conclusion
@@ -439,16 +661,24 @@ class MergeCriteria:
                 f"/actions/runs/{os.environ['GITHUB_RUN_ID']}"
             )
 
-        self.api("POST", "check-runs", body)
+        run = self.api("POST", "check-runs", body)
+
+        # Annotations beyond the per-request limit are added to the check run.
+        for i in range(ANNOTATIONS_PER_REQUEST, len(annotations), ANNOTATIONS_PER_REQUEST):
+            batch = annotations[i : i + ANNOTATIONS_PER_REQUEST]
+            self.api("PATCH", f"check-runs/{run['id']}", {"output": output(batch)})
 
     def update(self, pr):
         if pr["isDraft"]:
             print(f"pr: {pr['url']} is a draft, skipping")
             return False
 
+        self.prepare(pr)
         evaluation = evaluate(pr, self.now, self.criteria)
         print(f"pr: {pr['url']} at {pr['headRefOid']}: {evaluation.title}")
         print(evaluation.summary)
+        for annotation in evaluation.annotations:
+            print(f"annotation: {annotation['path']}: {annotation['title']}")
 
         if current_check(pr) == evaluation.check:
             print("check run unchanged")
@@ -467,6 +697,7 @@ class MergeCriteria:
                 continue
 
             total += 1
+            self.prepare(pr)
             check = current_check(pr)
             evaluation = evaluate(pr, self.now, self.criteria)
             if check == evaluation.check:
