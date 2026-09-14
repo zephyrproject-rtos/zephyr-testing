@@ -12,6 +12,14 @@ name: Merge Criteria
 # read-only token for forks. The schedule re-evaluates all open non-draft pull
 # requests so that ended review periods are reported without another event.
 # Draft pull requests are skipped by every trigger.
+#
+# Repository variables:
+#   MERGE_CRITERIA_USE_MAINTAINERS: "true" enables the criteria based on
+#     MAINTAINERS.yml (system wide change label, area approvals).
+#   MERGE_CRITERIA_SYSTEM_WIDE_AREAS: changed areas above which a pull request
+#     is a system wide change.
+#   MERGE_CRITERIA_SYSTEM_WIDE_REVIEW_DAYS: review period of a system wide
+#     change in business days.
 
 on:
   pull_request_target:
@@ -36,7 +44,7 @@ on:
 permissions:
   checks: write
   contents: read
-  pull-requests: read
+  pull-requests: write
 
 concurrency:
   # Serialize runs for the same head commit so the check run written last is
@@ -57,8 +65,11 @@ jobs:
       (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'))
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    env:
+      USE_MAINTAINERS: ${{ vars.MERGE_CRITERIA_USE_MAINTAINERS == 'true' }}
     steps:
       - name: Checkout
+        if: env.USE_MAINTAINERS != 'true'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -66,6 +77,13 @@ jobs:
             scripts/ci/merge_criteria.py
             scripts/requirements-actions-basic.txt
           sparse-checkout-cone-mode: false
+
+      # Loading MAINTAINERS.yml checks its file patterns against the tree.
+      - name: Checkout with maintainers file
+        if: env.USE_MAINTAINERS == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
@@ -78,6 +96,23 @@ jobs:
         run: |
           pip install -r scripts/requirements-actions-basic.txt --require-hashes
 
+      - name: Select criteria
+        env:
+          SYSTEM_WIDE_AREAS: ${{ vars.MERGE_CRITERIA_SYSTEM_WIDE_AREAS }}
+          SYSTEM_WIDE_REVIEW_DAYS: ${{ vars.MERGE_CRITERIA_SYSTEM_WIDE_REVIEW_DAYS }}
+        run: |
+          FLAGS=""
+          if [ "$USE_MAINTAINERS" = "true" ]; then
+            FLAGS+=" -M MAINTAINERS.yml"
+          fi
+          if [ -n "$SYSTEM_WIDE_AREAS" ]; then
+            FLAGS+=" --system-wide-areas $SYSTEM_WIDE_AREAS"
+          fi
+          if [ -n "$SYSTEM_WIDE_REVIEW_DAYS" ]; then
+            FLAGS+=" --system-wide-review-days $SYSTEM_WIDE_REVIEW_DAYS"
+          fi
+          echo "MERGE_CRITERIA_FLAGS=$FLAGS" >> "$GITHUB_ENV"
+
       - name: Update check run for pull request event
         if: github.event_name == 'pull_request_target'
         env:
@@ -86,7 +121,8 @@ jobs:
           ORG: ${{ github.event.repository.owner.login }}
           REPO: ${{ github.event.repository.name }}
         run: |
-          python -u scripts/ci/merge_criteria.py -p "$PR_NUMBER" -o "$ORG" -r "$REPO"
+          python -u scripts/ci/merge_criteria.py -p "$PR_NUMBER" -o "$ORG" -r "$REPO" \
+          $MERGE_CRITERIA_FLAGS
 
       - name: Update check run for review event
         if: github.event_name == 'workflow_run'
@@ -99,7 +135,8 @@ jobs:
           REPO: ${{ github.event.repository.name }}
         run: |
           python -u scripts/ci/merge_criteria.py \
-          --head "$HEAD_OWNER:$HEAD_BRANCH" --sha "$HEAD_SHA" -o "$ORG" -r "$REPO"
+          --head "$HEAD_OWNER:$HEAD_BRANCH" --sha "$HEAD_SHA" -o "$ORG" -r "$REPO" \
+          $MERGE_CRITERIA_FLAGS
 
       - name: Update check runs for all open pull requests
         if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
@@ -108,4 +145,4 @@ jobs:
           REPOSITORY: ${{ github.repository }}
         run: |
           python -u scripts/ci/merge_criteria.py --all \
-          -o "${REPOSITORY%%/*}" -r "${REPOSITORY#*/}"
+          -o "${REPOSITORY%%/*}" -r "${REPOSITORY#*/}" $MERGE_CRITERIA_FLAGS
