@@ -218,6 +218,8 @@ class Maintainers:
             area.tags = area_dict.get("tags", [])
             area.description = area_dict.get("description")
             area.meta = bool(area_dict.get("meta", False))
+            area.requires_maintainer_approval = \
+                bool(area_dict.get("requires-maintainer-approval", False))
 
             # Initialize file groups if present
             area.file_groups = []
@@ -551,6 +553,11 @@ class Area:
         (documentation, samples, tests, ...) instead of owning a subsystem.
         False if the area has no 'meta' key. See MAINTAINERS.yml.
 
+    requires_maintainer_approval:
+        True if pull requests changing the area need the approval of one of
+        its maintainers. False if the area has no
+        'requires-maintainer-approval' key. See MAINTAINERS.yml.
+
     file_groups:
         List of FileGroup instances for any file-groups defined in the area.
         Empty if the area has no 'file-groups' key.
@@ -630,6 +637,7 @@ def _print_areas(areas):
 \ttests: {}
 \ttags: {}
 \tmeta: {}
+\trequires-maintainer-approval: {}
 \tdescription: {}""".format(area.name,
                             area.status,
                             ", ".join(area.maintainers),
@@ -639,6 +647,7 @@ def _print_areas(areas):
                             ", ".join(area.tests),
                             ", ".join(area.tags),
                             area.meta,
+                            area.requires_maintainer_approval,
                             area.description or ""))
 
         # Print file groups if any exist
@@ -721,7 +730,7 @@ def _check_maintainers(maints_path, yaml):
     ok_keys = {"status", "maintainers", "collaborators", "inform", "files",
                "files-exclude", "files-regex", "files-regex-exclude",
                "labels", "description", "tests", "tags", "file-groups",
-               "meta"}
+               "meta", "requires-maintainer-approval"}
 
     ok_status = {"maintained", "odd fixes", "unmaintained", "obsolete"}
     ok_status_s = ", ".join('"' + s + '"' for s in ok_status)  # For messages
@@ -860,6 +869,11 @@ def _check_maintainers(maints_path, yaml):
         if "meta" in area_dict and not isinstance(area_dict["meta"], bool):
             ferr("malformed 'meta' value for area '{}' -- should be a "
                  "boolean".format(area_name))
+
+        if "requires-maintainer-approval" in area_dict and \
+           not isinstance(area_dict["requires-maintainer-approval"], bool):
+            ferr("malformed 'requires-maintainer-approval' value for area '{}' "
+                 "-- should be a boolean".format(area_name))
 
 
 def _git(*args):
