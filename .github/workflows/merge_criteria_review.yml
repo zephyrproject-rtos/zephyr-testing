@@ -1,0 +1,29 @@
+name: Merge Criteria Review
+
+# Relays review events on non-draft pull requests to the "Merge Criteria"
+# workflow through workflow_run. This run has a read-only token for pull
+# requests from forks and does nothing itself; the pull request is identified
+# from the run's head commit.
+
+on:
+  pull_request_review:
+    types:
+      - submitted
+      - edited
+      - dismissed
+
+permissions: {}
+
+jobs:
+  relay:
+    name: Relay review event
+    if: ${{ !github.event.pull_request.draft }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Report review event
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REVIEW_STATE: ${{ github.event.review.state }}
+        run: |
+          echo "Review on pull request #$PR_NUMBER: $REVIEW_STATE"
