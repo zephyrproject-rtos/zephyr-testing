@@ -149,6 +149,9 @@
 #         a file only through a file group with defer-to-other-areas: true does
 #         not require the approval for that file when another area covers it.
 #
+#         scripts/ci/merge_criteria.py enforces it when run with
+#         --maintainer-file.
+#
 #
 # All areas must have a 'files' and/or 'files-regex' key. The other keys are
 # optional.
