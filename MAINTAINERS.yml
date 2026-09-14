@@ -3745,6 +3745,7 @@ Kconfig:
 
 Kernel:
   status: maintained
+  requires-maintainer-approval: true
   maintainers:
     - peter-mitsis
     - npitre
