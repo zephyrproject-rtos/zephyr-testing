@@ -645,7 +645,11 @@ void fusb307_init_work_cb(struct k_work *work)
 	tcpci_tcpm_clear_status_register(&cfg->bus, TCPC_ALERT_STATUS, 0xff);
 
 	/* Initialize alert interrupt */
-	gpio_pin_configure_dt(&cfg->alert_gpio, GPIO_INPUT);
+	ret = gpio_pin_configure_dt(&cfg->alert_gpio, GPIO_INPUT);
+	if (ret < 0) {
+		LOG_ERR("Failed to configure alert GPIO: %d", ret);
+		return;
+	}
 
 	gpio_init_callback(&data->alert_cb, fusb307_alert_cb, BIT(cfg->alert_gpio.pin));
 	ret = gpio_add_callback(cfg->alert_gpio.port, &data->alert_cb);
@@ -654,7 +658,11 @@ void fusb307_init_work_cb(struct k_work *work)
 		return;
 	}
 
-	gpio_pin_interrupt_configure_dt(&cfg->alert_gpio, GPIO_INT_EDGE_TO_ACTIVE);
+	ret = gpio_pin_interrupt_configure_dt(&cfg->alert_gpio, GPIO_INT_EDGE_TO_ACTIVE);
+	if (ret < 0) {
+		LOG_ERR("Failed to configure alert interrupt: %d", ret);
+		return;
+	}
 
 	tcpci_init_alert_mask(data->dev);
 	data->initialized = true;
@@ -679,6 +687,19 @@ static int fusb307_dev_init(const struct device *dev)
 
 	if (!device_is_ready(cfg->bus.bus)) {
 		return -EIO;
+	}
+
+	if (cfg->vconn_disc_gpio.port != NULL) {
+		if (!gpio_is_ready_dt(&cfg->vconn_disc_gpio)) {
+			LOG_ERR("VCONN discharge GPIO is not ready");
+			return -ENODEV;
+		}
+
+		ret = gpio_pin_configure_dt(&cfg->vconn_disc_gpio, GPIO_OUTPUT_INACTIVE);
+		if (ret < 0) {
+			LOG_ERR("Failed to configure VCONN discharge GPIO: %d", ret);
+			return ret;
+		}
 	}
 
 	/* Resets the chip */
