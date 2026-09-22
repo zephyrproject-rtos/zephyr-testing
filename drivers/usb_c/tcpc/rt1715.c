@@ -597,7 +597,11 @@ void rt1715_init_work_cb(struct k_work *work)
 	tcpci_write_reg8(&cfg->bus, RT1715_REG_LP_CTRL, lp_reg);
 
 	/* Initialize alert interrupt */
-	gpio_pin_configure_dt(&cfg->alert_gpio, GPIO_INPUT);
+	ret = gpio_pin_configure_dt(&cfg->alert_gpio, GPIO_INPUT);
+	if (ret != 0) {
+		LOG_ERR("Failed to configure alert GPIO: %d", ret);
+		return;
+	}
 
 	gpio_init_callback(&data->alert_cb, rt1715_alert_cb, BIT(cfg->alert_gpio.pin));
 
@@ -608,7 +612,11 @@ void rt1715_init_work_cb(struct k_work *work)
 		return;
 	}
 
-	gpio_pin_interrupt_configure_dt(&cfg->alert_gpio, GPIO_INT_EDGE_TO_ACTIVE);
+	ret = gpio_pin_interrupt_configure_dt(&cfg->alert_gpio, GPIO_INT_EDGE_TO_ACTIVE);
+	if (ret != 0) {
+		LOG_ERR("Failed to configure alert interrupt: %d", ret);
+		return;
+	}
 
 	tcpci_init_alert_mask(data->dev);
 	data->initialized = true;
@@ -629,6 +637,32 @@ static int rt1715_dev_init(const struct device *dev)
 
 	if (!device_is_ready(cfg->bus.bus)) {
 		return -EIO;
+	}
+
+	if (cfg->vconn_ctrl_gpio.port != NULL) {
+		if (!gpio_is_ready_dt(&cfg->vconn_ctrl_gpio)) {
+			LOG_ERR("VCONN control GPIO is not ready");
+			return -ENODEV;
+		}
+
+		ret = gpio_pin_configure_dt(&cfg->vconn_ctrl_gpio, GPIO_OUTPUT_INACTIVE);
+		if (ret != 0) {
+			LOG_ERR("Failed to configure VCONN control GPIO: %d", ret);
+			return ret;
+		}
+	}
+
+	if (cfg->vconn_disc_gpio.port != NULL) {
+		if (!gpio_is_ready_dt(&cfg->vconn_disc_gpio)) {
+			LOG_ERR("VCONN discharge GPIO is not ready");
+			return -ENODEV;
+		}
+
+		ret = gpio_pin_configure_dt(&cfg->vconn_disc_gpio, GPIO_OUTPUT_INACTIVE);
+		if (ret != 0) {
+			LOG_ERR("Failed to configure VCONN discharge GPIO: %d", ret);
+			return ret;
+		}
 	}
 
 	/* Resets the chip */
