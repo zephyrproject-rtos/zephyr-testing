@@ -17,7 +17,7 @@
  *          information, see @ref bt_gatt_client and @ref bt_gatt_server.
  * @defgroup bt_gatt Generic Attribute Profile (GATT)
  * @since 1.0
- * @version 1.0.0
+ * @version 1.0.1
  * @ingroup bluetooth
  * @{
  */
@@ -1116,7 +1116,7 @@ struct bt_gatt_ccc_managed_user_data {
 	/** Configuration for each connection */
 	struct bt_gatt_ccc_cfg cfg[BT_GATT_CCC_MAX];
 
-	/** Highest value of all connected peer's subscriptions */
+	/** Highest value of all connected peer's subscriptions, Reserved bits excluded */
 	uint16_t value;
 
 	/** @brief CCC attribute changed callback

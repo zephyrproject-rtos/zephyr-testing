@@ -330,8 +330,10 @@ static ssize_t sc_ccc_cfg_write(struct bt_conn *conn,
 {
 	LOG_DBG("value 0x%04x", value);
 
-	if (value == BT_GATT_CCC_INDICATE) {
-		/* Create a new SC configuration entry if subscribed */
+	if ((value & BT_GATT_CCC_INDICATE) != 0U) {
+		/* Create a new SC configuration entry if subscribed; the CCC
+		 * value is a bit field and Reserved bits are ignored.
+		 */
 		sc_save(conn->id, &conn->le.dst, 0, 0);
 	} else {
 		sc_clear(conn);
@@ -2153,8 +2155,15 @@ static void gatt_ccc_changed(const struct bt_gatt_attr *attr,
 		struct bt_conn *conn = bt_conn_lookup_addr_le(ccc->cfg[i].id, &ccc->cfg[i].peer);
 
 		if (conn) {
-			if (ccc->cfg[i].value > value) {
-				value = ccc->cfg[i].value;
+			/* Leave out Reserved bits, which a receiver ignores:
+			 * callbacks compare the value with BT_GATT_CCC_NOTIFY or
+			 * BT_GATT_CCC_INDICATE.
+			 */
+			uint16_t peer_value =
+				ccc->cfg[i].value & (BT_GATT_CCC_NOTIFY | BT_GATT_CCC_INDICATE);
+
+			if (peer_value > value) {
+				value = peer_value;
 			}
 
 			bt_conn_unref(conn);
@@ -2828,10 +2837,11 @@ static uint8_t notify_cb(const struct bt_gatt_attr *attr, uint16_t handle,
 		struct bt_conn *conn;
 		int err;
 
-		/* Check if config value matches data type since consolidated
-		 * value may be for a different peer.
+		/* The consolidated value may be for a different peer, and the
+		 * CCC value is a bit field: a peer may have enabled both
+		 * notifications and indications, and Reserved bits are ignored.
 		 */
-		if (cfg->value != data->type) {
+		if ((cfg->value & data->type) == 0U) {
 			continue;
 		}
 
