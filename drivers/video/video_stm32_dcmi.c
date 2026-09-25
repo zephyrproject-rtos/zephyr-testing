@@ -186,6 +186,14 @@ static int stm32_dma_init(const struct device *dev)
 		return ret;
 	}
 
+#if DT_HAS_COMPAT_STATUS_OKAY(st_stm32_dma_v1)
+	if (STM32_DMA_FEATURES_FIFO_THRESHOLD(DT_INST_DMAS_CELL_BY_IDX(0, 0, features)) ==
+	    DMA_FIFO_THRESHOLD_FULL) {
+		hdma.Init.FIFOMode = DMA_FIFOMODE_ENABLE;
+		hdma.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_FULL;
+	}
+#endif
+
 	hdma.Instance = STM32_DMA_GET_INSTANCE(dma->reg, dma->channel);
 
 	/* Initialize DMA HAL */
@@ -586,10 +594,10 @@ static void video_stm32_dcmi_irq_config_func(const struct device *dev)
 			STM32_DT_INST_DMA_CHANNEL_CONFIG_BY_IDX(index, 0)),		\
 		.dest_data_size = STM32_DMA_CONFIG_##dest_dev##_DATA_SIZE(		\
 			STM32_DT_INST_DMA_CHANNEL_CONFIG_BY_IDX(index, 0)),		\
-		/* single transfers (burst length = data size) */			\
+		/* single transfers on the DCMI side, 4 beat bursts to memory */	\
 		.source_burst_length = STM32_DMA_CONFIG_##src_dev##_DATA_SIZE(		\
 			STM32_DT_INST_DMA_CHANNEL_CONFIG_BY_IDX(index, 0)),		\
-		.dest_burst_length = STM32_DMA_CONFIG_##dest_dev##_DATA_SIZE(		\
+		.dest_burst_length = 4 * STM32_DMA_CONFIG_##dest_dev##_DATA_SIZE(	\
 			STM32_DT_INST_DMA_CHANNEL_CONFIG_BY_IDX(index, 0)),		\
 		.channel_priority = STM32_DMA_CONFIG_PRIORITY(				\
 			STM32_DT_INST_DMA_CHANNEL_CONFIG_BY_IDX(index, 0)),		\
