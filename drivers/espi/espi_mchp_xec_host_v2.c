@@ -47,8 +47,11 @@
 #define INIT_EMI2     NULL
 #define INIT_RTC0     NULL
 #define INIT_P80BD0   NULL
-#define INIT_UART0    NULL
-#define INIT_UART1    NULL
+/* Hardware implements several UART logical devices (UART0/1/2) with their own
+ * I/O BARs. This driver exposes one eSPI UART selected by
+ * CONFIG_ESPI_PERIPHERAL_UART_SOC_MAPPING, initialized by INIT_UART.
+ */
+#define INIT_UART     NULL
 
 /* Host I/O space addresses for default set of peripherals mapped by eSPI */
 #define ESPI_XEC_KBC_HOST_ADDR      0x60U
@@ -951,7 +954,7 @@ static int init_acpi_ec1(const struct device *dev)
 				       xec_acpi_ec1_cfg.host_mem_addr, true);
 	}
 
-	if (xec_acpi_ec2_cfg.host_io_addr != UINT16_MAX) {
+	if (xec_acpi_ec1_cfg.host_io_addr != UINT16_MAX) {
 		bar_val = MCHP_ESPI_IO_BAR_HOST_ADDR_SET((uint32_t)xec_acpi_ec1_cfg.host_io_addr);
 	}
 #endif
