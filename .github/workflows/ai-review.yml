@@ -86,9 +86,9 @@ jobs:
         with:
           openrouter_api_key: ${{ secrets.OPENROUTER_API_KEY }}
           pr_number: ${{ inputs.pr_number || '' }}
-          model: ${{ inputs.model || 'deepseek/deepseek-v4.1-flash' }}
-          draft_model: ${{ inputs.draft_model || '' }}
-          pipeline: ${{ inputs.pipeline || 'auto' }}
+          model: ${{ inputs.model || 'google/gemini-4-argon' }}
+          draft_model: ${{ inputs.draft_model || 'deepseek/deepseek-v4.1-flash' }}
+          pipeline: ${{ inputs.pipeline || 'multi-stage' }}
           publish: ${{ inputs.publish || 'post' }}
           generate_test_plan: ${{ inputs.generate_test_plan || 'false' }}
           provider: '{"data_collection": "deny"}'
