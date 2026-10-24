@@ -1,0 +1,119 @@
+name: AI Review
+
+# Proof of concept: review a pull request with zephyr-review-agent (source intelligence over MCP
+# plus an OpenRouter-driven review agent) and post the findings back to the pull request.
+#
+# Forked pull requests get no secrets under `pull_request`, so this runs under
+# `pull_request_target`. That is safe here only because nothing from the pull request is executed:
+# the checkout below is the base branch, the action fetches the head commit by SHA and reads it
+# through git plumbing, and no script from the tree is run. Do not add a checkout of the head ref
+# or any build step to this job.
+#
+# Automatic runs are gated on the `ai-review` label so cost is opt-in. `workflow_dispatch` reviews
+# any pull request by number for testing, with the model, pipeline and publish mode selectable.
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review, labeled]
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: Pull request number to review
+        required: true
+        type: string
+      model:
+        description: OpenRouter model that verifies and finalizes
+        required: false
+        default: deepseek/deepseek-v4.1-flash
+        type: string
+      draft_model:
+        description: Low-cost model for drafting (two-stage) or the specialist passes (multi-stage); empty for none
+        required: false
+        default: ""
+        type: string
+      pipeline:
+        description: single, two-stage or multi-stage (auto picks two-stage when a draft model is set)
+        required: false
+        default: auto
+        type: choice
+        options: [auto, single, two-stage, multi-stage]
+      publish:
+        description: post to the pull request, or ask (save artifacts only), or never (dry run)
+        required: false
+        default: ask
+        type: choice
+        options: [post, ask, never]
+      generate_test_plan:
+        description: Also propose a twister test plan
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ai-review-${{ github.event.pull_request.number || inputs.pr_number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    name: AI review
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.draft == false
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      pull-requests: write # summary comment and inline review comments
+      checks: read         # ci_status: check runs on the head commit
+      actions: read        # ci_failure_logs: failed job logs
+
+    steps:
+      - name: Check out the base branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.ref || github.ref }}
+          fetch-depth: 200
+          persist-credentials: false
+        # The action fetches the head commit and the merge base by SHA itself, so a shallow checkout
+        # is enough; depth only improves file_history and blame.
+
+      - name: Review
+        id: review
+        uses: zephyrproject-rtos/zephyr-review-agent@main
+        with:
+          openrouter_api_key: ${{ secrets.OPENROUTER_API_KEY }}
+          pr_number: ${{ inputs.pr_number || '' }}
+          model: ${{ inputs.model || 'deepseek/deepseek-v4.1-flash' }}
+          draft_model: ${{ inputs.draft_model || '' }}
+          pipeline: ${{ inputs.pipeline || 'auto' }}
+          publish: ${{ inputs.publish || 'post' }}
+          generate_test_plan: ${{ inputs.generate_test_plan || 'false' }}
+          provider: '{"data_collection": "deny"}'
+          # Automatic runs only for labelled pull requests; manual runs review whatever was asked for.
+          required_labels: ${{ github.event_name == 'pull_request_target' && 'ai-review' || '' }}
+          lockdown: label
+          max_stage_seconds: "900"
+          show_run_details: "false"
+
+      - name: Summary
+        if: always()
+        env:
+          VERDICT: ${{ steps.review.outputs.verdict }}
+          FINDINGS: ${{ steps.review.outputs.findings_count }}
+          INLINE: ${{ steps.review.outputs.inline_count }}
+          POSTED: ${{ steps.review.outputs.posted }}
+          SKIPPED: ${{ steps.review.outputs.skipped }}
+        run: |
+          echo "verdict=${VERDICT} findings=${FINDINGS} inline=${INLINE} posted=${POSTED} skipped=${SKIPPED}"
+
+      - name: Upload review artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-review-${{ github.event.pull_request.number || inputs.pr_number }}-${{ github.run_id }}
+          path: review-output/
+          retention-days: 30
+          if-no-files-found: ignore
