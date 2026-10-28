@@ -3590,7 +3590,6 @@ Infineon AURIX Platforms:
     - include/zephyr/drivers/*/*aurix*
     - dts/bindings/*/infineon,asclin*
     - dts/bindings/*/infineon,aurix*
-    - dts/bindings/*/infineon,tc*
     - dts/tricore/
   labels:
     - "platform: Infineon AURIX"
