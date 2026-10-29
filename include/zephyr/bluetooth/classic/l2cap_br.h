@@ -43,6 +43,11 @@ extern "C" {
  * different modules of an application are interested in tracking the ECHO request/response
  * signaling packets. If a callback is not of interest for an instance, it may be set to NULL and
  * will as a consequence not be used for that instance.
+ *
+ * If no registered instance has a @ref bt_l2cap_br_echo_cb.req callback, the stack answers a
+ * received ECHO request itself with an ECHO response without data.
+ *
+ * @kconfig_dep{CONFIG_BT_CLASSIC,CONFIG_BT_TESTING}
  */
 struct bt_l2cap_br_echo_cb {
 	/**
@@ -76,6 +81,8 @@ struct bt_l2cap_br_echo_cb {
  *
  * Register callbacks to monitor the packets of L2CAP BR echo request/response.
  *
+ * @kconfig_dep{CONFIG_BT_CLASSIC,CONFIG_BT_TESTING}
+ *
  * @param cb Callback struct. Must point to memory that remains valid.
  *
  * @retval 0 Success.
@@ -87,6 +94,8 @@ int bt_l2cap_br_echo_cb_register(struct bt_l2cap_br_echo_cb *cb);
  * @brief Unregister ECHO callbacks.
  *
  * Unregister callbacks that are used to monitor the packets of L2CAP BR echo request/response.
+ *
+ * @kconfig_dep{CONFIG_BT_CLASSIC,CONFIG_BT_TESTING}
  *
  * @param cb Callback struct point to memory that remains valid.
  *
@@ -113,6 +122,8 @@ int bt_l2cap_br_echo_cb_unregister(struct bt_l2cap_br_echo_cb *cb);
  * @ref BT_L2CAP_BR_ECHO_REQ_RESERVE bytes in the buffer before sending. On error, the
  * application still owns @p buf and gets it back unchanged.
  *
+ * @kconfig_dep{CONFIG_BT_CLASSIC,CONFIG_BT_TESTING}
+ *
  * @param conn The ACL connection object.
  * @param buf Sending ECHO data.
  *
@@ -126,6 +137,8 @@ int bt_l2cap_br_echo_req(struct bt_conn *conn, struct net_buf *buf);
  * Send ECHO data through ECHO response. The application is required to have reserved
  * @ref BT_L2CAP_BR_ECHO_RSP_RESERVE bytes in the buffer before sending. On error, the
  * application still owns @p buf and gets it back unchanged.
+ *
+ * @kconfig_dep{CONFIG_BT_CLASSIC,CONFIG_BT_TESTING}
  *
  * @param conn The ACL connection object.
  * @param identifier The identifier of the ECHO request.
