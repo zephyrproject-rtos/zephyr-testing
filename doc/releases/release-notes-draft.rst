@@ -108,6 +108,9 @@ Libraries / Subsystems
       :c:enumerator:`ETHERNET_HW_STP_PORT_STATE` capability and takes the port state and FDB
       flushes from the protocol.
 
+  * :ref:`MQTT 5.0 <mqtt_socket_interface>` support in the MQTT client
+    (:kconfig:option:`CONFIG_MQTT_VERSION_5_0`) is no longer experimental.
+
 Devicetree
 **********
 
