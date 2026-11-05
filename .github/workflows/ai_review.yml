@@ -1,0 +1,72 @@
+name: Zephyr AI Review
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review, labeled]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "Pull request number to review"
+        required: true
+        type: string
+      publish:
+        description: "post the review, or ask (save it as an artifact only)"
+        required: false
+        default: "post"
+        type: choice
+        options: [post, ask]
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: read      # ci_status: check runs on the head commit
+  actions: read     # ci_failure_logs: failed job logs
+
+concurrency:
+  group: ai-review-${{ github.event.pull_request.number || inputs.pr_number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    name: Review
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.draft == false
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Check out the base branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.ref || github.ref }}
+          fetch-depth: 200
+          persist-credentials: false
+
+      # The action fetches the head commit and the merge base by SHA itself when they are missing,
+      # so a shallow checkout is enough. A deeper fetch-depth only improves file_history and blame.
+
+      - name: Review
+        id: review
+        uses: zephyrproject-rtos/zephyr-review-agent@v0.1 # main
+        with:
+          openrouter_api_key: ${{ secrets.OPENROUTER_API_KEY }}
+          pr_number: ${{ inputs.pr_number }}
+          pipeline: multi-stage
+          # Models come from repository variables so they can change without a workflow edit:
+          # AI_REVIEW_MODEL verifies and finalizes, AI_REVIEW_DRAFT_ENSEMBLE (comma-separated) runs
+          # the specialist passes. The literals are the defaults when a variable is unset.
+          model: ${{ vars.AI_REVIEW_MODEL || 'google/gemini-3.8-flash' }}
+          draft_ensemble: ${{ vars.AI_REVIEW_DRAFT_ENSEMBLE || 'deepseek/deepseek-v4.1-flash,z-ai/glm-5.3-flash' }}
+          provider: '{"data_collection": "deny"}'
+          specialist_max_steps: "25"
+          # Label-gated on pull request events; a manual run reviews the given PR regardless.
+          required_labels: ${{ github.event_name == 'workflow_dispatch' && '' || 'ai-review' }}
+          skip_reviewed: same-head
+          publish: ${{ inputs.publish || 'post' }}
+          quiet: "true"
+
+      - name: Upload review artifacts
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ai-review-${{ github.event.pull_request.number || inputs.pr_number }}-${{ github.run_id }}
+          path: review-output/
+          retention-days: 30
