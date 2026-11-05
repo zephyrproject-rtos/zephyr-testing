@@ -7115,6 +7115,8 @@ West:
     - modules/dhara/
   labels:
     - "area: Disk Access"
+  tests:
+    - drivers.disk.ftl
 
 "West project: edtt":
   status: maintained
