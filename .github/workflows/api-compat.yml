@@ -1,0 +1,186 @@
+# SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+# Reports changes to public API headers that break the guarantees implied by the API's documented
+# lifecycle state, as annotations on the pull request.
+#
+# Two things are checked, and they cost very different amounts:
+#
+#   * lifecycle metadata -- that a newly declared @defgroup carries a valid @since and @version,
+#     and that deprecating an API bumps its minor version. These read only the headers and the
+#     diff, so they take seconds.
+#
+#   * breaking changes -- every public symbol is compared between the base branch and the pull
+#     request, and each difference is graded by the lifecycle state of the group that owns it.
+#     This needs a Doxygen tree per revision, which is the bulk of the runtime.
+#
+# The paths below track the Doxygen INPUT set declared in doc/zephyr.doxyfile.in, since a public
+# symbol can be declared from any of those roots.
+
+name: API Compatibility
+
+on:
+  pull_request:
+    paths:
+      - 'include/**'
+      - 'subsys/testsuite/include/**'
+      - 'subsys/testsuite/ztest/include/**'
+      - 'subsys/secure_storage/include/**'
+      - 'kernel/include/kernel_arch_interface.h'
+      - 'lib/libc/**'
+      - 'lib/midi2/**'
+      - 'doc/_doxygen/**'
+      - 'doc/zephyr.doxyfile.in'
+      - 'scripts/ci/api_compat/**'
+      - 'scripts/ci/check_api_compat.py'
+      - '.github/workflows/api-compat.yml'
+    branches:
+      - main
+      - v*-branch
+      - collab-*
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api-compat:
+    name: "API Compatibility"
+    runs-on:
+      group: zephyr-runner-v2-linux-x64-4xlarge
+    container:
+      image: ghcr.io/zephyrproject-rtos/ci-repo-cache:v0.29.2.20260422
+      options: '--entrypoint /bin/bash'
+    timeout-minutes: 60
+    env:
+      BASE_REF: ${{ github.base_ref }}
+
+    steps:
+      - name: Apply container owner mismatch workaround
+        run: |
+          git config --global --add safe.directory ${GITHUB_WORKSPACE}
+
+      - name: Clone cached Zephyr repository
+        continue-on-error: true
+        run: |
+          git clone --shared /repo-cache/zephyrproject/zephyr .
+          git remote set-url origin ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}
+
+      - name: Checkout PR branch
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      # doc/requirements.txt is what carries doxmlparser, which the signature
+      # comparison reads the Doxygen XML with.
+      - name: Install Python packages
+        run: |
+          pip install -r scripts/requirements-actions.txt --require-hashes
+          pip install -r doc/requirements.txt --require-hashes
+
+      # The base revision is needed as a local ref: the signature comparison builds a Doxygen tree
+      # from it in a temporary worktree. No west workspace is required, because every INPUT in
+      # doc/zephyr.doxyfile.in is relative to the Zephyr repository itself.
+      #
+      # The cached clone plus a full checkout usually leaves the base ref in place already, so it
+      # is only fetched when missing.
+      #
+      # Everything below compares against the merge base rather than the tip of the target branch.
+      # The two differ whenever the target has moved on since the pull request branched, and
+      # comparing against the tip would report every API change made by everyone else in the
+      # meantime as though this pull request had made it.
+      - name: Resolve the base revision
+        run: |
+          if ! git rev-parse --verify --quiet "origin/${BASE_REF}^{commit}" >/dev/null; then
+            git fetch --no-tags origin \
+              "+refs/heads/${BASE_REF}:refs/remotes/origin/${BASE_REF}"
+          fi
+          BASE_SHA="$(git merge-base "origin/${BASE_REF}" HEAD)"
+          echo "BASE_SHA=${BASE_SHA}" >> "${GITHUB_ENV}"
+          echo "Target branch: ${BASE_REF} ($(git rev-parse --short "origin/${BASE_REF}"))"
+          echo "Merge base:    $(git rev-parse --short "${BASE_SHA}")"
+          echo "Head:          $(git rev-parse --short HEAD)"
+
+      # Fast, and precise enough to gate on: it only looks at groups the pull request itself adds.
+      - name: Check API lifecycle metadata
+        run: |
+          ./scripts/ci/check_api_compat.py check \
+            --commits "${BASE_SHA}..HEAD" \
+            --format github \
+            --fail-on error
+
+      # Emits the annotations and keeps the Doxygen output, so the report and the summary below
+      # come from the same pair of trees rather than costing a second pair of builds.
+      #
+      # Findings are limited to the files this change touches. Doxygen does not expand
+      # macro-generated declarations reproducibly, so a header built from Fake Function Framework
+      # macros can expand in one snapshot and not the other, and every symbol it generates then
+      # looks removed. Those phantoms always land in files the change never touched.
+      #
+      # Groups that declare no @version are graded as unstable here, which is deliberately weaker
+      # than the tool's fail-closed default: a large part of the tree is still untagged, and
+      # treating all of it as stable would fail pull requests over APIs that never promised
+      # anything. Only an API that explicitly declares itself stable can fail this job. Drop the
+      # --unversioned-is flag once the untagged backlog is small enough to gate on.
+      - name: Detect breaking API changes
+        if: ${{ !cancelled() }}
+        run: |
+          ./scripts/ci/check_api_compat.py compare-revs \
+            "${BASE_SHA}" HEAD \
+            --xml-dir api-xml \
+            --unversioned-is unstable \
+            --format github \
+            --fail-on never
+
+      - name: Write the job summary
+        if: ${{ !cancelled() }}
+        run: |
+          {
+            echo "## API compatibility"
+            echo
+            echo '```'
+            ./scripts/ci/check_api_compat.py signature \
+              api-xml/base/xml api-xml/head/xml \
+              --base-root . --head-root . \
+              --changed-in "${BASE_SHA}..HEAD" \
+              --unversioned-is unstable \
+              --fail-on never
+            echo '```'
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Build the HTML report
+        if: ${{ !cancelled() }}
+        run: |
+          ./scripts/ci/check_api_compat.py signature \
+            api-xml/base/xml api-xml/head/xml \
+            --base-root . --head-root . \
+            --changed-in "${BASE_SHA}..HEAD" \
+            --unversioned-is unstable \
+            --format html --output api-compat-report.html \
+            --fail-on never
+
+      - name: Upload the HTML report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: api-compat-report
+          path: api-compat-report.html
+          if-no-files-found: ignore
+
+      # Runs last so that the annotations, the summary and the report are all produced even when
+      # the comparison found something that fails the job.
+      - name: Fail on breaking changes to a stable API
+        if: ${{ !cancelled() }}
+        run: |
+          ./scripts/ci/check_api_compat.py signature \
+            api-xml/base/xml api-xml/head/xml \
+            --base-root . --head-root . \
+            --changed-in "${BASE_SHA}..HEAD" \
+            --unversioned-is unstable \
+            --format text \
+            --fail-on error > /dev/null
