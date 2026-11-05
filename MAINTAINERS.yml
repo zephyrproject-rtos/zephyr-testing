@@ -1505,6 +1505,19 @@ Display controllers:
     - drivers.display
     - sample.display
 
+Division by Reciprocal:
+  status: maintained
+  maintainers:
+    - npitre
+  files:
+    - doc/kernel/div64.rst
+    - include/zephyr/sys/div64.h
+    - lib/os/div64.c
+    - tests/lib/div64/
+    - tests/unit/time_units/reciprocal.c
+  tests:
+    - libraries.div64
+
 Documentation:
   status: maintained
   meta: true
