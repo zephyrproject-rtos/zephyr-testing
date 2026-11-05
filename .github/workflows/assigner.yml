@@ -67,6 +67,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.ZB_PR_ASSIGNER_GITHUB_TOKEN }}
       run: |
+        FLAGS="--size-labels"
         FLAGS="-v"
         FLAGS+=" -o ${{ github.event.repository.owner.login }}"
         FLAGS+=" -r ${{ github.event.repository.name }}"
