@@ -72,7 +72,7 @@
       "frozen": false,
       "head_sha": "e53ca7ad0a4f277aca405117f385de7deed5c372",
       "fetched_sha": "e53ca7ad0a4f277aca405117f385de7deed5c372",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 118426,
@@ -136,7 +136,7 @@
       "frozen": false,
       "head_sha": "9bbac4c53de65686a90a90e375b37b13aa40bf7d",
       "fetched_sha": "9bbac4c53de65686a90a90e375b37b13aa40bf7d",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 118519,
@@ -202,7 +202,7 @@
       "frozen": false,
       "head_sha": "771076d850d3b7e9ad3b90122e0dab9d9b33d269",
       "fetched_sha": "771076d850d3b7e9ad3b90122e0dab9d9b33d269",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 118810,
@@ -264,7 +264,7 @@
       "frozen": false,
       "head_sha": "097dd13108ae2f6e4eaf8df882068cc49d945c9b",
       "fetched_sha": "097dd13108ae2f6e4eaf8df882068cc49d945c9b",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 119034,
@@ -325,7 +325,7 @@
       "frozen": false,
       "head_sha": "5a5dd6eb820a844dddf5634f640a60f46c1ca3f2",
       "fetched_sha": "5a5dd6eb820a844dddf5634f640a60f46c1ca3f2",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 119528,
@@ -384,7 +384,7 @@
       "frozen": false,
       "head_sha": "95aae77612572a380616108ce862a157847adb10",
       "fetched_sha": "95aae77612572a380616108ce862a157847adb10",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 119800,
@@ -444,7 +444,7 @@
       "frozen": false,
       "head_sha": "65a5363b8991f148a8f246e0f9e4d5a0f2ea7595",
       "fetched_sha": "65a5363b8991f148a8f246e0f9e4d5a0f2ea7595",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 120102,
@@ -504,7 +504,7 @@
       "frozen": false,
       "head_sha": "106800a942c4c7281df3683e4cf2fe5ce7dd799b",
       "fetched_sha": "106800a942c4c7281df3683e4cf2fe5ce7dd799b",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 120589,
@@ -561,7 +561,7 @@
       "frozen": false,
       "head_sha": "c12a03feb9c9f779894a19a09d094a6a2012e653",
       "fetched_sha": "c12a03feb9c9f779894a19a09d094a6a2012e653",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 120966,
@@ -623,7 +623,7 @@
       "frozen": false,
       "head_sha": "106a0e8635964750a2fbd404835857dcb2f5e230",
       "fetched_sha": "106a0e8635964750a2fbd404835857dcb2f5e230",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 121046,
@@ -676,7 +676,7 @@
       "frozen": false,
       "head_sha": "6747f72b75a1dd5edd99f4980d333fc8f9df4512",
       "fetched_sha": "6747f72b75a1dd5edd99f4980d333fc8f9df4512",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 121383,
@@ -742,7 +742,7 @@
       "frozen": false,
       "head_sha": "95c8ac1b2263bf16b87d6c7eb3f978bb7293da18",
       "fetched_sha": "95c8ac1b2263bf16b87d6c7eb3f978bb7293da18",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 121430,
@@ -804,7 +804,7 @@
       "frozen": false,
       "head_sha": "d7dfd8009b9d5101503347784e1c6b3d26817c7c",
       "fetched_sha": "d7dfd8009b9d5101503347784e1c6b3d26817c7c",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 121530,
@@ -860,7 +860,7 @@
       "frozen": false,
       "head_sha": "b761203ede0c53891c69dd3f61d27eb7315a5492",
       "fetched_sha": "b761203ede0c53891c69dd3f61d27eb7315a5492",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 122535,
@@ -919,7 +919,7 @@
       "frozen": false,
       "head_sha": "84ef0ebe619b5c8eba83574e1c01c635ad22ddc9",
       "fetched_sha": "84ef0ebe619b5c8eba83574e1c01c635ad22ddc9",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 122666,
@@ -976,7 +976,7 @@
       "frozen": false,
       "head_sha": "a7f5116e3b879fdb8cd9b256904cf2a11eca559a",
       "fetched_sha": "a7f5116e3b879fdb8cd9b256904cf2a11eca559a",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 122701,
@@ -1035,7 +1035,7 @@
       "frozen": false,
       "head_sha": "434e8f8bc4c6cc881a359c6ac3a2960ae5f0ffe7",
       "fetched_sha": "434e8f8bc4c6cc881a359c6ac3a2960ae5f0ffe7",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 122776,
@@ -1093,7 +1093,7 @@
       "frozen": false,
       "head_sha": "a86d23d5295fc119120459dc2a32d31b553bfea5",
       "fetched_sha": "a86d23d5295fc119120459dc2a32d31b553bfea5",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 122791,
@@ -1148,7 +1148,7 @@
       "frozen": false,
       "head_sha": "96b71f49f99bfa5b77efed6f97fcb347a78b8e05",
       "fetched_sha": "96b71f49f99bfa5b77efed6f97fcb347a78b8e05",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 123010,
@@ -1204,7 +1204,7 @@
       "frozen": false,
       "head_sha": "90b2218944d6621d331e2ba873795b5a1c3c26c4",
       "fetched_sha": "90b2218944d6621d331e2ba873795b5a1c3c26c4",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 123225,
@@ -1259,7 +1259,7 @@
       "frozen": false,
       "head_sha": "6a04d04b1b11ba64e2cf63925e995b4c3a013f96",
       "fetched_sha": "6a04d04b1b11ba64e2cf63925e995b4c3a013f96",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 123442,
@@ -1315,7 +1315,7 @@
       "frozen": false,
       "head_sha": "750d83f89991d670c56618e1dfde4396edda312a",
       "fetched_sha": "750d83f89991d670c56618e1dfde4396edda312a",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 123468,
@@ -1370,7 +1370,7 @@
       "frozen": false,
       "head_sha": "53a55c6e7003a05333004eb3b5d535875dc2f3a3",
       "fetched_sha": "53a55c6e7003a05333004eb3b5d535875dc2f3a3",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 123716,
@@ -1429,7 +1429,7 @@
       "frozen": false,
       "head_sha": "9204c533f115cd5199a69e6d73ead67495a73822",
       "fetched_sha": "9204c533f115cd5199a69e6d73ead67495a73822",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 123720,
@@ -1488,7 +1488,7 @@
       "frozen": false,
       "head_sha": "f70beda54be7566a275353e7564f5157260890e2",
       "fetched_sha": "f70beda54be7566a275353e7564f5157260890e2",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 123968,
@@ -1545,7 +1545,7 @@
       "frozen": false,
       "head_sha": "0cda6dab4013d69ab16f49fefc3b65cf8f320ef3",
       "fetched_sha": "0cda6dab4013d69ab16f49fefc3b65cf8f320ef3",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 124029,
@@ -1606,7 +1606,7 @@
       "frozen": false,
       "head_sha": "2fda12785883e7eccf744f8ee4b97ba419c28a17",
       "fetched_sha": "2fda12785883e7eccf744f8ee4b97ba419c28a17",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 124174,
@@ -1663,7 +1663,7 @@
       "frozen": false,
       "head_sha": "bcde7fd9b901259f71c8f094bfaf5a65fdd02028",
       "fetched_sha": "bcde7fd9b901259f71c8f094bfaf5a65fdd02028",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 124232,
@@ -1721,7 +1721,7 @@
       "frozen": false,
       "head_sha": "f8da20aa806d2df1cfbfb529b1e4e956e1549386",
       "fetched_sha": "f8da20aa806d2df1cfbfb529b1e4e956e1549386",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 124334,
@@ -1796,7 +1796,10 @@
       "frozen": false,
       "head_sha": "54b61161d35447297abdee7ceaf5f6db76bf5115",
       "fetched_sha": "54b61161d35447297abdee7ceaf5f6db76bf5115",
-      "result": "pending"
+      "result": "failed",
+      "conflicts": [
+        "doc/releases/migration-guide-draft.rst"
+      ]
     },
     {
       "number": 124345,
@@ -1853,7 +1856,7 @@
       "frozen": false,
       "head_sha": "0d71cc65caf1889023aa56e5d99c1c9dd328a1db",
       "fetched_sha": "0d71cc65caf1889023aa56e5d99c1c9dd328a1db",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 124421,
@@ -1909,7 +1912,7 @@
       "frozen": false,
       "head_sha": "1ca8af1be0f3671cc50fbf8792b7606527bea1e0",
       "fetched_sha": "1ca8af1be0f3671cc50fbf8792b7606527bea1e0",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 124423,
@@ -1965,7 +1968,7 @@
       "frozen": false,
       "head_sha": "037a08c33cac5152e292071a74ae05cef4fef6e6",
       "fetched_sha": "037a08c33cac5152e292071a74ae05cef4fef6e6",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 124494,
@@ -2021,7 +2024,7 @@
       "frozen": false,
       "head_sha": "0c1eaf83d89bf4d5c27d5400f17e6db405c6b64e",
       "fetched_sha": "0c1eaf83d89bf4d5c27d5400f17e6db405c6b64e",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 124558,
@@ -2077,7 +2080,7 @@
       "frozen": false,
       "head_sha": "0a8d90c876ea2c56fb0a70ba9c56292dc9c5803f",
       "fetched_sha": "0a8d90c876ea2c56fb0a70ba9c56292dc9c5803f",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 124576,
@@ -2136,7 +2139,7 @@
       "frozen": false,
       "head_sha": "41e490d0784e0198737a5f25591a21c4027031d5",
       "fetched_sha": "41e490d0784e0198737a5f25591a21c4027031d5",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 124577,
@@ -2194,7 +2197,7 @@
       "frozen": false,
       "head_sha": "049c00445e40889c0b4cf3c8364f321f4c80379e",
       "fetched_sha": "049c00445e40889c0b4cf3c8364f321f4c80379e",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 124580,
@@ -2252,7 +2255,7 @@
       "frozen": false,
       "head_sha": "d055152812997cb372e249725b52854fe91237f5",
       "fetched_sha": "d055152812997cb372e249725b52854fe91237f5",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 124581,
@@ -2308,7 +2311,7 @@
       "frozen": false,
       "head_sha": "0de7135b49b93a6f2eb71dcba9344052cc5bd679",
       "fetched_sha": "0de7135b49b93a6f2eb71dcba9344052cc5bd679",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 124589,
@@ -2367,7 +2370,7 @@
       "frozen": false,
       "head_sha": "7e0f0cd83fc8a5715ea32eeb91719212415c94e5",
       "fetched_sha": "7e0f0cd83fc8a5715ea32eeb91719212415c94e5",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 124597,
@@ -2424,7 +2427,7 @@
       "frozen": false,
       "head_sha": "b213cc5db6222748a3860a4bbedd2cb1b93cfdcd",
       "fetched_sha": "b213cc5db6222748a3860a4bbedd2cb1b93cfdcd",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 124609,
@@ -2483,7 +2486,7 @@
       "frozen": false,
       "head_sha": "808ec0d4507c0f0011a4888c5a56f952ca407228",
       "fetched_sha": "808ec0d4507c0f0011a4888c5a56f952ca407228",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 124613,
@@ -2546,7 +2549,7 @@
       "frozen": false,
       "head_sha": "217d33cbf9ef12aa2167bb743f6a6670a923cfc1",
       "fetched_sha": "217d33cbf9ef12aa2167bb743f6a6670a923cfc1",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 124632,
@@ -2603,7 +2606,7 @@
       "frozen": false,
       "head_sha": "247c616ae36c4d5a5a73ae42e7eb57147e67ec84",
       "fetched_sha": "247c616ae36c4d5a5a73ae42e7eb57147e67ec84",
-      "result": "pending"
+      "result": "merged"
     },
     {
       "number": 124637,
@@ -2659,7 +2662,56 @@
       "frozen": false,
       "head_sha": "4b63dcac5449f61941a66e408a27bd5cd9472f0b",
       "fetched_sha": "4b63dcac5449f61941a66e408a27bd5cd9472f0b",
-      "result": "pending"
+      "result": "merged"
     }
+  ],
+  "merged": [
+    115202,
+    118426,
+    118519,
+    118810,
+    119034,
+    119528,
+    119800,
+    120102,
+    120589,
+    120966,
+    121046,
+    121383,
+    121430,
+    121530,
+    122535,
+    122666,
+    122701,
+    122776,
+    122791,
+    123010,
+    123225,
+    123442,
+    123468,
+    123716,
+    123720,
+    123968,
+    124029,
+    124174,
+    124232,
+    124345,
+    124421,
+    124423,
+    124494,
+    124558,
+    124576,
+    124577,
+    124580,
+    124581,
+    124589,
+    124597,
+    124609,
+    124613,
+    124632,
+    124637
+  ],
+  "failed": [
+    124334
   ]
 }
