@@ -7,11 +7,19 @@ config TEST_EXTRA_STACK_SIZE
 config IDLE_STACK_SIZE
 	default 1024
 
+# Calls through printk() alone take over 1 KiB of stack, so the kernel
+# default of 1024 overflows main() in tests that log from it.
+config MAIN_STACK_SIZE
+	default 4096 if COVERAGE_GCOV
+	default 2048
+
 config PRIVILEGED_STACK_SIZE
 	# Sizes thread->arch.priv_stack, the kernel-side stack each K_USER
 	# thread uses for event/syscall handling (see arch_user_mode_enter()).
 	# 1024 was too small for some syscalls' C call depth; 2048 covers
 	# everything hit so far but is an empirical, not proven, bound.
+	# With HW_STACK_PROTECTION, 128 bytes at the bottom of this array
+	# are reserved as FRAMELIMIT headroom for an event frame.
 	default 2048
 
 if CPU_HAS_MMU
