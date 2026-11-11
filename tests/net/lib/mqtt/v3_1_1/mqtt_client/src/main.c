@@ -58,6 +58,10 @@ static struct tls_connect_work {
 
 static struct mqtt_test_ctx {
 	bool connected;
+	int connack_count;
+	uint8_t disconnect_reason;
+	const uint8_t *reply_before_connack;
+	size_t reply_before_connack_len;
 	bool ping_resp_handled;
 	bool publish_handled;
 	bool puback_handled;
@@ -74,6 +78,11 @@ static const uint8_t payload_long[] = LOREM_IPSUM;
 
 static const uint8_t connect_ack_reply[] = {
 	MQTT_PKT_TYPE_CONNACK, 0x02, 0, 0,
+};
+
+/* MQTT 5.0 CONNACK: flags, reason code and an empty property list. */
+static const uint8_t connect_ack_reply_5_0[] = {
+	MQTT_PKT_TYPE_CONNACK, 0x03, 0, 0, 0,
 };
 
 static const uint8_t ping_resp_reply[] = {
@@ -268,7 +277,16 @@ static void broker_validate_packet(uint8_t *buf, size_t length, uint8_t type,
 {
 	switch (type) {
 	case MQTT_PKT_TYPE_CONNECT: {
-		test_send_reply(connect_ack_reply, sizeof(connect_ack_reply));
+		if (test_ctx.reply_before_connack != NULL) {
+			test_send_reply(test_ctx.reply_before_connack,
+					test_ctx.reply_before_connack_len);
+		}
+
+		if (client_ctx.protocol_version == MQTT_VERSION_5_0) {
+			test_send_reply(connect_ack_reply_5_0, sizeof(connect_ack_reply_5_0));
+		} else {
+			test_send_reply(connect_ack_reply, sizeof(connect_ack_reply));
+		}
 		break;
 	}
 	case MQTT_PKT_TYPE_PUBLISH: {
@@ -378,6 +396,8 @@ static void broker_validate_packet(uint8_t *buf, size_t length, uint8_t type,
 		break;
 	}
 	case MQTT_PKT_TYPE_DISCONNECT: {
+		/* MQTT 5.0 carries a reason code; an empty one means Normal. */
+		test_ctx.disconnect_reason = (length > 0) ? buf[0] : 0U;
 		zsock_close(c_sock);
 		c_sock = -1;
 		break;
@@ -531,6 +551,7 @@ static void mqtt_evt_handler(struct mqtt_client *const client,
 	switch (evt->type) {
 	case MQTT_EVT_CONNACK:
 		zassert_ok(evt->result, "MQTT connect failed %d", evt->result);
+		test_ctx.connack_count++;
 		test_ctx.connected = true;
 		break;
 
@@ -1016,6 +1037,68 @@ ZTEST(mqtt_client, test_mqtt_pubsub_long)
 {
 	test_pubsub(payload_long, MQTT_QOS_1_AT_LEAST_ONCE);
 	zassert_true(test_ctx.puback_handled, "MQTT client should receive puback");
+}
+
+static void test_second_connack(const uint8_t *connack, size_t connack_len)
+{
+	int ret;
+
+	test_connect();
+	zassert_true(test_ctx.connected, "MQTT client should be connected");
+
+	test_send_reply(connack, connack_len);
+
+	client_wait(false);
+	ret = mqtt_input(&client_ctx);
+	zexpect_equal(ret, -EBADMSG, "Second CONNACK should be a protocol error (%d)", ret);
+	zexpect_equal(test_ctx.connack_count, 1, "Second CONNACK reported to the application");
+	zexpect_false(test_ctx.connected, "MQTT client should have closed the connection");
+
+	ret = mqtt_input(&client_ctx);
+	zexpect_equal(ret, -ENOTCONN, "MQTT client should no longer be connected (%d)", ret);
+}
+
+ZTEST(mqtt_client, test_mqtt_second_connack)
+{
+	test_second_connack(connect_ack_reply, sizeof(connect_ack_reply));
+}
+
+ZTEST(mqtt_client, test_mqtt_second_connack_5_0)
+{
+	if (!IS_ENABLED(CONFIG_MQTT_VERSION_5_0)) {
+		ztest_test_skip();
+	}
+
+	client_ctx.protocol_version = MQTT_VERSION_5_0;
+
+	test_second_connack(connect_ack_reply_5_0, sizeof(connect_ack_reply_5_0));
+
+	/* MQTT 5.0 4.13.1: the client says why before closing the connection. */
+	broker_process(MQTT_PKT_TYPE_DISCONNECT);
+	zexpect_equal(test_ctx.disconnect_reason, MQTT_DISCONNECT_PROTOCOL_ERROR,
+		      "Unexpected DISCONNECT reason code 0x%02x", test_ctx.disconnect_reason);
+}
+
+ZTEST(mqtt_client, test_mqtt_packet_before_connack)
+{
+	int ret;
+
+	test_ctx.reply_before_connack = ping_resp_reply;
+	test_ctx.reply_before_connack_len = sizeof(ping_resp_reply);
+
+	ret = mqtt_connect(&client_ctx);
+	zassert_ok(ret, "MQTT client failed to connect (%d)", ret);
+	broker_process(MQTT_PKT_TYPE_CONNECT);
+	prepare_client_fds(&client_ctx);
+
+	client_wait(false);
+	ret = mqtt_input(&client_ctx);
+	zexpect_equal(ret, -EBADMSG, "Packet before CONNACK should be a protocol error (%d)", ret);
+	zexpect_false(test_ctx.ping_resp_handled,
+		      "Packet before CONNACK reported to the application");
+
+	ret = mqtt_input(&client_ctx);
+	zexpect_equal(ret, -ENOTCONN, "MQTT client should no longer be connected (%d)", ret);
 }
 
 static void mqtt_tests_before(void *fixture)
