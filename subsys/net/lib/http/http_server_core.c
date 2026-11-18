@@ -889,6 +889,14 @@ static int handle_http_request(struct http_client_ctx *client)
 			ret = IS_ENABLED(CONFIG_HTTP_SERVER_VERSION_2) ?
 				handle_http_frame_priority(client) : -ENOTSUP;
 			break;
+		case HTTP_SERVER_FRAME_PING_STATE:
+			ret = IS_ENABLED(CONFIG_HTTP_SERVER_VERSION_2) ?
+				handle_http_frame_ping(client) : -ENOTSUP;
+			break;
+		case HTTP_SERVER_FRAME_UNKNOWN_STATE:
+			ret = IS_ENABLED(CONFIG_HTTP_SERVER_VERSION_2) ?
+				handle_http_frame_unknown(client) : -ENOTSUP;
+			break;
 		case HTTP_SERVER_FRAME_PADDING_STATE:
 			ret = IS_ENABLED(CONFIG_HTTP_SERVER_VERSION_2) ?
 				handle_http_frame_padding(client) : -ENOTSUP;
