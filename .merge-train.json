@@ -1,0 +1,1061 @@
+{
+  "schema": 1,
+  "created_at": "2026-11-18T03:15:46+00:00",
+  "target": "main",
+  "remote": "upstream",
+  "status": "ready",
+  "branch": "integration/main-2026-11-17",
+  "base": "109df1e47bbf3ca178669f53c3a670261bcb3b6a",
+  "merge_list": {
+    "updated": "2026-11-18T02:45:43.025415+00:00",
+    "freeze_mode": false,
+    "latest_tag": "v4.5.0",
+    "review_window_biz_hours": 48,
+    "review_window_trivial_hours": 4,
+    "count": 144,
+    "source": "https://merge-list.zephyrproject.io/merge_list.json",
+    "fetched_at": "2026-11-18T03:15:43+00:00"
+  },
+  "pull_requests": [
+    {
+      "number": 118786,
+      "url": "https://github.com/zephyrproject-rtos/zephyr/pull/118786",
+      "title": "drivers: timer: keep the tick accounting exact on any rate ratio",
+      "status": "ready",
+      "author": "npitre",
+      "assignees": [
+        "npitre",
+        "peter-mitsis"
+      ],
+      "approvers": [
+        "grahamroff-dev",
+        "nashif"
+      ],
+      "base": "main",
+      "head": {
+        "ref": "timer/core-exact-tick-rate",
+        "sha": "31712348d05edbd00c80cd69e122c25c9526b767",
+        "repo": "npitre/zephyr"
+      },
+      "milestone": "v4.6.0",
+      "labels": [
+        "ai-review",
+        "area: Base OS",
+        "area: Build System",
+        "area: Kernel",
+        "area: MAINTAINER File",
+        "area: Shell",
+        "area: Tests",
+        "area: Timer",
+        "area: Utilities",
+        "backport v4.5-branch",
+        "bug"
+      ],
+      "created_at": "2026-09-11T06:56:20+00:00",
+      "updated_at": "2026-11-17T22:06:05+00:00",
+      "draft": false,
+      "commits": 6,
+      "changed_files": 9,
+      "additions": 1656,
+      "deletions": 87,
+      "gates": {
+        "conflict": "pass",
+        "ci": "pass",
+        "approval": "pass",
+        "review_time": "pass"
+      },
+      "rebaseable": true,
+      "mergeable_state": "blocked",
+      "approved": true,
+      "ci_state": "SUCCESS",
+      "assignee_approved": true,
+      "review_window_elapsed": true,
+      "time_left_hours": -1099,
+      "hotfix": false,
+      "trivial": false,
+      "override_required": false,
+      "dnm": false,
+      "dismissed": false,
+      "ci_run_recent": true,
+      "ci_age_days": null,
+      "frozen": false,
+      "head_sha": "31712348d05edbd00c80cd69e122c25c9526b767",
+      "fetched_sha": "31712348d05edbd00c80cd69e122c25c9526b767",
+      "result": "pending"
+    },
+    {
+      "number": 124573,
+      "url": "https://github.com/zephyrproject-rtos/zephyr/pull/124573",
+      "title": "arch: x86: intel64: preserve IF state on KPTI exception entry",
+      "status": "ready",
+      "author": "Aphlita",
+      "assignees": [
+        "edersondisouza"
+      ],
+      "approvers": [
+        "dcpleung",
+        "edersondisouza"
+      ],
+      "base": "main",
+      "head": {
+        "ref": "x86-kpti-exception-if",
+        "sha": "8c580d3d19e09085362fa29bcf4288a20e9eb7a9",
+        "repo": "Aphlita/zephyr"
+      },
+      "milestone": null,
+      "labels": [
+        "area: Tests",
+        "area: X86"
+      ],
+      "created_at": "2026-11-04T11:19:51+00:00",
+      "updated_at": "2026-11-17T22:21:34+00:00",
+      "draft": false,
+      "commits": 1,
+      "changed_files": 5,
+      "additions": 190,
+      "deletions": 1,
+      "gates": {
+        "conflict": "pass",
+        "ci": "pass",
+        "approval": "pass",
+        "review_time": "pass"
+      },
+      "rebaseable": true,
+      "mergeable_state": "blocked",
+      "approved": true,
+      "ci_state": "SUCCESS",
+      "assignee_approved": true,
+      "review_window_elapsed": true,
+      "time_left_hours": -183,
+      "hotfix": false,
+      "trivial": false,
+      "override_required": false,
+      "dnm": false,
+      "dismissed": false,
+      "ci_run_recent": true,
+      "ci_age_days": null,
+      "frozen": false,
+      "head_sha": "8c580d3d19e09085362fa29bcf4288a20e9eb7a9",
+      "fetched_sha": "8c580d3d19e09085362fa29bcf4288a20e9eb7a9",
+      "result": "pending"
+    },
+    {
+      "number": 125696,
+      "url": "https://github.com/zephyrproject-rtos/zephyr/pull/125696",
+      "title": "drivers: sensor: ams_as5600: fix channel check, bus check and angle masking",
+      "status": "ready",
+      "author": "d4ggr",
+      "assignees": [
+        "MaureenHelm"
+      ],
+      "approvers": [
+        "MaureenHelm",
+        "kartben"
+      ],
+      "base": "main",
+      "head": {
+        "ref": "as5600-fixes",
+        "sha": "10269cc5166852d99f9236a2db3227c4f04d9eb8",
+        "repo": "d4ggr/zephyr"
+      },
+      "milestone": null,
+      "labels": [
+        "area: Sensors",
+        "size: M"
+      ],
+      "created_at": "2026-11-13T00:27:52+00:00",
+      "updated_at": "2026-11-17T20:09:03+00:00",
+      "draft": false,
+      "commits": 3,
+      "changed_files": 1,
+      "additions": 17,
+      "deletions": 4,
+      "gates": {
+        "conflict": "pass",
+        "ci": "pass",
+        "approval": "pass",
+        "review_time": "pass"
+      },
+      "rebaseable": true,
+      "mergeable_state": "blocked",
+      "approved": true,
+      "ci_state": "SUCCESS",
+      "assignee_approved": true,
+      "review_window_elapsed": true,
+      "time_left_hours": -26,
+      "hotfix": false,
+      "trivial": false,
+      "override_required": false,
+      "dnm": false,
+      "dismissed": false,
+      "ci_run_recent": true,
+      "ci_age_days": null,
+      "frozen": false,
+      "head_sha": "10269cc5166852d99f9236a2db3227c4f04d9eb8",
+      "fetched_sha": "10269cc5166852d99f9236a2db3227c4f04d9eb8",
+      "result": "pending"
+    },
+    {
+      "number": 125814,
+      "url": "https://github.com/zephyrproject-rtos/zephyr/pull/125814",
+      "title": "net: sockets: Keep the iovec position across recvmsg() reads",
+      "status": "ready",
+      "author": "jukkar",
+      "assignees": [
+        "rlubos"
+      ],
+      "approvers": [
+        "pdgendt",
+        "rlubos"
+      ],
+      "base": "main",
+      "head": {
+        "ref": "fix/sockets-recvmsg-waitall-iovec",
+        "sha": "b45289e1ea2bbfc48c931e70ef0c2327afaf4c12",
+        "repo": "jukkar/zephyr"
+      },
+      "milestone": null,
+      "labels": [
+        "area: Networking",
+        "area: Sockets",
+        "area: Tests",
+        "backport v3.7-branch",
+        "backport v4.4-branch",
+        "backport v4.5-branch"
+      ],
+      "created_at": "2026-11-14T09:56:43+00:00",
+      "updated_at": "2026-11-17T22:08:50+00:00",
+      "draft": false,
+      "commits": 1,
+      "changed_files": 2,
+      "additions": 37,
+      "deletions": 1,
+      "gates": {
+        "conflict": "pass",
+        "ci": "pass",
+        "approval": "pass",
+        "review_time": "pass"
+      },
+      "rebaseable": true,
+      "mergeable_state": "blocked",
+      "approved": true,
+      "ci_state": "SUCCESS",
+      "assignee_approved": true,
+      "review_window_elapsed": true,
+      "time_left_hours": -2,
+      "hotfix": false,
+      "trivial": false,
+      "override_required": false,
+      "dnm": false,
+      "dismissed": false,
+      "ci_run_recent": true,
+      "ci_age_days": null,
+      "frozen": false,
+      "head_sha": "b45289e1ea2bbfc48c931e70ef0c2327afaf4c12",
+      "fetched_sha": "b45289e1ea2bbfc48c931e70ef0c2327afaf4c12",
+      "result": "pending"
+    },
+    {
+      "number": 125835,
+      "url": "https://github.com/zephyrproject-rtos/zephyr/pull/125835",
+      "title": "soc: st: stm32: wb0/wba: update to new PM IRQ lock contract",
+      "status": "ready",
+      "author": "msmttchr",
+      "assignees": [
+        "erwango"
+      ],
+      "approvers": [
+        "asm5878",
+        "erwango",
+        "mathieuchopstm"
+      ],
+      "base": "main",
+      "head": {
+        "ref": "remove-irq-enable",
+        "sha": "d4da106e6b0ad4a221ba7a555dfe5ab52c0bd188",
+        "repo": "msmttchr/zephyr"
+      },
+      "milestone": null,
+      "labels": [
+        "area: Boards/SoCs",
+        "platform: STM32"
+      ],
+      "created_at": "2026-11-14T16:08:06+00:00",
+      "updated_at": "2026-11-16T15:56:41+00:00",
+      "draft": false,
+      "commits": 1,
+      "changed_files": 4,
+      "additions": 7,
+      "deletions": 43,
+      "gates": {
+        "conflict": "pass",
+        "ci": "pass",
+        "approval": "pass",
+        "review_time": "pass"
+      },
+      "rebaseable": true,
+      "mergeable_state": "blocked",
+      "approved": true,
+      "ci_state": "SUCCESS",
+      "assignee_approved": true,
+      "review_window_elapsed": true,
+      "time_left_hours": -3,
+      "hotfix": false,
+      "trivial": false,
+      "override_required": false,
+      "dnm": false,
+      "dismissed": false,
+      "ci_run_recent": true,
+      "ci_age_days": null,
+      "frozen": false,
+      "head_sha": "d4da106e6b0ad4a221ba7a555dfe5ab52c0bd188",
+      "fetched_sha": "d4da106e6b0ad4a221ba7a555dfe5ab52c0bd188",
+      "result": "pending"
+    },
+    {
+      "number": 125843,
+      "url": "https://github.com/zephyrproject-rtos/zephyr/pull/125843",
+      "title": "net: http: server: answer HTTP/2 PING frames",
+      "status": "ready",
+      "author": "elyorbek010",
+      "assignees": [
+        "jukkar",
+        "rlubos"
+      ],
+      "approvers": [
+        "jukkar",
+        "rlubos"
+      ],
+      "base": "main",
+      "head": {
+        "ref": "http-server-h2-ping",
+        "sha": "2db73fdb384feef8e70196d79a96d45c330635eb",
+        "repo": "elyorbek010/zephyr"
+      },
+      "milestone": null,
+      "labels": [
+        "area: HTTP",
+        "area: Networking",
+        "area: Tests"
+      ],
+      "created_at": "2026-11-14T17:58:18+00:00",
+      "updated_at": "2026-11-17T14:46:55+00:00",
+      "draft": false,
+      "commits": 4,
+      "changed_files": 6,
+      "additions": 278,
+      "deletions": 1,
+      "gates": {
+        "conflict": "pass",
+        "ci": "pass",
+        "approval": "pass",
+        "review_time": "pass"
+      },
+      "rebaseable": true,
+      "mergeable_state": "blocked",
+      "approved": true,
+      "ci_state": "SUCCESS",
+      "assignee_approved": true,
+      "review_window_elapsed": true,
+      "time_left_hours": -2,
+      "hotfix": false,
+      "trivial": false,
+      "override_required": false,
+      "dnm": false,
+      "dismissed": false,
+      "ci_run_recent": true,
+      "ci_age_days": null,
+      "frozen": false,
+      "head_sha": "2db73fdb384feef8e70196d79a96d45c330635eb",
+      "fetched_sha": "2db73fdb384feef8e70196d79a96d45c330635eb",
+      "result": "pending"
+    },
+    {
+      "number": 125844,
+      "url": "https://github.com/zephyrproject-rtos/zephyr/pull/125844",
+      "title": "net: http: server: split HTTP/2 DATA frames at the default frame size",
+      "status": "ready",
+      "author": "elyorbek010",
+      "assignees": [
+        "jukkar",
+        "rlubos"
+      ],
+      "approvers": [
+        "jukkar",
+        "rlubos"
+      ],
+      "base": "main",
+      "head": {
+        "ref": "http-server-h2-data-frame-size",
+        "sha": "f1453fd478db9c2671921c5c6f72dff9b70e4c77",
+        "repo": "elyorbek010/zephyr"
+      },
+      "milestone": null,
+      "labels": [
+        "area: HTTP",
+        "area: Networking",
+        "area: Tests"
+      ],
+      "created_at": "2026-11-14T18:11:20+00:00",
+      "updated_at": "2026-11-17T14:48:13+00:00",
+      "draft": false,
+      "commits": 2,
+      "changed_files": 2,
+      "additions": 145,
+      "deletions": 11,
+      "gates": {
+        "conflict": "pass",
+        "ci": "pass",
+        "approval": "pass",
+        "review_time": "pass"
+      },
+      "rebaseable": true,
+      "mergeable_state": "blocked",
+      "approved": true,
+      "ci_state": "SUCCESS",
+      "assignee_approved": true,
+      "review_window_elapsed": true,
+      "time_left_hours": -3,
+      "hotfix": false,
+      "trivial": false,
+      "override_required": false,
+      "dnm": false,
+      "dismissed": false,
+      "ci_run_recent": true,
+      "ci_age_days": null,
+      "frozen": false,
+      "head_sha": "f1453fd478db9c2671921c5c6f72dff9b70e4c77",
+      "fetched_sha": "f1453fd478db9c2671921c5c6f72dff9b70e4c77",
+      "result": "pending"
+    },
+    {
+      "number": 125845,
+      "url": "https://github.com/zephyrproject-rtos/zephyr/pull/125845",
+      "title": "net: http: server: send static fs files in larger HTTP/2 DATA frames",
+      "status": "ready",
+      "author": "elyorbek010",
+      "assignees": [
+        "jukkar",
+        "rlubos"
+      ],
+      "approvers": [
+        "jukkar",
+        "rlubos"
+      ],
+      "base": "main",
+      "head": {
+        "ref": "http-server-h2-static-fs-chunk",
+        "sha": "1c53e759335a3c8607130fcbb700bbdaafb74da2",
+        "repo": "elyorbek010/zephyr"
+      },
+      "milestone": null,
+      "labels": [
+        "area: HTTP",
+        "area: Networking",
+        "area: Tests"
+      ],
+      "created_at": "2026-11-14T18:11:42+00:00",
+      "updated_at": "2026-11-17T15:06:14+00:00",
+      "draft": false,
+      "commits": 2,
+      "changed_files": 4,
+      "additions": 130,
+      "deletions": 10,
+      "gates": {
+        "conflict": "pass",
+        "ci": "pass",
+        "approval": "pass",
+        "review_time": "pass"
+      },
+      "rebaseable": true,
+      "mergeable_state": "blocked",
+      "approved": true,
+      "ci_state": "SUCCESS",
+      "assignee_approved": true,
+      "review_window_elapsed": true,
+      "time_left_hours": -3,
+      "hotfix": false,
+      "trivial": false,
+      "override_required": false,
+      "dnm": false,
+      "dismissed": false,
+      "ci_run_recent": true,
+      "ci_age_days": null,
+      "frozen": false,
+      "head_sha": "1c53e759335a3c8607130fcbb700bbdaafb74da2",
+      "fetched_sha": "1c53e759335a3c8607130fcbb700bbdaafb74da2",
+      "result": "pending"
+    },
+    {
+      "number": 125854,
+      "url": "https://github.com/zephyrproject-rtos/zephyr/pull/125854",
+      "title": "net: stun: Refuse text that is not well-formed UTF-8",
+      "status": "ready",
+      "author": "kshypachov",
+      "assignees": [
+        "jukkar",
+        "rlubos"
+      ],
+      "approvers": [
+        "jukkar",
+        "pdgendt",
+        "rlubos"
+      ],
+      "base": "main",
+      "head": {
+        "ref": "net/lib/stun-utf8",
+        "sha": "168b11dde00004ec1a3aac9a9beea113c2cea182",
+        "repo": "kshypachov/zephyr"
+      },
+      "milestone": null,
+      "labels": [
+        "area: Networking",
+        "area: Tests"
+      ],
+      "created_at": "2026-11-15T00:05:16+00:00",
+      "updated_at": "2026-11-17T15:37:33+00:00",
+      "draft": false,
+      "commits": 1,
+      "changed_files": 3,
+      "additions": 37,
+      "deletions": 8,
+      "gates": {
+        "conflict": "pass",
+        "ci": "pass",
+        "approval": "pass",
+        "review_time": "pass"
+      },
+      "rebaseable": true,
+      "mergeable_state": "blocked",
+      "approved": true,
+      "ci_state": "SUCCESS",
+      "assignee_approved": true,
+      "review_window_elapsed": true,
+      "time_left_hours": -2,
+      "hotfix": false,
+      "trivial": false,
+      "override_required": false,
+      "dnm": false,
+      "dismissed": false,
+      "ci_run_recent": true,
+      "ci_age_days": null,
+      "frozen": false,
+      "head_sha": "168b11dde00004ec1a3aac9a9beea113c2cea182",
+      "fetched_sha": "168b11dde00004ec1a3aac9a9beea113c2cea182",
+      "result": "pending"
+    },
+    {
+      "number": 125859,
+      "url": "https://github.com/zephyrproject-rtos/zephyr/pull/125859",
+      "title": "drivers: spi: stm32: return the DMA load error",
+      "status": "ready",
+      "author": "ouoam",
+      "assignees": [
+        "erwango"
+      ],
+      "approvers": [
+        "erwango",
+        "gautierg-st"
+      ],
+      "base": "main",
+      "head": {
+        "ref": "stm32-spi-dma-load-error",
+        "sha": "d2a2ad4a9935b2cbd10ba679e3e4e9441e63429b",
+        "repo": "ouoam/zephyr"
+      },
+      "milestone": null,
+      "labels": [
+        "area: SPI",
+        "platform: STM32"
+      ],
+      "created_at": "2026-11-15T02:31:10+00:00",
+      "updated_at": "2026-11-16T08:53:20+00:00",
+      "draft": false,
+      "commits": 1,
+      "changed_files": 1,
+      "additions": 4,
+      "deletions": 0,
+      "gates": {
+        "conflict": "pass",
+        "ci": "pass",
+        "approval": "pass",
+        "review_time": "pass"
+      },
+      "rebaseable": true,
+      "mergeable_state": "blocked",
+      "approved": true,
+      "ci_state": "SUCCESS",
+      "assignee_approved": true,
+      "review_window_elapsed": true,
+      "time_left_hours": -3,
+      "hotfix": false,
+      "trivial": false,
+      "override_required": false,
+      "dnm": false,
+      "dismissed": false,
+      "ci_run_recent": true,
+      "ci_age_days": null,
+      "frozen": false,
+      "head_sha": "d2a2ad4a9935b2cbd10ba679e3e4e9441e63429b",
+      "fetched_sha": "d2a2ad4a9935b2cbd10ba679e3e4e9441e63429b",
+      "result": "pending"
+    },
+    {
+      "number": 125861,
+      "url": "https://github.com/zephyrproject-rtos/zephyr/pull/125861",
+      "title": "drivers: dma: stm32: release a never started channel on stop",
+      "status": "ready",
+      "author": "ouoam",
+      "assignees": [
+        "erwango"
+      ],
+      "approvers": [
+        "djiatsaf-st",
+        "erwango"
+      ],
+      "base": "main",
+      "head": {
+        "ref": "stm32-dma-stop-release",
+        "sha": "9b955484fc18a0b1a5ee4f626888f26b27f9869c",
+        "repo": "ouoam/zephyr"
+      },
+      "milestone": null,
+      "labels": [
+        "area: DMA",
+        "platform: STM32"
+      ],
+      "created_at": "2026-11-15T03:44:33+00:00",
+      "updated_at": "2026-11-17T10:16:00+00:00",
+      "draft": false,
+      "commits": 1,
+      "changed_files": 3,
+      "additions": 6,
+      "deletions": 0,
+      "gates": {
+        "conflict": "pass",
+        "ci": "pass",
+        "approval": "pass",
+        "review_time": "pass"
+      },
+      "rebaseable": true,
+      "mergeable_state": "blocked",
+      "approved": true,
+      "ci_state": "SUCCESS",
+      "assignee_approved": true,
+      "review_window_elapsed": true,
+      "time_left_hours": -3,
+      "hotfix": false,
+      "trivial": false,
+      "override_required": false,
+      "dnm": false,
+      "dismissed": false,
+      "ci_run_recent": true,
+      "ci_age_days": null,
+      "frozen": false,
+      "head_sha": "9b955484fc18a0b1a5ee4f626888f26b27f9869c",
+      "fetched_sha": "9b955484fc18a0b1a5ee4f626888f26b27f9869c",
+      "result": "pending"
+    },
+    {
+      "number": 125880,
+      "url": "https://github.com/zephyrproject-rtos/zephyr/pull/125880",
+      "title": "dts: Add GPIO nexus compatibles for in-tree ti variants.",
+      "status": "ready",
+      "author": "onaffaa",
+      "assignees": [
+        "glneo"
+      ],
+      "approvers": [
+        "glneo",
+        "kartben"
+      ],
+      "base": "main",
+      "head": {
+        "ref": "onaffaa/add_ti_gpio_nexus_bindings",
+        "sha": "5e49612ae8229e354e0f7b125fc065f412dd0360",
+        "repo": "onaffaa/zephyr"
+      },
+      "milestone": null,
+      "labels": [
+        "platform: TI K3"
+      ],
+      "created_at": "2026-11-15T08:33:32+00:00",
+      "updated_at": "2026-11-17T09:37:17+00:00",
+      "draft": false,
+      "commits": 1,
+      "changed_files": 4,
+      "additions": 13,
+      "deletions": 0,
+      "gates": {
+        "conflict": "pass",
+        "ci": "pass",
+        "approval": "pass",
+        "review_time": "pass"
+      },
+      "rebaseable": true,
+      "mergeable_state": "blocked",
+      "approved": true,
+      "ci_state": "SUCCESS",
+      "assignee_approved": true,
+      "review_window_elapsed": true,
+      "time_left_hours": -3,
+      "hotfix": false,
+      "trivial": false,
+      "override_required": false,
+      "dnm": false,
+      "dismissed": false,
+      "ci_run_recent": true,
+      "ci_age_days": null,
+      "frozen": false,
+      "head_sha": "5e49612ae8229e354e0f7b125fc065f412dd0360",
+      "fetched_sha": "5e49612ae8229e354e0f7b125fc065f412dd0360",
+      "result": "pending"
+    },
+    {
+      "number": 125889,
+      "url": "https://github.com/zephyrproject-rtos/zephyr/pull/125889",
+      "title": "arch: arm: cortex_a_r: call soc_early_reset_hook",
+      "status": "ready",
+      "author": "andrei-edward-popa",
+      "assignees": [
+        "wearyzen"
+      ],
+      "approvers": [
+        "nhutnguyenkc",
+        "wearyzen"
+      ],
+      "base": "main",
+      "head": {
+        "ref": "cortex-r-early-reset-hook",
+        "sha": "048568236a4ab529690781669ade64508fa2d376",
+        "repo": "andrei-edward-popa/zephyr"
+      },
+      "milestone": null,
+      "labels": [
+        "area: ARM"
+      ],
+      "created_at": "2026-11-15T12:17:28+00:00",
+      "updated_at": "2026-11-17T20:11:36+00:00",
+      "draft": false,
+      "commits": 1,
+      "changed_files": 1,
+      "additions": 7,
+      "deletions": 0,
+      "gates": {
+        "conflict": "pass",
+        "ci": "pass",
+        "approval": "pass",
+        "review_time": "pass"
+      },
+      "rebaseable": true,
+      "mergeable_state": "blocked",
+      "approved": true,
+      "ci_state": "SUCCESS",
+      "assignee_approved": true,
+      "review_window_elapsed": true,
+      "time_left_hours": -3,
+      "hotfix": false,
+      "trivial": false,
+      "override_required": false,
+      "dnm": false,
+      "dismissed": false,
+      "ci_run_recent": true,
+      "ci_age_days": null,
+      "frozen": false,
+      "head_sha": "048568236a4ab529690781669ade64508fa2d376",
+      "fetched_sha": "048568236a4ab529690781669ade64508fa2d376",
+      "result": "pending"
+    },
+    {
+      "number": 125893,
+      "url": "https://github.com/zephyrproject-rtos/zephyr/pull/125893",
+      "title": "mgmt: mcumgr: transport: smp_bt: fix outgoing bridge slot leak",
+      "status": "ready",
+      "author": "hongquan-prog",
+      "assignees": [
+        "nordicjm"
+      ],
+      "approvers": [
+        "kartben",
+        "nordicjm"
+      ],
+      "base": "main",
+      "head": {
+        "ref": "fix-125873-mcumgr-bt-bridge-slot",
+        "sha": "6c3a858c25a6e80d99df21c4ed15a715e3480fd0",
+        "repo": "hongquan-prog/zephyr"
+      },
+      "milestone": null,
+      "labels": [
+        "area: Tests",
+        "area: mcumgr"
+      ],
+      "created_at": "2026-11-15T14:25:09+00:00",
+      "updated_at": "2026-11-17T16:06:44+00:00",
+      "draft": false,
+      "commits": 2,
+      "changed_files": 5,
+      "additions": 137,
+      "deletions": 11,
+      "gates": {
+        "conflict": "pass",
+        "ci": "pass",
+        "approval": "pass",
+        "review_time": "pass"
+      },
+      "rebaseable": true,
+      "mergeable_state": "blocked",
+      "approved": true,
+      "ci_state": "SUCCESS",
+      "assignee_approved": true,
+      "review_window_elapsed": true,
+      "time_left_hours": -3,
+      "hotfix": false,
+      "trivial": false,
+      "override_required": false,
+      "dnm": false,
+      "dismissed": false,
+      "ci_run_recent": true,
+      "ci_age_days": null,
+      "frozen": false,
+      "head_sha": "6c3a858c25a6e80d99df21c4ed15a715e3480fd0",
+      "fetched_sha": "6c3a858c25a6e80d99df21c4ed15a715e3480fd0",
+      "result": "pending"
+    },
+    {
+      "number": 125894,
+      "url": "https://github.com/zephyrproject-rtos/zephyr/pull/125894",
+      "title": "mgmt: mcumgr: smp_client: fix header read before length validation",
+      "status": "ready",
+      "author": "hongquan-prog",
+      "assignees": [
+        "nordicjm"
+      ],
+      "approvers": [
+        "SeppoTakalo",
+        "nordicjm",
+        "vidarbe"
+      ],
+      "base": "main",
+      "head": {
+        "ref": "fix-125874-mcumgr-client-header-length",
+        "sha": "236b8ba7a1ec52611cd7832bc35cfaacd37969b0",
+        "repo": "hongquan-prog/zephyr"
+      },
+      "milestone": null,
+      "labels": [
+        "area: Tests",
+        "area: mcumgr",
+        "backport v4.4-branch",
+        "backport v4.5-branch"
+      ],
+      "created_at": "2026-11-15T14:33:43+00:00",
+      "updated_at": "2026-11-16T11:44:45+00:00",
+      "draft": false,
+      "commits": 2,
+      "changed_files": 3,
+      "additions": 29,
+      "deletions": 1,
+      "gates": {
+        "conflict": "pass",
+        "ci": "pass",
+        "approval": "pass",
+        "review_time": "pass"
+      },
+      "rebaseable": true,
+      "mergeable_state": "blocked",
+      "approved": true,
+      "ci_state": "SUCCESS",
+      "assignee_approved": true,
+      "review_window_elapsed": true,
+      "time_left_hours": -3,
+      "hotfix": false,
+      "trivial": false,
+      "override_required": false,
+      "dnm": false,
+      "dismissed": false,
+      "ci_run_recent": true,
+      "ci_age_days": null,
+      "frozen": false,
+      "head_sha": "236b8ba7a1ec52611cd7832bc35cfaacd37969b0",
+      "fetched_sha": "236b8ba7a1ec52611cd7832bc35cfaacd37969b0",
+      "result": "pending"
+    },
+    {
+      "number": 125895,
+      "url": "https://github.com/zephyrproject-rtos/zephyr/pull/125895",
+      "title": "mgmt: mcumgr: transport: fix LoRaWAN reassembly after collect errors",
+      "status": "ready",
+      "author": "hongquan-prog",
+      "assignees": [
+        "nordicjm"
+      ],
+      "approvers": [
+        "kartben",
+        "nordicjm"
+      ],
+      "base": "main",
+      "head": {
+        "ref": "fix-125875-mcumgr-lorawan-reassembly",
+        "sha": "4f04f4688846a29d51f44929e36210fb35216095",
+        "repo": "hongquan-prog/zephyr"
+      },
+      "milestone": null,
+      "labels": [
+        "area: mcumgr",
+        "size: XS"
+      ],
+      "created_at": "2026-11-15T14:42:11+00:00",
+      "updated_at": "2026-11-17T21:32:37+00:00",
+      "draft": false,
+      "commits": 1,
+      "changed_files": 1,
+      "additions": 1,
+      "deletions": 0,
+      "gates": {
+        "conflict": "pass",
+        "ci": "pass",
+        "approval": "pass",
+        "review_time": "pass"
+      },
+      "rebaseable": true,
+      "mergeable_state": "blocked",
+      "approved": true,
+      "ci_state": "SUCCESS",
+      "assignee_approved": true,
+      "review_window_elapsed": true,
+      "time_left_hours": -3,
+      "hotfix": false,
+      "trivial": false,
+      "override_required": false,
+      "dnm": false,
+      "dismissed": false,
+      "ci_run_recent": true,
+      "ci_age_days": null,
+      "frozen": false,
+      "head_sha": "4f04f4688846a29d51f44929e36210fb35216095",
+      "fetched_sha": "4f04f4688846a29d51f44929e36210fb35216095",
+      "result": "pending"
+    },
+    {
+      "number": 125905,
+      "url": "https://github.com/zephyrproject-rtos/zephyr/pull/125905",
+      "title": "boards: renesas: rssk_ra2l1: add compatible to CN1 nexus node",
+      "status": "ready",
+      "author": "onaffaa",
+      "assignees": [
+        "KhiemNguyenT",
+        "khoa-nguyen-18",
+        "soburi"
+      ],
+      "approvers": [
+        "duynguyenxa",
+        "soburi",
+        "thenguyenyf"
+      ],
+      "base": "main",
+      "head": {
+        "ref": "onaffaa/add_rssk_ra2l1_gpio_map",
+        "sha": "9a2e1d3198ed5fc6c87584381471b4370af28ad4",
+        "repo": "onaffaa/zephyr"
+      },
+      "milestone": null,
+      "labels": [
+        "area: Boards/SoCs",
+        "area: Devicetree Binding",
+        "area: GPIO",
+        "platform: Renesas RA"
+      ],
+      "created_at": "2026-11-15T19:25:59+00:00",
+      "updated_at": "2026-11-17T15:15:01+00:00",
+      "draft": false,
+      "commits": 1,
+      "changed_files": 2,
+      "additions": 21,
+      "deletions": 0,
+      "gates": {
+        "conflict": "pass",
+        "ci": "pass",
+        "approval": "pass",
+        "review_time": "pass"
+      },
+      "rebaseable": true,
+      "mergeable_state": "blocked",
+      "approved": true,
+      "ci_state": "SUCCESS",
+      "assignee_approved": true,
+      "review_window_elapsed": true,
+      "time_left_hours": -3,
+      "hotfix": false,
+      "trivial": false,
+      "override_required": false,
+      "dnm": false,
+      "dismissed": false,
+      "ci_run_recent": true,
+      "ci_age_days": null,
+      "frozen": false,
+      "head_sha": "9a2e1d3198ed5fc6c87584381471b4370af28ad4",
+      "fetched_sha": "9a2e1d3198ed5fc6c87584381471b4370af28ad4",
+      "result": "pending"
+    },
+    {
+      "number": 125906,
+      "url": "https://github.com/zephyrproject-rtos/zephyr/pull/125906",
+      "title": "dts: riscv: neorv32: add compatible to FIRQ nexus node",
+      "status": "ready",
+      "author": "onaffaa",
+      "assignees": [
+        "henrikbrixandersen"
+      ],
+      "approvers": [
+        "henrikbrixandersen",
+        "hongquan-prog",
+        "maass-hamburg"
+      ],
+      "base": "main",
+      "head": {
+        "ref": "onaffaa/add_neorv32_interrupt_nexus",
+        "sha": "38fdc621ad4699197bc6dc2b1b07f89afb00e31b",
+        "repo": "onaffaa/zephyr"
+      },
+      "milestone": null,
+      "labels": [
+        "area: Devicetree Binding",
+        "area: Interrupt Controller",
+        "platform: NEORV32",
+        "platforms: RISCV"
+      ],
+      "created_at": "2026-11-15T20:06:10+00:00",
+      "updated_at": "2026-11-16T18:54:43+00:00",
+      "draft": false,
+      "commits": 2,
+      "changed_files": 2,
+      "additions": 11,
+      "deletions": 0,
+      "gates": {
+        "conflict": "pass",
+        "ci": "pass",
+        "approval": "pass",
+        "review_time": "pass"
+      },
+      "rebaseable": true,
+      "mergeable_state": "blocked",
+      "approved": true,
+      "ci_state": "SUCCESS",
+      "assignee_approved": true,
+      "review_window_elapsed": true,
+      "time_left_hours": -3,
+      "hotfix": false,
+      "trivial": false,
+      "override_required": false,
+      "dnm": false,
+      "dismissed": false,
+      "ci_run_recent": true,
+      "ci_age_days": null,
+      "frozen": false,
+      "head_sha": "38fdc621ad4699197bc6dc2b1b07f89afb00e31b",
+      "fetched_sha": "38fdc621ad4699197bc6dc2b1b07f89afb00e31b",
+      "result": "pending"
+    }
+  ]
+}
