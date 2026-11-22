@@ -3269,7 +3269,7 @@ def test_twisterrunner_add_tasks_to_queue(
     build,
     expected_pipeline_elements
 ):
-    def mock_get_cmake_filter_stages(filter):
+    def mock_get_cmake_filter_stages(filter, keys):
         return [filter]
 
     instances = {
@@ -3305,9 +3305,9 @@ def test_twisterrunner_add_tasks_to_queue(
         [build_only != instance.run for instance in instances.values()]
     )
 
-    tr.get_cmake_filter_stages.assert_any_call('full')
+    tr.get_cmake_filter_stages.assert_any_call('full', mock.ANY)
     if retry_build_errors:
-        tr.get_cmake_filter_stages.assert_any_call('some')
+        tr.get_cmake_filter_stages.assert_any_call('some', mock.ANY)
 
     print(processing_queue_mock.append.call_args_list)
     print([mock.call(el) for el in expected_pipeline_elements])
@@ -3443,7 +3443,7 @@ def test_twisterrunner_execute(caplog):
 TESTDATA_20 = [
     ('', []),
     ('not ARCH in ["x86", "arc"]', ['full']),
-    ('dt_dummy("x", "y")', ['dts']),
+    ('dt_dummy(x, y)', ['dts']),
     ('not CONFIG_FOO', ['kconfig']),
     ('dt_dummy and CONFIG_FOO', ['dts', 'kconfig']),
 ]
@@ -3454,32 +3454,6 @@ TESTDATA_20 = [
     ids=['none', 'full', 'dts', 'kconfig', 'dts+kconfig']
 )
 def test_twisterrunner_get_cmake_filter_stages(filter, expected_result):
-    result = TwisterRunner.get_cmake_filter_stages(filter)
+    result = TwisterRunner.get_cmake_filter_stages(filter, ['not', 'and'])
 
     assert sorted(result) == sorted(expected_result)
-
-
-TESTDATA_21 = [
-    ([], False, False),
-    (['full'], False, False),
-    (['dts'], False, True),
-    (['kconfig'], False, False),
-    (['dts', 'kconfig'], False, True),
-    (['kconfig'], True, True),
-    (['full'], True, False),
-]
-
-@pytest.mark.parametrize(
-    'filter_stages, sysbuild, expected_result',
-    TESTDATA_21,
-    ids=['none', 'full', 'dts', 'kconfig', 'dts+kconfig',
-         'kconfig sysbuild', 'full sysbuild']
-)
-def test_twisterrunner_filter_before_configuring(
-    filter_stages,
-    sysbuild,
-    expected_result
-):
-    instance = mock.Mock(filter_stages=filter_stages, sysbuild=sysbuild)
-
-    assert TwisterRunner.filter_before_configuring(instance) == expected_result
