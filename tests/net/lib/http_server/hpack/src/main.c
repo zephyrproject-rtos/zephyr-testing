@@ -505,7 +505,7 @@ ZTEST(http2_hpack, test_http2_hpack_literal_not_indexed_decode)
  * buffer is configured to hold, which keeps the encoder on the literal
  * path and the value decodable without one.
  */
-#define TEST_LONG_VALUE_LEN MAX(408, 2 * HTTP_SERVER_HUFFMAN_DECODE_BUFFER_SIZE)
+#define TEST_LONG_VALUE_LEN MAX(408, 2 * HTTP_HUFFMAN_DECODE_BUFFER_SIZE)
 
 static char test_long_value[TEST_LONG_VALUE_LEN + 1];
 static uint8_t test_long_buf[TEST_LONG_VALUE_LEN + 16];
@@ -562,6 +562,61 @@ ZTEST(http2_hpack, test_http2_hpack_empty_value_encode_decode)
 	zassert_equal(dec.value_len, 0, "Decoded a %zu byte value", dec.value_len);
 }
 
+ZTEST(http2_hpack, test_http2_hpack_field_len)
+{
+	static const struct {
+		const char *name;
+		const char *value;
+	} fields[] = {
+		/* Indexed. */
+		{ ":method", "GET" },
+		/* Name from the static table, at the first and at the last index. */
+		{ ":authority", "example.com" },
+		{ "www-authenticate", "Basic realm=\"test\"" },
+		/* Literal name, Huffman encoded and not: control characters take
+		 * the longest codes.
+		 */
+		{ "x-custom-field", "some-value" },
+		{ "x-binary", "\x01\x02\x03\x04\x05\x06\x07\x08" },
+		{ "x-empty", "" },
+		/* String lengths on either side of the one octet limit. */
+		{ "x-126",
+		  "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+		  "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" },
+		{ "x-127",
+		  "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+		  "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" },
+		/* Too long for the Huffman encoding buffer. */
+		{ "content-type", test_long_value },
+	};
+	struct http_hpack_header_buf hdr = { 0 };
+	int len, ret;
+
+	memset(test_long_value, 'a', TEST_LONG_VALUE_LEN);
+
+	ARRAY_FOR_EACH(fields, i) {
+		len = http_hpack_field_len(&hdr, fields[i].name, fields[i].value);
+		zassert_true(len > 0, "No length for field %zu (%d)", i, len);
+
+		ret = http_hpack_encode_field(test_long_buf, sizeof(test_long_buf), &hdr,
+					      fields[i].name, fields[i].value);
+		zassert_equal(ret, len, "Field %zu encoded to %d bytes, %d announced", i, ret,
+			      len);
+
+		/* The length is the room the field needs, to the byte. */
+		ret = http_hpack_encode_field(test_long_buf, len, &hdr, fields[i].name,
+					      fields[i].value);
+		zassert_equal(ret, len, "Field %zu does not fit its length (%d)", i, ret);
+
+		ret = http_hpack_encode_field(test_long_buf, len - 1, &hdr, fields[i].name,
+					      fields[i].value);
+		zassert_equal(ret, -ENOBUFS, "Field %zu fits %d bytes (%d)", i, len - 1, ret);
+	}
+
+	ret = http_hpack_field_len(&hdr, "", "value");
+	zassert_equal(ret, -EINVAL, "Length for a field without a name (%d)", ret);
+}
+
 ZTEST(http2_hpack, test_http2_hpack_dynamic_table_size_update)
 {
 	static const uint8_t update_zero[] = { 0x20 };
@@ -592,7 +647,7 @@ ZTEST(http2_hpack, test_http2_hpack_oversized_field)
 	/* A literal field with the name "x" and a Huffman-coded value that
 	 * decodes to more than the decoding buffer holds.
 	 */
-	static uint8_t value[2 * HTTP_SERVER_HUFFMAN_DECODE_BUFFER_SIZE];
+	static uint8_t value[2 * HTTP_HUFFMAN_DECODE_BUFFER_SIZE];
 	static uint8_t encoded[sizeof(value)];
 	static uint8_t entry[8 + sizeof(value)];
 	struct http_hpack_header_buf dec = { 0 };
@@ -624,7 +679,7 @@ ZTEST(http2_hpack, test_http2_hpack_oversized_field_invalid)
 	 * buffer and then runs into an EOS symbol: an error, not an oversized
 	 * field (RFC 7541, Section 5.2).
 	 */
-	static uint8_t value[2 * HTTP_SERVER_HUFFMAN_DECODE_BUFFER_SIZE];
+	static uint8_t value[2 * HTTP_HUFFMAN_DECODE_BUFFER_SIZE];
 	static uint8_t encoded[sizeof(value) + 4];
 	static uint8_t entry[8 + sizeof(encoded)];
 	struct http_hpack_header_buf dec = { 0 };
@@ -1183,7 +1238,7 @@ ZTEST(http2_hpack, test_http2_hpack_dynamic_table_name_too_long_for_buffer)
 	/* A name that leaves 4 bytes of the decoding buffer, and a value
 	 * that decodes to 8.
 	 */
-	static uint8_t name[HTTP_SERVER_HUFFMAN_DECODE_BUFFER_SIZE - 4];
+	static uint8_t name[HTTP_HUFFMAN_DECODE_BUFFER_SIZE - 4];
 	static uint8_t add_long_name[8 + sizeof(name)];
 	static const uint8_t value[8] = "aaaaaaaa";
 	uint8_t encoded[sizeof(value)];
