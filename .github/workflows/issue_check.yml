@@ -24,7 +24,7 @@ jobs:
     name: Issue Check
     runs-on: ubuntu-24.04
     timeout-minutes: 10
-    if: github.repository == 'zephyrproject-rtos/zephyr' && github.event.issue.state == 'open'
+    if: github.repository == 'zephyrproject-rtos/zephyr-testing' && github.event.issue.state == 'open'
     permissions:
       issues: write # to comment on issues
 
