@@ -1267,8 +1267,8 @@ static int nsos_getsockopt_int(struct nsos_socket *sock, int nsos_mid_level, int
 		return -1;
 	}
 
-	err = nsos_adapt_getsockopt(sock->poll.mid.fd, NSOS_MID_SOL_SOCKET,
-				    NSOS_MID_SO_KEEPALIVE, optval, &nsos_mid_optlen);
+	err = nsos_adapt_getsockopt(sock->poll.mid.fd, nsos_mid_level,
+				    nsos_mid_optname, optval, &nsos_mid_optlen);
 	if (err) {
 		errno = nsi_errno_from_mid(-err);
 		return -1;
@@ -1394,6 +1394,10 @@ static int nsos_getsockopt(void *obj, int level, int optname,
 		case ZSOCK_SO_REUSEPORT:
 			return nsos_getsockopt_int(sock,
 						   NSOS_MID_SOL_SOCKET, NSOS_MID_SO_REUSEPORT,
+						   optval, optlen);
+		case ZSOCK_SO_BROADCAST:
+			return nsos_getsockopt_int(sock,
+						   NSOS_MID_SOL_SOCKET, NSOS_MID_SO_BROADCAST,
 						   optval, optlen);
 		case ZSOCK_SO_KEEPALIVE:
 			return nsos_getsockopt_int(sock,
@@ -1565,6 +1569,10 @@ static int nsos_setsockopt(void *obj, int level, int optname, const void *optval
 		case ZSOCK_SO_REUSEPORT:
 			return nsos_setsockopt_int(sock,
 						   NSOS_MID_SOL_SOCKET, NSOS_MID_SO_REUSEPORT,
+						   optval, optlen);
+		case ZSOCK_SO_BROADCAST:
+			return nsos_setsockopt_int(sock,
+						   NSOS_MID_SOL_SOCKET, NSOS_MID_SO_BROADCAST,
 						   optval, optlen);
 		case ZSOCK_SO_LINGER:
 			return nsos_setsockopt_int(sock,
