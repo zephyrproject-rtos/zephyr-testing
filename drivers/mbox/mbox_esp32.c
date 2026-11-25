@@ -11,13 +11,12 @@
  * SoCs where the HP and LP cores communicate through the PMU software
  * interrupt build either the HP or the LP image separately.
  */
-#if defined(CONFIG_SOC_ESP32C5_LPCORE) || defined(CONFIG_SOC_ESP32C6_LPCORE) ||                    \
-	defined(CONFIG_SOC_ESP32P4_LPCORE)
+#if defined(CONFIG_SOC_FAMILY_ESPRESSIF_LPCORE_TARGET)
 #define MBOX_ESP32_LPCORE 1
 #endif
 
 #if defined(CONFIG_SOC_ESP32C5_HPCORE) || defined(CONFIG_SOC_ESP32C6_HPCORE) ||                    \
-	defined(CONFIG_SOC_ESP32P4_HPCORE)
+	defined(CONFIG_SOC_ESP32P4_HPCORE) || defined(CONFIG_SOC_ESP32S31_HPCORE)
 #define MBOX_ESP32_HPCORE 1
 #endif
 
@@ -92,7 +91,7 @@ static const struct device *s_mbox_dev;
  */
 LP_CORE_ISR_ATTR void ulp_lp_core_lp_pmu_intr_handler(void)
 {
-#if defined(CONFIG_SOC_SERIES_ESP32P4)
+#if defined(CONFIG_SOC_SERIES_ESP32P4) || defined(CONFIG_SOC_SERIES_ESP32S31)
 	bool triggered = PMU.lp_ext.int_st.hp_sw_trigger;
 #else
 	bool triggered = PMU.lp_ext.int_st.sw_trigger;
