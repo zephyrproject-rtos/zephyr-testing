@@ -165,6 +165,9 @@ static inline void copy_hdr(struct net_buf *buf)
 
 static void reset_rx(void)
 {
+	/* A discarded packet leaves its buffer behind */
+	net_buf_drop(&rx.buf);
+
 	rx.type = BT_HCI_H4_NONE;
 	rx.remaining = 0U;
 	rx.have_hdr = false;
@@ -225,7 +228,7 @@ static void rx_thread(void *p1, void *p2, void *p3)
 		if (rx.have_hdr && !rx.buf) {
 			rx.buf = get_rx(K_FOREVER);
 			LOG_DBG("Got rx.buf %p", rx.buf);
-			if (rx.remaining > net_buf_tailroom(rx.buf)) {
+			if (rx.remaining + rx.hdr_len > net_buf_tailroom(rx.buf)) {
 				LOG_ERR("Not enough space in buffer");
 				rx.discard = rx.remaining;
 				reset_rx();
@@ -296,8 +299,9 @@ static inline void read_payload(void)
 		LOG_DBG("Allocated rx.buf %p", rx.buf);
 
 		buf_tailroom = net_buf_tailroom(rx.buf);
-		if (buf_tailroom < rx.remaining) {
-			LOG_ERR("Not enough space in buffer %u/%zu", rx.remaining, buf_tailroom);
+		if (buf_tailroom < rx.remaining + rx.hdr_len) {
+			LOG_ERR("Not enough space in buffer %u/%zu", rx.remaining + rx.hdr_len,
+				buf_tailroom);
 			rx.discard = rx.remaining;
 			reset_rx();
 			return;
@@ -355,7 +359,7 @@ static inline void read_header(void)
 	}
 
 	if (rx.have_hdr && rx.buf) {
-		if (rx.remaining > net_buf_tailroom(rx.buf)) {
+		if (rx.remaining + rx.hdr_len > net_buf_tailroom(rx.buf)) {
 			LOG_ERR("Not enough space in buffer");
 			rx.discard = rx.remaining;
 			reset_rx();

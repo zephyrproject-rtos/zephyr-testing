@@ -407,9 +407,12 @@ static int bt_spi_rx_buf_construct(uint8_t *msg, struct net_buf **bufp, uint16_t
 
 #if DT_HAS_COMPAT_STATUS_OKAY(st_hci_spi_v1)
 	if (buf) {
-		/* Buffer already allocated, waiting to complete event reception */
-		net_buf_add_mem(buf, msg, MIN(size, len - buf->len));
-		if (buf->len >= len) {
+		/* Buffer already allocated, waiting to complete event reception.
+		 * It also holds the HCI packet indicator, which len does not
+		 * count.
+		 */
+		net_buf_add_mem(buf, msg, MIN(size, len - (buf->len - 1)));
+		if (buf->len - 1 >= len) {
 			return 0;
 		} else {
 			return -EINPROGRESS;
@@ -460,8 +463,10 @@ static int bt_spi_rx_buf_construct(uint8_t *msg, struct net_buf **bufp, uint16_t
 			net_buf_unref(buf);
 			return -ENOMEM;
 		}
-		/* Skip the first byte (HCI packet indicator) */
-		size = size - 1;
+		/* Skip the first byte (HCI packet indicator), and take no more
+		 * than the event that the buffer was checked for.
+		 */
+		size = MIN(size - 1, len);
 		net_buf_add_mem(buf, &msg[1], size);
 #if DT_HAS_COMPAT_STATUS_OKAY(st_hci_spi_v1)
 		if (size < len) {
@@ -473,6 +478,11 @@ static int bt_spi_rx_buf_construct(uint8_t *msg, struct net_buf **bufp, uint16_t
 		buf = bt_buf_get_rx(BT_BUF_ACL_IN, K_FOREVER);
 		memcpy(&acl_hdr, &msg[1], sizeof(acl_hdr));
 		len = sizeof(acl_hdr) + sys_le16_to_cpu(acl_hdr.len);
+		if (len > size - 1) {
+			LOG_ERR("ACL longer than the SPI transfer: %d > %d", len, size - 1);
+			net_buf_unref(buf);
+			return -EMSGSIZE;
+		}
 		if (len > net_buf_tailroom(buf)) {
 			LOG_ERR("ACL too long: %d", len);
 			net_buf_unref(buf);
@@ -491,6 +501,11 @@ static int bt_spi_rx_buf_construct(uint8_t *msg, struct net_buf **bufp, uint16_t
 		} else {
 			LOG_ERR("No available ISO buffers!");
 			return -ENOMEM;
+		}
+		if (len > size - 1) {
+			LOG_ERR("ISO longer than the SPI transfer: %d > %d", len, size - 1);
+			net_buf_unref(buf);
+			return -EMSGSIZE;
 		}
 		if (len > net_buf_tailroom(buf)) {
 			LOG_ERR("ISO too long: %d", len);
