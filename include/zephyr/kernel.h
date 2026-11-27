@@ -517,7 +517,7 @@ __syscall k_tid_t k_thread_create(struct k_thread *new_thread,
 				  size_t stack_size,
 				  k_thread_entry_t entry,
 				  void *p1, void *p2, void *p3,
-				  int prio, uint32_t options, k_timeout_t delay);
+				  int prio, uint32_t options, k_timeout_t delay, void *dummy_ptr);
 
 /**
  * @brief Drop a thread's privileges permanently to user mode
@@ -603,7 +603,7 @@ static inline void k_thread_heap_assign(struct k_thread *thread,
  * @return -EFAULT Bad memory address for unused_ptr (user mode only)
  */
 __syscall int k_thread_stack_space_get(const struct k_thread *thread,
-				       size_t *unused_ptr);
+				       size_t *unused_ptr, void *unused_ptr_user);
 
 /**
  * @brief Set the unused stack threshold for a thread as a percentage
