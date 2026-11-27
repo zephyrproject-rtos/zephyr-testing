@@ -476,12 +476,11 @@ static int stm32_dcmipp_conf_csi(const struct device *dev, uint32_t dcmipp_csi_b
 }
 #endif
 
-/* Description of DCMIPP inputs */
+/* Description of the dump pipe formats: the output format and the source format it takes */
 #define DUMP_PIPE_FMT(fmt, input_fmt)					\
 	{								\
 		.pixelformat = VIDEO_PIX_FMT_##fmt,			\
-		.pipes = BIT(0),					\
-		.dump.input_pixelformat = VIDEO_PIX_FMT_##input_fmt,	\
+		.input_pixelformat = VIDEO_PIX_FMT_##input_fmt,		\
 	}
 #define RAW_BAYER_UNPACKED(size)				\
 	DUMP_PIPE_FMT(SBGGR##size, SBGGR##size),		\
@@ -489,43 +488,51 @@ static int stm32_dcmipp_conf_csi(const struct device *dev, uint32_t dcmipp_csi_b
 	DUMP_PIPE_FMT(SGRBG##size, SGRBG##size),		\
 	DUMP_PIPE_FMT(SRGGB##size, SRGGB##size)
 
-#define RAW_BAYER_PACKED(size)					\
-	DUMP_PIPE_FMT(SBGGR##size##P, SBGGR##size),		\
-	DUMP_PIPE_FMT(SGBRG##size##P, SGBRG##size),		\
-	DUMP_PIPE_FMT(SGRBG##size##P, SGRBG##size),		\
-	DUMP_PIPE_FMT(SRGGB##size##P, SRGGB##size)
+/* The dump pipe stores each pixel of a packed 10/12/14-bit input in a 16-bit word */
+#define RAW_BAYER_PADDED(size)					\
+	DUMP_PIPE_FMT(SBGGR##size, SBGGR##size##P),		\
+	DUMP_PIPE_FMT(SGBRG##size, SGBRG##size##P),		\
+	DUMP_PIPE_FMT(SGRBG##size, SGRBG##size##P),		\
+	DUMP_PIPE_FMT(SRGGB##size, SRGGB##size##P)
+
+static const struct stm32_dcmipp_dump_mapping {
+	uint32_t pixelformat;
+	uint32_t input_pixelformat;
+} stm32_dcmipp_dump_formats[] = {
+	RAW_BAYER_UNPACKED(8),
+	RAW_BAYER_PADDED(10), RAW_BAYER_PADDED(12), RAW_BAYER_PADDED(14),
+	DUMP_PIPE_FMT(RGB565, RGB565),
+	DUMP_PIPE_FMT(YUYV, YUYV),
+	DUMP_PIPE_FMT(GREY, GREY),
+};
+
+static const struct stm32_dcmipp_dump_mapping *stm32_dcmipp_get_dump_mapping(uint32_t pixelformat)
+{
+	for (int i = 0; i < ARRAY_SIZE(stm32_dcmipp_dump_formats); i++) {
+		if (stm32_dcmipp_dump_formats[i].pixelformat == pixelformat) {
+			return &stm32_dcmipp_dump_formats[i];
+		}
+	}
+
+	return NULL;
+}
 
 #if defined(STM32_DCMIPP_HAS_PIXEL_PIPES)
-/* Description of Pixel Pipes formats */
+/* Description of the pixel pipes formats: the pixel packer format producing each of them */
 #define PIXEL_PIPE_FMT(fmt, dcmipp, swap, valid_pipes)				\
 	{									\
 		.pixelformat = VIDEO_PIX_FMT_##fmt,				\
 		.pipes = valid_pipes,						\
-		.pixels.dcmipp_format = DCMIPP_PIXEL_PACKER_FORMAT_##dcmipp,	\
-		.pixels.swap_uv = swap,						\
+		.dcmipp_format = DCMIPP_PIXEL_PACKER_FORMAT_##dcmipp,		\
+		.swap_uv = swap,						\
 	}
-#endif
-static const struct stm32_dcmipp_mapping {
+
+static const struct stm32_dcmipp_pixel_mapping {
 	uint32_t pixelformat;
 	uint32_t pipes;
-	union {
-		struct {
-			uint32_t input_pixelformat;
-		} dump;
-		struct {
-			uint32_t dcmipp_format;
-			uint32_t swap_uv;
-		} pixels;
-	};
-} stm32_dcmipp_format_support[] = {
-	/* Dump pipe format descriptions */
-	RAW_BAYER_UNPACKED(8),
-	RAW_BAYER_PACKED(10), RAW_BAYER_PACKED(12), RAW_BAYER_PACKED(14),
-	DUMP_PIPE_FMT(RGB565, RGB565),
-	DUMP_PIPE_FMT(YUYV, YUYV),
-	DUMP_PIPE_FMT(GREY, GREY),
-#if defined(STM32_DCMIPP_HAS_PIXEL_PIPES)
-	/* Pixel pipes format descriptions */
+	uint32_t dcmipp_format;
+	uint32_t swap_uv;
+} stm32_dcmipp_pixel_formats[] = {
 	PIXEL_PIPE_FMT(RGB565, RGB565_1, 0, (BIT(1) | BIT(2))),
 	PIXEL_PIPE_FMT(YUYV, YUV422_1, 0, (BIT(1) | BIT(2))),
 	PIXEL_PIPE_FMT(YVYU, YUV422_1, 1, (BIT(1) | BIT(2))),
@@ -543,20 +550,32 @@ static const struct stm32_dcmipp_mapping {
 	PIXEL_PIPE_FMT(NV61, YUV422_2, 1, BIT(1)),
 	PIXEL_PIPE_FMT(YUV420, YUV420_3, 0, BIT(1)),
 	PIXEL_PIPE_FMT(YVU420, YUV420_3, 1, BIT(1)),
-#endif
 };
 
-static const struct stm32_dcmipp_mapping *stm32_dcmipp_get_mapping(uint32_t pixelformat,
-								   uint32_t pipe)
+static const struct stm32_dcmipp_pixel_mapping *stm32_dcmipp_get_pixel_mapping(uint32_t pixelformat,
+									       uint32_t pipe)
 {
-	for (int i = 0; i < ARRAY_SIZE(stm32_dcmipp_format_support); i++) {
-		if (pixelformat == stm32_dcmipp_format_support[i].pixelformat &&
-		    BIT(pipe) & stm32_dcmipp_format_support[i].pipes) {
-			return &stm32_dcmipp_format_support[i];
+	for (int i = 0; i < ARRAY_SIZE(stm32_dcmipp_pixel_formats); i++) {
+		if (stm32_dcmipp_pixel_formats[i].pixelformat == pixelformat &&
+		    BIT(pipe) & stm32_dcmipp_pixel_formats[i].pipes) {
+			return &stm32_dcmipp_pixel_formats[i];
 		}
 	}
 
 	return NULL;
+}
+#endif
+
+/* The format the dump pipe outputs for a source format, the source's own when it has none */
+static uint32_t stm32_dcmipp_get_dump_pixelformat(uint32_t source_pixelformat)
+{
+	for (int i = 0; i < ARRAY_SIZE(stm32_dcmipp_dump_formats); i++) {
+		if (stm32_dcmipp_dump_formats[i].input_pixelformat == source_pixelformat) {
+			return stm32_dcmipp_dump_formats[i].pixelformat;
+		}
+	}
+
+	return source_pixelformat;
 }
 
 static inline void stm32_dcmipp_compute_fmt_pitch(uint32_t pipe_id, struct video_format *fmt)
@@ -577,12 +596,21 @@ static int stm32_dcmipp_set_fmt(const struct device *dev, struct video_format *f
 {
 	struct stm32_dcmipp_pipe_data *pipe = dev->data;
 	struct stm32_dcmipp_data *dcmipp = pipe->dcmipp;
-	const struct stm32_dcmipp_mapping *mapping;
+	const struct stm32_dcmipp_dump_mapping *dump = NULL;
+	bool supported = false;
 	int ret = 0;
 
 	/* Sanitize format given */
-	mapping = stm32_dcmipp_get_mapping(fmt->pixelformat, pipe->id);
-	if (mapping == NULL) {
+	if (pipe->id == DCMIPP_PIPE0) {
+		dump = stm32_dcmipp_get_dump_mapping(fmt->pixelformat);
+		supported = dump != NULL;
+	}
+#if defined(STM32_DCMIPP_HAS_PIXEL_PIPES)
+	else {
+		supported = stm32_dcmipp_get_pixel_mapping(fmt->pixelformat, pipe->id) != NULL;
+	}
+#endif
+	if (!supported) {
 		LOG_ERR("Pixelformat %s/0x%x is not supported",
 			VIDEO_FOURCC_TO_STR(fmt->pixelformat), fmt->pixelformat);
 		return -EINVAL;
@@ -590,7 +618,7 @@ static int stm32_dcmipp_set_fmt(const struct device *dev, struct video_format *f
 
 	/* In case of DUMP pipe, verify that requested format matched with input format */
 	if (pipe->id == DCMIPP_PIPE0 &&
-	    mapping->dump.input_pixelformat != dcmipp->source_fmt.pixelformat) {
+	    dump->input_pixelformat != dcmipp->source_fmt.pixelformat) {
 		LOG_ERR("Dump pipe output format (%s) incompatible with source format (%s)",
 			 VIDEO_FOURCC_TO_STR(fmt->pixelformat),
 			 VIDEO_FOURCC_TO_STR(dcmipp->source_fmt.pixelformat));
@@ -1047,7 +1075,10 @@ static int stm32_dcmipp_stream_enable(const struct device *dev)
 	struct stm32_dcmipp_data *dcmipp = pipe->dcmipp;
 	const struct stm32_dcmipp_config *config = dev->config;
 	struct video_format *fmt = &pipe->fmt;
-	const struct stm32_dcmipp_mapping *mapping;
+#if defined(STM32_DCMIPP_HAS_PIXEL_PIPES)
+	const struct stm32_dcmipp_pixel_mapping *pixel = NULL;
+#endif
+	bool supported = false;
 	const struct stm32_dcmipp_input_fmt *input_fmt;
 #if defined(STM32_DCMIPP_HAS_CSI)
 	DCMIPP_CSI_PIPE_ConfTypeDef csi_pipe_cfg = { 0 };
@@ -1119,8 +1150,16 @@ static int stm32_dcmipp_stream_enable(const struct device *dev)
 #endif
 
 	/* Configure Pipe */
-	mapping = stm32_dcmipp_get_mapping(fmt->pixelformat, pipe->id);
-	if (mapping == NULL) {
+	if (pipe->id == DCMIPP_PIPE0) {
+		supported = stm32_dcmipp_get_dump_mapping(fmt->pixelformat) != NULL;
+	}
+#if defined(STM32_DCMIPP_HAS_PIXEL_PIPES)
+	else {
+		pixel = stm32_dcmipp_get_pixel_mapping(fmt->pixelformat, pipe->id);
+		supported = pixel != NULL;
+	}
+#endif
+	if (!supported) {
 		LOG_ERR("Failed to find pipe format mapping");
 		ret = -EIO;
 		goto out;
@@ -1130,7 +1169,7 @@ static int stm32_dcmipp_stream_enable(const struct device *dev)
 #if defined(STM32_DCMIPP_HAS_PIXEL_PIPES)
 	if (pipe->id == DCMIPP_PIPE1 || pipe->id == DCMIPP_PIPE2) {
 		pipe_cfg.PixelPipePitch = VIDEO_Y_PLANE_PITCH(fmt);
-		pipe_cfg.PixelPackerFormat = mapping->pixels.dcmipp_format;
+		pipe_cfg.PixelPackerFormat = pixel->dcmipp_format;
 	}
 #endif
 	hal_ret = HAL_DCMIPP_PIPE_SetConfig(&dcmipp->hdcmipp, pipe->id, &pipe_cfg);
@@ -1160,7 +1199,7 @@ static int stm32_dcmipp_stream_enable(const struct device *dev)
 #if defined(STM32_DCMIPP_HAS_PIXEL_PIPES)
 	else if (pipe->id == DCMIPP_PIPE1 || pipe->id == DCMIPP_PIPE2) {
 		/* Enable / disable SWAPRB if necessary */
-		if (mapping->pixels.swap_uv) {
+		if (pixel->swap_uv) {
 			hal_ret = HAL_DCMIPP_PIPE_EnableRedBlueSwap(&dcmipp->hdcmipp, pipe->id);
 			if (hal_ret != HAL_OK) {
 				LOG_ERR("Failed to enable Red-Blue swap");
@@ -1448,9 +1487,9 @@ static int stm32_dcmipp_dequeue(const struct device *dev, struct video_buffer **
 #define DCMIPP_CEIL_DIV(val, div)								\
 		(((val) + (div) - 1) / (div))
 
-static const struct video_format_cap stm32_dcmipp_dump_fmt[] = {
+/* The pixel format is the dump pipe's output for the source format, set at the pipe's init */
+static struct video_format_cap stm32_dcmipp_dump_fmt[] = {
 	{
-		.pixelformat = VIDEO_FOURCC_FROM_STR(CONFIG_VIDEO_STM32_DCMIPP_SENSOR_PIXEL_FORMAT),
 		.width_min = CONFIG_VIDEO_STM32_DCMIPP_SENSOR_WIDTH,
 		.width_max = CONFIG_VIDEO_STM32_DCMIPP_SENSOR_WIDTH,
 		.height_min = CONFIG_VIDEO_STM32_DCMIPP_SENSOR_HEIGHT,
@@ -1881,7 +1920,13 @@ static int stm32_dcmipp_pipe_init(const struct device *dev)
 		pipe->fmt.height /= dcmipp->isp_dec_vratio;
 	}
 #endif
-	pipe->fmt.pixelformat = dcmipp->source_fmt.pixelformat;
+	if (pipe->id == DCMIPP_PIPE0) {
+		pipe->fmt.pixelformat =
+			stm32_dcmipp_get_dump_pixelformat(dcmipp->source_fmt.pixelformat);
+		stm32_dcmipp_dump_fmt[0].pixelformat = pipe->fmt.pixelformat;
+	} else {
+		pipe->fmt.pixelformat = dcmipp->source_fmt.pixelformat;
+	}
 	pipe->crop.top = 0;
 	pipe->crop.left = 0;
 	pipe->crop.width = pipe->fmt.width;
